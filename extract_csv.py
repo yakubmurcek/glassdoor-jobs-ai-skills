@@ -3,13 +3,14 @@
 
 import pandas as pd
 
+extract_rows = 10
 input_csv = "us_relevant.csv"
-output_csv = "us_relevant_50.csv"
+output_csv = f"us_relevant_{extract_rows}.csv"
 
 df = pd.read_csv(
     input_csv,
     sep=";",
-    nrows=50,
+    nrows=extract_rows,
     encoding="utf-8"
 )
 
@@ -20,4 +21,4 @@ df.to_csv(
     encoding="utf-8-sig"
 )
 
-print("Done. Exported first 50 rows.")
+print(f"Done. Exported first {extract_rows} rows.")

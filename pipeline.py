@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""High-level orchestration of the AI skill analysis workflow."""
+
+from __future__ import annotations
+
+import pandas as pd
+
+from data_io import load_input_data, reorder_columns, save_results
+from models import JobAnalysisResult
+from openai_analyzer import OpenAIJobAnalyzer
+from skill_processing import annotate_declared_skills
+
+
+class JobAnalysisPipeline:
+    """Coordinates each step of data ingestion and enrichment."""
+
+    def __init__(self, *, analyzer: OpenAIJobAnalyzer | None = None) -> None:
+        self.analyzer = analyzer or OpenAIJobAnalyzer()
+
+    def run(self) -> pd.DataFrame:
+        """Execute the full pipeline and return the final DataFrame."""
+        df = load_input_data()
+        df = annotate_declared_skills(df)
+        df = self._annotate_job_descriptions(df)
+        df = reorder_columns(df)
+        save_results(df)
+        return df
+
+    def _annotate_job_descriptions(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Apply the OpenAI analyzer to every job description."""
+        annotated_df = df.copy()
+        results = annotated_df["job_desc_text"].apply(self.analyzer.analyze_text)
+        annotated_df["AI_skill_openai"] = results.apply(self._as_indicator)
+        annotated_df["AI_skills_openai_mentioned"] = results.apply(self._as_joined_skills)
+        return annotated_df
+
+    @staticmethod
+    def _as_indicator(result: JobAnalysisResult) -> int:
+        return int(result.has_ai_skill)
+
+    @staticmethod
+    def _as_joined_skills(result: JobAnalysisResult) -> str:
+        return ", ".join(result.ai_skills_mentioned)
+

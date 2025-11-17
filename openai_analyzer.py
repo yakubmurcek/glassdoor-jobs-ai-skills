@@ -4,113 +4,88 @@
 
 import json
 import time
-from typing import Dict, List
+from typing import Optional
 
 from openai import OpenAI
 
 from config import (
+    MAX_JOB_DESC_LENGTH,
     OPENAI_API_KEY,
     OPENAI_MODEL,
     OPENAI_TEMPERATURE,
     RATE_LIMIT_DELAY,
-    MAX_JOB_DESC_LENGTH,
 )
+from models import JobAnalysisResult
+from prompts import job_analysis_prompt
 
-# Initialize OpenAI client
-client = OpenAI(api_key=OPENAI_API_KEY)
 
+class OpenAIJobAnalyzer:
+    """Encapsulates the OpenAI client and response parsing logic."""
 
-def analyze_job_desc_with_openai(job_desc_text: str) -> Dict[str, any]:
-    """
-    Use OpenAI to analyze job description text and determine if it contains AI skills.
-    
-    Args:
-        job_desc_text: The job description text to analyze
-        
-    Returns:
-        Dict with 'has_ai_skill' (bool) and 'ai_skills_mentioned' (list of strings)
-    """
-    if not job_desc_text or not job_desc_text.strip():
-        return {"has_ai_skill": False, "ai_skills_mentioned": []}
-    
-    # Truncate very long descriptions to avoid token limits
-    text_to_analyze = (
-        job_desc_text[:MAX_JOB_DESC_LENGTH]
-        if len(job_desc_text) > MAX_JOB_DESC_LENGTH
-        else job_desc_text
-    )
-    
-    prompt = f"""Analyze the following job description and determine if it mentions any AI (Artificial Intelligence), Machine Learning, or related skills.
+    def __init__(
+        self,
+        *,
+        api_key: str = OPENAI_API_KEY,
+        model: str = OPENAI_MODEL,
+        temperature: float = OPENAI_TEMPERATURE,
+        delay_seconds: float = RATE_LIMIT_DELAY,
+    ) -> None:
+        self.client = OpenAI(api_key=api_key)
+        self.model = model
+        self.temperature = temperature
+        self.delay_seconds = delay_seconds
 
-Consider these categories of AI skills:
-- Core AI/ML: artificial intelligence, machine learning, deep learning, neural networks
-- Generative AI/LLMs: GPT, BERT, LLM, large language models, generative AI, prompt engineering
-- NLP: natural language processing, text analysis, sentiment analysis
-- Computer Vision: image recognition, object detection, computer vision
-- ML Frameworks: PyTorch, TensorFlow, Keras, scikit-learn
-- MLOps: model deployment, MLflow, model serving
-- Cloud AI: AWS SageMaker, Azure ML, Vertex AI
-- Other AI-related technologies and concepts
+    def analyze_text(self, job_desc_text: Optional[str]) -> JobAnalysisResult:
+        """Run the LLM prompt for a single job description."""
+        if not job_desc_text or not job_desc_text.strip():
+            return JobAnalysisResult()
 
-Job Description:
-{text_to_analyze}
+        text_to_analyze = (
+            job_desc_text[:MAX_JOB_DESC_LENGTH]
+            if len(job_desc_text) > MAX_JOB_DESC_LENGTH
+            else job_desc_text
+        )
 
-Respond with a JSON object in this exact format:
-{{
-    "has_ai_skill": true or false,
-    "ai_skills_mentioned": ["skill1", "skill2", ...]
-}}
+        response_payload = self._call_openai(text_to_analyze)
+        result = self._parse_response(response_payload)
 
-Only include skills that are explicitly mentioned or clearly implied in the job description. Be conservative - if the job description doesn't clearly mention AI/ML work, set has_ai_skill to false."""
+        # Small delay to avoid rate limits
+        time.sleep(self.delay_seconds)
+        return result
 
-    try:
-        response = client.chat.completions.create(
-            model=OPENAI_MODEL,
+    def _call_openai(self, text_to_analyze: str) -> str:
+        prompt = job_analysis_prompt(text_to_analyze)
+        response = self.client.chat.completions.create(
+            model=self.model,
             messages=[
                 {
                     "role": "system",
-                    "content": "You are an expert at analyzing job descriptions for AI and machine learning skills. Always respond with valid JSON only."
+                    "content": (
+                        "You are an expert at analyzing job descriptions for AI "
+                        "and machine learning skills. Always respond with valid JSON only."
+                    ),
                 },
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt},
             ],
-            temperature=OPENAI_TEMPERATURE,
-            response_format={"type": "json_object"}
+            temperature=self.temperature,
+            response_format={"type": "json_object"},
         )
-        
-        result_text = response.choices[0].message.content.strip()
-        result = json.loads(result_text)
-        
-        # Validate and normalize the response
-        has_ai = bool(result.get("has_ai_skill", False))
-        skills_list = result.get("ai_skills_mentioned", [])
-        if not isinstance(skills_list, list):
-            skills_list = []
-        
-        return {
-            "has_ai_skill": has_ai,
-            "ai_skills_mentioned": skills_list
-        }
-    
-    except json.JSONDecodeError as e:
-        print(f"Warning: Failed to parse OpenAI JSON response: {e}")
-        return {"has_ai_skill": False, "ai_skills_mentioned": []}
-    except Exception as e:
-        print(f"Warning: OpenAI API error: {e}")
-        return {"has_ai_skill": False, "ai_skills_mentioned": []}
+        return response.choices[0].message.content.strip()
 
+    @staticmethod
+    def _parse_response(response_text: str) -> JobAnalysisResult:
+        try:
+            parsed = json.loads(response_text)
+        except json.JSONDecodeError as error:
+            print(f"Warning: Failed to parse OpenAI JSON response: {error}")
+            return JobAnalysisResult()
 
-def analyze_job_desc_wrapper(job_desc_text: str) -> Dict[str, any]:
-    """
-    Wrapper function with rate limiting and error handling.
-    
-    Args:
-        job_desc_text: The job description text to analyze
-        
-    Returns:
-        Dict with 'has_ai_skill' (bool) and 'ai_skills_mentioned' (list of strings)
-    """
-    result = analyze_job_desc_with_openai(job_desc_text)
-    # Small delay to avoid rate limits
-    time.sleep(RATE_LIMIT_DELAY)
-    return result
+        skills = parsed.get("ai_skills_mentioned", [])
+        if not isinstance(skills, list):
+            skills = []
+
+        return JobAnalysisResult(
+            has_ai_skill=bool(parsed.get("has_ai_skill", False)),
+            ai_skills_mentioned=skills,
+        )
 
