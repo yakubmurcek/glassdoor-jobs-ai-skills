@@ -110,19 +110,24 @@ def tokenize_skills(skill_string: str) -> list[str]:
     parts = re.split(r",|\n", skill_string)
     return [part.strip().lower() for part in parts if part.strip()]
 
-
-def contains_ai_skills(skill_string: str) -> int:
+def find_ai_matches(skill_string: str) -> str:
+    """Return comma-separated AI skills found in the string."""
     tokens = tokenize_skills(skill_string)
-    return int(any(token in AI_SKILLS_SET for token in tokens))
+    matches = sorted(set(t for t in tokens if t in AI_SKILLS_SET))
+    return ", ".join(matches)
 
-df["AI_skill_hard"] = df["skills"].apply(contains_ai_skills)
+# Column 1: explicit skills found (for debugging)
+df["AI_skills_found"] = df["skills"].apply(find_ai_matches)
+
+# Column 2: binary indicator
+df["AI_skill_hard"] = df["AI_skills_found"].apply(lambda s: int(bool(s)))
 
 # ===== REORDER COLUMNS =====
-preferred_order = ["skills", "job_desc_text", "AI_skill_hard"]
+preferred_order = ["skills", "job_desc_text", "AI_skills_found", "AI_skill_hard"]
 remaining_columns = [col for col in df.columns if col not in preferred_order]
 df = df[preferred_order + remaining_columns]
 
 # ===== SAVE =====
 df.to_csv(OUTPUT_CSV, sep=";", index=False)
 
-print("Done. Added AI_skill_hard column.")
+print("Done. Added AI_skills_found and AI_skill_hard columns.")
