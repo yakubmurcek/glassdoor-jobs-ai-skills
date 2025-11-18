@@ -33,6 +33,9 @@ class JobAnalysisPipeline:
         results = annotated_df["job_desc_text"].apply(self.analyzer.analyze_text)
         annotated_df["AI_skill_openai"] = results.apply(self._as_indicator)
         annotated_df["AI_skills_openai_mentioned"] = results.apply(self._as_joined_skills)
+        annotated_df["AI_skill_openai_confidence"] = results.apply(
+            self._as_confidence
+        )
         return annotated_df
 
     @staticmethod
@@ -42,3 +45,7 @@ class JobAnalysisPipeline:
     @staticmethod
     def _as_joined_skills(result: JobAnalysisResult) -> str:
         return ", ".join(result.ai_skills_mentioned)
+
+    @staticmethod
+    def _as_confidence(result: JobAnalysisResult) -> float:
+        return result.confidence

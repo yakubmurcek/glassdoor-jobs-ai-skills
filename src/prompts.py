@@ -23,7 +23,9 @@ def job_analysis_instructions() -> str:
     Respond with a JSON object in this exact format:
     {{
         "has_ai_skill": true or false,
-        "ai_skills_mentioned": ["skill1", "skill2", ...]
+        "ai_skills_mentioned": ["skill1", "skill2", ...],
+        "confidence": number between 0 and 1 describing how confident you are in
+                       your has_ai_skill and ai_skills_mentioned answers
     }}
 
     Only include skills that are explicitly mentioned or clearly implied in the

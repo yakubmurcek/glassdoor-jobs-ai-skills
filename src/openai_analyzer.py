@@ -85,9 +85,16 @@ class OpenAIJobAnalyzer:
                 "properties": {
                     "has_ai_skill": {"type": "boolean"},
                     "ai_skills_mentioned": {"type": "array", "items": {"type": "string"}},
+                    "confidence": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "Confidence for both has_ai_skill "
+                        "and ai_skills_mentioned answers",
+                    },
                 },
                 "strict": True,
-                "required": ["has_ai_skill", "ai_skills_mentioned"],
+                "required": ["has_ai_skill", "ai_skills_mentioned", "confidence"],
                 "additionalProperties": False,
             }
             }},
@@ -109,6 +116,7 @@ class OpenAIJobAnalyzer:
         return JobAnalysisResult(
             has_ai_skill=bool(parsed.get("has_ai_skill", False)),
             ai_skills_mentioned=skills,
+            confidence=_coerce_confidence(parsed.get("confidence")),
         )
 
     @staticmethod
@@ -134,3 +142,12 @@ class OpenAIJobAnalyzer:
                 return content.strip()
 
         return ""
+
+
+def _coerce_confidence(value: Any) -> float:
+    """Convert the model confidence to a bounded float."""
+    try:
+        numeric = float(value)
+    except (TypeError, ValueError):
+        return 0.0
+    return max(0.0, min(1.0, numeric))
