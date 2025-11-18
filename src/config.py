@@ -83,7 +83,7 @@ AI_SKILLS = [
     "t5", "llama", "mistral",
     "generative ai", "genai", "gen ai",
     "text generation", "text-generation",
-    "prompt engineering",
+    "prompt engineering", "prompt"
     
     # Vision / Speech
     "computer vision",

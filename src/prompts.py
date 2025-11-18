@@ -33,12 +33,19 @@ def job_analysis_instructions() -> str:
     You may include other AI/ML skills that are not listed only when they name a specific
     algorithm, framework, or technique. Keep each skill entry to a short noun phrase (<= 4 words).
 
-    Strict output rules for `ai_skills_mentioned`:
-    - Only include AI/ML skills, tools, models, or techniques. Never include business domains,
-      product descriptions, platforms, or responsibilities (e.g., do NOT output phrases such as
-      "instructional materials platform" or "AI initiatives").
-    - Do not infer skills that are not clearly stated. If the text merely says "AI-powered" or
-      similar without naming a skill, leave the array empty and set has_ai_skill to false.
+    Strict output rules for `ai_skills_mentioned` (keep this section simple and literal):
+    - Qualify only concrete AI/ML techniques, model types, algorithms, AI-specific platforms, or clearly
+      ML-oriented tooling (e.g., "transformer fine-tuning", "pytorch", "vertex ai"). General software
+      stack items are never valid skills in this field.
+    - Hard blocklist: under no circumstances output general-purpose languages, frameworks, databases,
+      or hosting stacks such as react, angular, next.js, vue, flutter, swift, kotlin, java, c#, node.js,
+      express, flask, django, rails, spring, rest, graphql, sql, html/css, git, docker, kubernetes, etc.
+      If a posting only mentions these, return has_ai_skill=false and an empty skills list.
+    - Dual-use utilities (python, pandas, spark, aws/azure/gcp, etc.) only qualify when the text spells
+      out an AI/ML role, such as "pandas feature engineering" or "sagemaker model deployment".
+    - If the description simply says "AI-powered" or references an AI product without naming any AI/ML
+      techniques (e.g., a React/Flask role at an AI-enabled company), return has_ai_skill=false and an
+      empty skills list.
     - Remove duplicates and keep consistent casing (lowercase unless the proper noun requires caps).
 
     Respond with a JSON object in this exact format:
