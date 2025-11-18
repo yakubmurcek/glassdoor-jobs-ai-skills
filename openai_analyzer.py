@@ -4,7 +4,7 @@
 
 import json
 import time
-from typing import Optional
+from typing import Any, Optional
 
 from openai import OpenAI
 
@@ -16,7 +16,7 @@ from config import (
     RATE_LIMIT_DELAY,
 )
 from models import JobAnalysisResult
-from prompts import job_analysis_prompt
+from prompts import job_analysis_instructions, job_analysis_prompt
 
 
 class OpenAIJobAnalyzer:
@@ -54,23 +54,45 @@ class OpenAIJobAnalyzer:
         return result
 
     def _call_openai(self, text_to_analyze: str) -> str:
+        system_prompt = (
+            "You are an expert at analyzing job descriptions for AI and "
+            "machine learning skills. Always respond with valid JSON only.\n\n"
+            f"{job_analysis_instructions()}"
+        )
         prompt = job_analysis_prompt(text_to_analyze)
-        response = self.client.chat.completions.create(
+        response = self.client.responses.create(
             model=self.model,
-            messages=[
+            input=[
                 {
                     "role": "system",
-                    "content": (
-                        "You are an expert at analyzing job descriptions for AI "
-                        "and machine learning skills. Always respond with valid JSON only."
-                    ),
+                    "content": [
+                        {
+                            "type": "input_text",
+                            "text": system_prompt,
+                        }
+                    ],
                 },
-                {"role": "user", "content": prompt},
+                {
+                    "role": "user",
+                    "content": [{"type": "input_text", "text": prompt}],
+                },
             ],
             temperature=self.temperature,
-            response_format={"type": "json_object"},
+            text={"format": {"type": "json_schema", "name": "job_analysis_result",
+            
+            "schema": {
+                "type": "object",
+                "properties": {
+                    "has_ai_skill": {"type": "boolean"},
+                    "ai_skills_mentioned": {"type": "array", "items": {"type": "string"}},
+                },
+                "strict": True,
+                "required": ["has_ai_skill", "ai_skills_mentioned"],
+                "additionalProperties": False,
+            }
+            }},
         )
-        return response.choices[0].message.content.strip()
+        return self._extract_response_text(response)
 
     @staticmethod
     def _parse_response(response_text: str) -> JobAnalysisResult:
@@ -89,3 +111,26 @@ class OpenAIJobAnalyzer:
             ai_skills_mentioned=skills,
         )
 
+    @staticmethod
+    def _extract_response_text(response: Any) -> str:
+        """Handle extraction for Responses API while staying backward compatible."""
+        output_text = getattr(response, "output_text", None)
+        if output_text:
+            return output_text.strip()
+
+        output_blocks = getattr(response, "output", None) or []
+        for block in output_blocks:
+            contents = getattr(block, "content", None) or []
+            for item in contents:
+                text_value = getattr(item, "text", None)
+                if text_value:
+                    return text_value.strip()
+
+        choices = getattr(response, "choices", None) or []
+        if choices:
+            message = getattr(choices[0], "message", None)
+            content = getattr(message, "content", None)
+            if isinstance(content, str):
+                return content.strip()
+
+        return ""

@@ -5,11 +5,11 @@
 from textwrap import dedent
 
 
-def job_analysis_prompt(job_description: str) -> str:
-    """Generate the prompt for analyzing a single job description."""
+def job_analysis_instructions() -> str:
+    """Return the static instructions for the OpenAI job analysis prompt."""
     template = """
-    Analyze the following job description and determine if it mentions any AI
-    (Artificial Intelligence), Machine Learning, or related skills.
+    Analyze job descriptions and determine if they mention AI (Artificial Intelligence),
+    Machine Learning, or related skills.
 
     Consider these categories of AI skills:
     - Core AI/ML: artificial intelligence, machine learning, deep learning, neural networks
@@ -19,9 +19,6 @@ def job_analysis_prompt(job_description: str) -> str:
     - MLOps: model deployment, MLflow, model serving
     - Cloud AI: AWS SageMaker, Azure ML, Vertex AI
     - Other AI-related technologies and concepts
-
-    Job Description:
-    {job_description}
 
     Respond with a JSON object in this exact format:
     {{
@@ -33,5 +30,13 @@ def job_analysis_prompt(job_description: str) -> str:
     job description. Be conservative - if the job description doesn't clearly
     mention AI/ML work, set has_ai_skill to false.
     """
-    return dedent(template).strip().format(job_description=job_description)
+    return dedent(template).strip()
 
+
+def job_analysis_prompt(job_description: str) -> str:
+    """Generate the user prompt that only contains the job description text."""
+    template = """
+    Job Description:
+    {job_description}
+    """
+    return dedent(template).strip().format(job_description=job_description)

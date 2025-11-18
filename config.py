@@ -13,8 +13,8 @@ env_path = BASE_DIR / ".env"
 load_dotenv(dotenv_path=env_path)
 
 # File paths (always relative to the project directory)
-INPUT_CSV = BASE_DIR / "us_relevant_50.csv"
-OUTPUT_CSV = BASE_DIR / "us_relevant_ai.csv"
+INPUT_CSV = BASE_DIR / "us_relevant_10.csv"
+OUTPUT_CSV = BASE_DIR / "us_relevant_ai_10.csv"
 
 # OpenAI configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
