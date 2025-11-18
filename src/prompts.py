@@ -8,17 +8,38 @@ from textwrap import dedent
 def job_analysis_instructions() -> str:
     """Return the static instructions for the OpenAI job analysis prompt."""
     template = """
-    Analyze job descriptions and determine if they mention AI (Artificial Intelligence),
-    Machine Learning, or related skills.
+    Analyze job descriptions and determine if they mention AI skills (Artificial
+    Intelligence).
 
-    Consider these categories of AI skills:
-    - Core AI/ML: artificial intelligence, machine learning, deep learning, neural networks
-    - Generative AI/LLMs: GPT, BERT, LLM, large language models, generative AI, prompt engineering
-    - NLP: natural language processing, text analysis, sentiment analysis
-    - ML Frameworks: PyTorch, TensorFlow, Keras, scikit-learn
-    - MLOps: model deployment, MLflow, model serving
-    - Cloud AI: AWS SageMaker, Azure ML, Vertex AI
-    - Other AI-related technologies and concepts
+    Canonical AI/ML skill vocabulary (case-insensitive; prefer these exact tokens when
+    applicable):
+    - Core AI/ML: artificial intelligence, ai, machine learning, ml, deep learning, dl,
+      neural network(s), supervised learning, unsupervised learning, reinforcement learning,
+      rl, self-supervised learning, classification, regression, clustering
+    - GenAI/LLMs: llm, large language model, gpt, gpt-3, gpt-4, bert, roberta, distilbert,
+      albert, t5, llama, mistral, generative ai, genai, text generation, prompt engineering
+    - NLP: nlp, nlu, nlg, natural language processing, tokenization, word embeddings,
+      word2vec, glove, fasttext, named entity recognition, ner, sentiment analysis
+    - Vision/Speech: computer vision, image recognition, object detection, yolo, retinanet,
+      mask r-cnn, speech recognition
+    - Frameworks & tooling: pytorch, tensorflow, keras, jax, flax, scikit-learn, sklearn,
+      xgboost, lightgbm, catboost, pandas, numpy, scipy, spark ml, pyspark, mlflow, kubeflow,
+      torchserve, tensorflow serving, onnx, onnxruntime
+    - Cloud/infra: sagemaker, vertex ai, azure ml, aws ai, gcp ai, cuda, cudnn, gpu acceleration,
+      distributed training, feature store, mlops, aiops, model deployment, model serving,
+      model monitoring, model governance, model training, model inference
+    - Edge/other: tflite, tensorflow lite, coreml, edge ai
+
+    You may include other AI/ML skills that are not listed only when they name a specific
+    algorithm, framework, or technique. Keep each skill entry to a short noun phrase (<= 4 words).
+
+    Strict output rules for `ai_skills_mentioned`:
+    - Only include AI/ML skills, tools, models, or techniques. Never include business domains,
+      product descriptions, platforms, or responsibilities (e.g., do NOT output phrases such as
+      "instructional materials platform" or "AI initiatives").
+    - Do not infer skills that are not clearly stated. If the text merely says "AI-powered" or
+      similar without naming a skill, leave the array empty and set has_ai_skill to false.
+    - Remove duplicates and keep consistent casing (lowercase unless the proper noun requires caps).
 
     Respond with a JSON object in this exact format:
     {{
@@ -28,13 +49,12 @@ def job_analysis_instructions() -> str:
                        your has_ai_skill and ai_skills_mentioned answers
     }}
 
-    Only include skills that are explicitly mentioned or clearly implied in the
-    job description. Be conservative - if the job description doesn't clearly
-    mention AI/ML work, set has_ai_skill to false.
+    If the job description does not clearly reference AI/ML work or skills, set has_ai_skill to false
+    and return an empty skills list.
 
-    When multiple job descriptions are provided with IDs, respond with a JSON
-    object that has a top-level "results" array where each element includes the
-    job's ID plus the same fields above.
+    When multiple job descriptions are provided with IDs, respond with a JSON object that
+    has a top-level "results" array where each element includes the job's ID plus the same
+    fields above.
     """
     return dedent(template).strip()
 
