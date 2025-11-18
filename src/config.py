@@ -8,13 +8,17 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Resolve project root and load environment variables
-BASE_DIR = Path(__file__).parent.resolve()
-env_path = BASE_DIR / ".env"
+PACKAGE_DIR = Path(__file__).parent.resolve()
+PROJECT_ROOT = PACKAGE_DIR.parent
+env_path = PROJECT_ROOT / ".env"
 load_dotenv(dotenv_path=env_path)
 
 # File paths (always relative to the project directory)
-INPUT_CSV = BASE_DIR / "us_relevant_10.csv"
-OUTPUT_CSV = BASE_DIR / "us_relevant_ai_10.csv"
+DATA_DIR = PROJECT_ROOT / "data"
+INPUTS_DIR = DATA_DIR / "inputs"
+OUTPUTS_DIR = DATA_DIR / "outputs"
+INPUT_CSV = INPUTS_DIR / "us_relevant_10.csv"
+OUTPUT_CSV = OUTPUTS_DIR / "us_relevant_ai_10.csv"
 
 # OpenAI configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")

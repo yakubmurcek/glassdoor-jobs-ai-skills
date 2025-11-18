@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """Command-line entry point for the AI skills analysis pipeline."""
 
-from config import OUTPUT_CSV
-from pipeline import JobAnalysisPipeline
+from src.config import OUTPUT_CSV
+from src.pipeline import JobAnalysisPipeline
 
 
 def main():

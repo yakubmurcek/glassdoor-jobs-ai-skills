@@ -5,7 +5,7 @@
 import re
 from typing import List, Set
 
-from config import AI_SKILLS
+from .config import AI_SKILLS
 
 # Lowercase version for reliable matching
 AI_SKILLS_LOWER = [skill.lower() for skill in AI_SKILLS]
@@ -23,4 +23,3 @@ def find_ai_matches(skill_string: str) -> str:
     tokens = tokenize_skills(skill_string)
     matches = sorted(set(t for t in tokens if t in AI_SKILLS_SET))
     return ", ".join(matches)
-

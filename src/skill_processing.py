@@ -4,7 +4,7 @@
 
 import pandas as pd
 
-from ai_skills import find_ai_matches
+from .ai_skills import find_ai_matches
 
 
 def annotate_declared_skills(df: pd.DataFrame) -> pd.DataFrame:
@@ -21,4 +21,3 @@ def annotate_declared_skills(df: pd.DataFrame) -> pd.DataFrame:
         lambda s: int(bool(s))
     )
     return annotated_df
-

@@ -6,10 +6,10 @@ from __future__ import annotations
 
 import pandas as pd
 
-from data_io import load_input_data, reorder_columns, save_results
-from models import JobAnalysisResult
-from openai_analyzer import OpenAIJobAnalyzer
-from skill_processing import annotate_declared_skills
+from .data_io import load_input_data, reorder_columns, save_results
+from .models import JobAnalysisResult
+from .openai_analyzer import OpenAIJobAnalyzer
+from .skill_processing import annotate_declared_skills
 
 
 class JobAnalysisPipeline:
@@ -42,4 +42,3 @@ class JobAnalysisPipeline:
     @staticmethod
     def _as_joined_skills(result: JobAnalysisResult) -> str:
         return ", ".join(result.ai_skills_mentioned)
-

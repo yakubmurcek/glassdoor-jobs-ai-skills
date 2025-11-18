@@ -8,15 +8,15 @@ from typing import Any, Optional
 
 from openai import OpenAI
 
-from config import (
+from .config import (
     MAX_JOB_DESC_LENGTH,
     OPENAI_API_KEY,
     OPENAI_MODEL,
     OPENAI_TEMPERATURE,
     RATE_LIMIT_DELAY,
 )
-from models import JobAnalysisResult
-from prompts import job_analysis_instructions, job_analysis_prompt
+from .models import JobAnalysisResult
+from .prompts import job_analysis_instructions, job_analysis_prompt
 
 
 class OpenAIJobAnalyzer:
