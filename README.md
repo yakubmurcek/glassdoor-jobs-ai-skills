@@ -42,23 +42,23 @@ Options:
 ### Run the OpenAI analysis
 
 ```bash
-python -m ai_skills.cli analyze
+python -m ai_skills.cli analyze --input-csv data/inputs/us_relevant_100.csv
 ```
 
 By default this shows a progress bar and writes the enriched file specified by
-`OUTPUT_CSV` in `ai_skills/config_settings.py`. Add `--no-progress` if you are piping
-logs to a file, `--input-csv path/to/file.csv` to analyze a different dataset, and
-`--output-csv path/to/result.csv` to pick a custom destination. When you only set
-`--input-csv`, the CLI automatically writes to
+`OUTPUT_CSV` in `ai_skills/config_settings.py`. Pass the dataset you want to process
+via `--input-csv` (required) and add `--no-progress` if you are piping logs to a
+file. Provide `--output-csv path/to/result.csv` to pick a custom destination. When
+you only set `--input-csv`, the CLI automatically writes to
 `data/outputs/<input_stem>_ai<suffix>`.
 
 ### Legacy shorthand
 
-`python main.py` now delegates to the same CLI and still runs the `analyze`
-command so existing instructions keep working. You can also forward options, e.g.
+`python main.py` now delegates to the same CLI and still defaults to the `analyze`
+command, but you must pass the same required flags. For example:
 
 ```bash
-python main.py analyze --no-progress
+python main.py analyze --input-csv data/inputs/us_relevant_100.csv --no-progress
 ```
 
 Run `python -m ai_skills.cli --help` for the full command reference.

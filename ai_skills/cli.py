@@ -66,8 +66,8 @@ def build_parser() -> argparse.ArgumentParser:
     analyze.add_argument(
         "--input-csv",
         type=Path,
-        default=None,
-        help="Override the CSV file to analyze instead of the configured INPUT_CSV.",
+        required=True,
+        help="CSV file to analyze (usually the output from prepare-inputs).",
     )
     analyze.add_argument(
         "--output-csv",
