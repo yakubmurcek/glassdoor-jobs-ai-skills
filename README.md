@@ -14,7 +14,8 @@ without guessing which script to execute.
 2. Create a `.env` file with a valid `OPENAI_API_KEY` (do not store the key in
    source files).
 3. Place the raw CSV file under `data/inputs/us_relevant.csv` or adjust the
-   paths inside `ai_skills/config_settings.py`.
+   paths inside `config/settings.toml` (copy it to
+   `config/settings.local.toml` if you want developer-specific overrides).
 
 ## 2. Command-line usage
 
@@ -46,7 +47,7 @@ python -m ai_skills.cli analyze --input-csv data/inputs/us_relevant_100.csv
 ```
 
 By default this shows a progress bar and writes the enriched file specified by
-`OUTPUT_CSV` in `ai_skills/config_settings.py`. Pass the dataset you want to process
+`OUTPUT_CSV` in `config/settings.toml`. Pass the dataset you want to process
 via `--input-csv` (required) and add `--no-progress` if you are piping logs to a
 file. Provide `--output-csv path/to/result.csv` to pick a custom destination. When
 you only set `--input-csv`, the CLI automatically writes to
@@ -62,3 +63,13 @@ python main.py analyze --input-csv data/inputs/us_relevant_100.csv --no-progress
 ```
 
 Run `python -m ai_skills.cli --help` for the full command reference.
+
+## 3. Configuration model
+
+- Shared defaults live in `config/settings.toml`.
+- Create `config/settings.local.toml` (ignored by git) for machine-specific overrides.
+- Secrets such as `OPENAI_API_KEY` must remain in `.env` or environment variables.
+
+Both TOML files support the `paths`, `openai`, and `processing` sections. Any value
+in the local file overrides the shared defaults, while environment variables remain
+the final source of truth for sensitive credentials.

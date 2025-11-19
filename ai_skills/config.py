@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 """Configuration settings for the AI skills analysis project.
 
-Edit `config_settings.py` to customize paths, OpenAI parameters, or limits.
-Values from that file take precedence over environment variables or `.env`,
-except for credentials such as `OPENAI_API_KEY`, which must come from the
-environment for security reasons.
+Defaults now live in `config/settings.toml`, with optional overrides in
+`config/settings.local.toml`. Values from those files take precedence over
+environment variables or `.env`, except for credentials such as
+`OPENAI_API_KEY`, which must come from the environment for security reasons.
 This module still exposes three structured sections:
 
 * `PATHS` - where data is read/written
@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 from dotenv import load_dotenv
+from .settings_loader import load_user_config
 
 # Resolve project root and load environment variables
 PACKAGE_DIR = Path(__file__).parent.resolve()
@@ -31,15 +32,7 @@ PROJECT_ROOT = PACKAGE_DIR.parent
 env_path = PROJECT_ROOT / ".env"
 load_dotenv(dotenv_path=env_path)
 
-try:
-    from .config_settings import get_user_config
-except ImportError:
-    def get_user_config(_: Path) -> Dict[str, Any]:
-        """Fallback when config_settings.py is absent."""
-        return {}
-
-
-USER_CONFIG = get_user_config(PROJECT_ROOT)
+USER_CONFIG = load_user_config(PROJECT_ROOT)
 
 
 def _get_raw_setting(env_var: str) -> Optional[Any]:

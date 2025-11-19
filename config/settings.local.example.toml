@@ -1,0 +1,16 @@
+# Example overrides. Copy this file to `config/settings.local.toml` and edit
+# the values to customize your environment without touching tracked files.
+
+[paths]
+# input_csv = "data/inputs/us_relevant_100.csv"
+# output_csv = "data/outputs/us_relevant_ai_100.csv"
+
+[openai]
+# model = "gpt-4o-mini"
+# temperature = 0.1
+# rate_limit_delay = 0.1
+# batch_size = 20
+# max_parallel_requests = 3
+
+[processing]
+# max_job_desc_length = 8000

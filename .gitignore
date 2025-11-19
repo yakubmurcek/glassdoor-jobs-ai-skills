@@ -161,6 +161,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+config/settings.local.toml
 
 # Spyder project settings
 .spyderproject
