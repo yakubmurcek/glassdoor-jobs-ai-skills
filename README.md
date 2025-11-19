@@ -28,6 +28,8 @@ Create a smaller CSV that downstream steps will consume:
 
 ```bash
 python -m ai_skills.cli prepare-inputs --rows 100
+# or, equivalently:
+python extract_csv.py --rows 100
 ```
 
 Options:
