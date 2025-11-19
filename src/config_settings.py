@@ -25,7 +25,7 @@ def get_user_config(project_root: Path) -> Dict[str, Any]:
     data_dir = project_root / "data"
     inputs_dir = data_dir / "inputs"
     outputs_dir = data_dir / "outputs"
-    input_csv = inputs_dir / "us_relevant_50.csv"
+    input_csv = inputs_dir / "us_relevant_100.csv"
     output_filename = f"{input_csv.stem}_ai{input_csv.suffix}"
     output_csv = outputs_dir / output_filename
     # Example: generate a custom filename dynamically
