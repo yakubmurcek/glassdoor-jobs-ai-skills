@@ -273,6 +273,19 @@ class OpenAIJobAnalyzer:
                 }
             },
         )
+        
+        # Log token usage including cache hits
+        usage = getattr(response, "usage", None)
+        if usage:
+            input_tokens = getattr(usage, "input_tokens", 0)
+            output_tokens = getattr(usage, "output_tokens", 0)
+            details = getattr(usage, "input_tokens_details", None)
+            cached_tokens = getattr(details, "cached_tokens", 0) if details else 0
+            print(
+                f"[OpenAI] Batch of {len(batch_items)}: "
+                f"input={input_tokens}, cached={cached_tokens}, output={output_tokens}"
+            )
+        
         return self._extract_response_text(response)
 
     @staticmethod
