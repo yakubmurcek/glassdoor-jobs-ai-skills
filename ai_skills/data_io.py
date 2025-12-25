@@ -29,12 +29,16 @@ def load_input_data(path=INPUT_CSV) -> pd.DataFrame:
         logger.error(f"Failed to read input CSV: {e}")
         raise
 
+    return _ensure_required_columns(df)
+
+
+def _ensure_required_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Ensure all required columns exist and are treated as strings."""
     for column in REQUIRED_COLUMNS:
         if column not in df.columns:
             logger.warning(f"Missing required column '{column}' - filling with empty strings.")
             df[column] = ""
         df[column] = df[column].fillna("").astype(str)
-
     return df
 
 

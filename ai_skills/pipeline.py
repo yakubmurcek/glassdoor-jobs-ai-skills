@@ -77,24 +77,23 @@ class JobAnalysisPipeline:
             job_texts, job_titles=job_titles, progress_callback=progress_callback
         )
 
-        # Convert results to a list of dicts for efficient DataFrame creation
-        # We start with the dict form, but we might want to respect the None logic from before
-        # if preserving "sparsity" is important. However, explicit "none" is usually better for data analysis.
-        # I will use the robust values.
-        
+        return self._merge_results_into_df(annotated_df, results)
+
+    def _merge_results_into_df(
+        self, df: pd.DataFrame, results: List[JobAnalysisResult]
+    ) -> pd.DataFrame:
+        """Merge analysis results into the DataFrame."""
         result_dicts = [r.as_columns() for r in results]
         results_df = pd.DataFrame(result_dicts)
         
-        # Concatenate columns. We reset index to ensure alignment, although strictly lists are ordered.
-        # Using simple assignment is safer if indices match.
         for col in results_df.columns:
-            annotated_df[col] = results_df[col].values
+            df[col] = results_df[col].values
 
         # Compute agreement between hard-coded skill matcher and OpenAI classification
         # A job is considered "AI" if tier is not "none"
-        annotated_df["AI_skill_agreement"] = (
-            annotated_df["AI_skill_hard"] == (annotated_df["AI_tier_openai"] != "none").astype(int)
+        df["AI_skill_agreement"] = (
+            df["AI_skill_hard"] == (df["AI_tier_openai"] != "none").astype(int)
         ).astype(int)
         
-        return annotated_df
+        return df
 

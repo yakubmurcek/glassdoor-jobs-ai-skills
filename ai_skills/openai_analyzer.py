@@ -74,30 +74,53 @@ class OpenAIJobAnalyzer:
         results: list[JobAnalysisResult] = [
             JobAnalysisResult() for _ in normalized_texts
         ]
-        total_trackable = sum(1 for text in normalized_texts if text is not None)
+        
+        reporter = self._setup_progress_reporter(
+            normalized_texts, progress_callback
+        )
 
-        if progress_callback and total_trackable:
-            progress_callback(0, total_trackable)
+        pending_batches = self._create_batches(normalized_texts, titles)
+        
+        self._process_batches(
+            pending_batches, results, progress_reporter=reporter
+        )
+
+        return results
+
+    def _setup_progress_reporter(
+        self,
+        normalized_texts: list[Optional[str]],
+        progress_callback: Callable[[int, int], None] | None,
+    ) -> Callable[[int], None] | None:
+        """Create a thread-safe progress reporter."""
+        total_trackable = sum(1 for text in normalized_texts if text is not None)
+        if not progress_callback or not total_trackable:
+            return None
+
+        progress_callback(0, total_trackable)
         processed_counter = 0
         progress_lock = threading.Lock()
 
         def report_progress(increment: int) -> None:
             nonlocal processed_counter
-            if (
-                not progress_callback
-                or total_trackable == 0
-                or increment <= 0
-            ):
+            if increment <= 0:
                 return
             with progress_lock:
-                processed_counter = min(
-                    total_trackable, processed_counter + increment
-                )
-                progress_callback(processed_counter, total_trackable)
+                processed_counter = min(total_trackable, processed_counter + increment)
+                progress_callback(processed_counter, total_trackable)  # type: ignore
 
+        return report_progress
+
+    def _create_batches(
+        self, 
+        normalized_texts: list[Optional[str]], 
+        titles: list[str]
+    ) -> list[tuple[list[tuple[str, str, str]], dict[str, int]]]:
+        """Group texts into batches for API processing."""
         pending_batches: list[tuple[list[tuple[str, str, str]], dict[str, int]]] = []
         batch: list[tuple[str, str, str]] = []
         index_lookup: dict[str, int] = {}
+
         for idx, text in enumerate(normalized_texts):
             if not text:
                 continue
@@ -105,6 +128,7 @@ class OpenAIJobAnalyzer:
             title = titles[idx] if idx < len(titles) else ""
             batch.append((job_id, title, text))
             index_lookup[job_id] = idx
+            
             if len(batch) >= self.batch_size:
                 pending_batches.append((batch, index_lookup))
                 batch = []
@@ -112,12 +136,8 @@ class OpenAIJobAnalyzer:
 
         if batch:
             pending_batches.append((batch, index_lookup))
-
-        self._process_batches(
-            pending_batches, results, progress_reporter=report_progress
-        )
-
-        return results
+            
+        return pending_batches
 
     def _prepare_text(self, job_desc_text: Optional[str]) -> Optional[str]:
         if job_desc_text is None:
@@ -139,17 +159,38 @@ class OpenAIJobAnalyzer:
         *,
         progress_reporter: Callable[[int], None] | None = None,
     ) -> None:
+        """Route batch processing to sequential or parallel execution."""
         if not pending_batches:
             return
 
         max_workers = min(self.max_concurrent_requests, len(pending_batches))
         if max_workers <= 1:
-            for batch, lookup in pending_batches:
-                self._dispatch_batch(
-                    batch, lookup, results, progress_reporter=progress_reporter
-                )
-            return
+            self._process_batches_sequentially(
+                pending_batches, results, progress_reporter
+            )
+        else:
+            self._process_batches_in_parallel(
+                pending_batches, results, max_workers, progress_reporter
+            )
 
+    def _process_batches_sequentially(
+        self,
+        pending_batches: list[tuple[list[tuple[str, str, str]], dict[str, int]]],
+        results: list[JobAnalysisResult],
+        progress_reporter: Callable[[int], None] | None = None,
+    ) -> None:
+        for batch, lookup in pending_batches:
+            self._dispatch_batch(
+                batch, lookup, results, progress_reporter=progress_reporter
+            )
+
+    def _process_batches_in_parallel(
+        self,
+        pending_batches: list[tuple[list[tuple[str, str, str]], dict[str, int]]],
+        results: list[JobAnalysisResult],
+        max_workers: int,
+        progress_reporter: Callable[[int], None] | None = None,
+    ) -> None:
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = [
                 executor.submit(
@@ -206,8 +247,6 @@ class OpenAIJobAnalyzer:
         prompt = job_analysis_batch_prompt(batch_items)
         
         try:
-            # User instructions suggest using the Responses API via client.responses.parse
-            # We supply the Pydantic model via text_format.
             response = self.client.responses.parse(
                 model=self.model,
                 input=[
@@ -218,43 +257,42 @@ class OpenAIJobAnalyzer:
                 temperature=self.temperature,
             )
             
-            # The parsed response object (ParsedResponse) typically holds the result 
-            # in an attribute. Based on search results and typical generic patterns:
-            # It might be in 'output', 'parsed', or 'output_parsed'.
-            # We check the likely candidates.
-            batch_response = None
-            
-            # 1. Check if 'output' is the model instance
-            if hasattr(response, "output") and isinstance(response.output, BatchAnalysisResponse):
-                batch_response = response.output
-            # 2. Check 'output_parsed'
-            elif hasattr(response, "output_parsed") and response.output_parsed:
-                batch_response = response.output_parsed
-            # 3. Check 'parsed' (like in beta.chat)
-            elif hasattr(response, "parsed") and response.parsed:
-                batch_response = response.parsed
-            
+            batch_response = self._extract_parsed_response(response)
             if not batch_response:
-                # If we couldn't find it, log available keys for debugging
-                logger.error(f"Could not find parsed model in response. attributes: {dir(response)}")
                 return []
 
-            # Log token usage
-            usage = getattr(response, "usage", None)
-            if usage:
-                # Usage object might have different fields in Responses API
-                input_tokens = getattr(usage, "input_tokens", getattr(usage, "prompt_tokens", 0))
-                output_tokens = getattr(usage, "output_tokens", getattr(usage, "completion_tokens", 0))
-                logger.info(
-                    f"[OpenAI] Batch of {len(batch_items)}: "
-                    f"input={input_tokens}, output={output_tokens}"
-                )
-            
+            self._log_token_usage(response, len(batch_items))
             return batch_response.results
 
         except Exception as e:
             logger.error(f"OpenAI API call failed: {e}")
             raise
+
+    def _extract_parsed_response(self, response: Any) -> BatchAnalysisResponse | None:
+        """Extract the parsed model from the API response object."""
+        # 1. Check if 'output' is the model instance
+        if hasattr(response, "output") and isinstance(response.output, BatchAnalysisResponse):
+            return response.output
+        # 2. Check 'output_parsed'
+        elif hasattr(response, "output_parsed") and response.output_parsed:
+            return response.output_parsed
+        # 3. Check 'parsed' (like in beta.chat)
+        elif hasattr(response, "parsed") and response.parsed:
+            return response.parsed
+        
+        logger.error(f"Could not find parsed model in response. attributes: {dir(response)}")
+        return None
+
+    def _log_token_usage(self, response: Any, batch_count: int) -> None:
+        """Log input and output token counts."""
+        usage = getattr(response, "usage", None)
+        if usage:
+            input_tokens = getattr(usage, "input_tokens", getattr(usage, "prompt_tokens", 0))
+            output_tokens = getattr(usage, "output_tokens", getattr(usage, "completion_tokens", 0))
+            logger.info(
+                f"[OpenAI] Batch of {batch_count}: "
+                f"input={input_tokens}, output={output_tokens}"
+            )
 
     @staticmethod
     def _to_result(result_with_id: JobAnalysisResultWithId) -> JobAnalysisResult:
