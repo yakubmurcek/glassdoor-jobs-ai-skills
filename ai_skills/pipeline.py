@@ -72,17 +72,28 @@ class JobAnalysisPipeline:
         return annotated_df
 
     @staticmethod
-    def _as_indicator(result: JobAnalysisResult) -> int:
+    def _as_indicator(result: JobAnalysisResult) -> int | None:
+        # Return None if this looks like an unprocessed default result
+        if not result.has_ai_skill and result.confidence == 0.0 and not result.ai_skills_mentioned:
+            return None
         return int(result.has_ai_skill)
 
     @staticmethod
-    def _as_joined_skills(result: JobAnalysisResult) -> str:
+    def _as_joined_skills(result: JobAnalysisResult) -> str | None:
+        if not result.ai_skills_mentioned:
+            return None
         return ", ".join(result.ai_skills_mentioned)
 
     @staticmethod
-    def _as_confidence(result: JobAnalysisResult) -> float:
+    def _as_confidence(result: JobAnalysisResult) -> float | None:
+        # Return None if this looks like an unprocessed default result
+        if not result.has_ai_skill and result.confidence == 0.0 and not result.ai_skills_mentioned:
+            return None
         return result.confidence
 
     @staticmethod
-    def _as_rationale(result: JobAnalysisResult) -> str:
+    def _as_rationale(result: JobAnalysisResult) -> str | None:
+        if not result.rationale:
+            return None
         return result.rationale
+

@@ -210,13 +210,28 @@ class OpenAIJobAnalyzer:
     ) -> None:
         response_payload = self._call_openai_batch(batch)
         parsed_entries = self._parse_batch_response(response_payload)
+        
+        # Track which job IDs we received results for
+        received_ids = set()
         for entry in parsed_entries:
             job_id = entry.id
+            received_ids.add(job_id)
             if job_id not in index_lookup:
                 continue
             results[index_lookup[job_id]] = self._to_result(entry)
+        
+        # Validate that we got all expected results
+        expected_ids = set(index_lookup.keys())
+        missing_ids = expected_ids - received_ids
+        if missing_ids:
+            print(
+                f"Warning: OpenAI returned {len(parsed_entries)}/{len(batch)} results. "
+                f"Missing IDs: {sorted(missing_ids)}"
+            )
+        
         if progress_reporter:
             progress_reporter(len(index_lookup))
+
 
         time.sleep(self.delay_seconds)
 
