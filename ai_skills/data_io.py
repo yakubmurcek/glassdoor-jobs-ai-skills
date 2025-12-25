@@ -15,7 +15,7 @@ REQUIRED_COLUMNS: Sequence[str] = ("skills", "job_desc_text")
 def load_input_data(path=INPUT_CSV) -> pd.DataFrame:
     """Read the raw CSV and normalize required columns."""
     csv_path = Path(path)
-    df = pd.read_csv(csv_path, sep=";", dtype=str, low_memory=False)
+    df = pd.read_csv(csv_path, sep=";", dtype=str, low_memory=False, encoding="utf-8-sig")
 
     for column in REQUIRED_COLUMNS:
         if column not in df.columns:
@@ -35,4 +35,4 @@ def save_results(df: pd.DataFrame, path=OUTPUT_CSV) -> None:
     """Persist the final DataFrame as a CSV file."""
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_csv(output_path, sep=";", index=False)
+    df.to_csv(output_path, sep=";", index=False, encoding="utf-8-sig")
