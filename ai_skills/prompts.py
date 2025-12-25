@@ -8,24 +8,38 @@ from textwrap import dedent
 def job_analysis_instructions() -> str:
     """Return the static instructions for the OpenAI job analysis prompt."""
     template = """
-Classify if a job requires hands-on AI/ML work: building, training, fine-tuning, deploying, or maintaining ML/DL models, LLMs, or AI systems.
+Classify each job into one of four AI involvement tiers based on the PRIMARY responsibilities:
 
-YES (AI/ML work):
-- Train/deploy ML models, fine-tune LLMs, build inference pipelines
-- Work with PyTorch/TensorFlow/scikit-learn for modeling
-- Design model architectures, evaluate ML performance, develop RAG pipelines
+**core_ai**: Building AI systems from scratch (RARE - most jobs don't qualify)
+  - Designing novel model architectures from the ground up
+  - Pre-training foundation models, training models from scratch
+  - ML/AI research, publishing papers, algorithm development
+  - Building custom neural networks (not just using existing ones)
+  
+**applied_ai**: Meaningful hands-on AI work using existing frameworks
+  - Fine-tuning LLMs or other pre-trained models
+  - Building ML pipelines with TensorFlow, PyTorch, scikit-learn
+  - Feature engineering, model evaluation, hyperparameter tuning
+  - MLOps, model deployment, inference optimization
+  - Building RAG pipelines, embeddings, vector search
 
-NO (NOT AI/ML work):
-- Software engineering at AI companies without modeling tasks
-- Using AI products/dashboards without building models
-- Backend/frontend/API work even if company is "AI-powered"
-- Mentions of AI only in company description or marketing
+**ai_integration**: Using AI as a tool (NOT developing/training models)
+  - Calling OpenAI/Claude/Anthropic APIs from application code
+  - Integrating pre-built AI services (no training involved)
+  - Using Copilot, ChatGPT, or AI coding assistants
+  - Consuming AI outputs without understanding/modifying models
+
+**none**: No AI involvement in job responsibilities
+  - Standard software engineering (web, mobile, backend)
+  - Mentions "AI" only in company description or marketing
+  - Working at an "AI company" but role is non-AI (HR, sales, ops)
 
 CRITICAL RULES:
-1. Words like "AI", "AI-powered", "AI startup" do NOT imply AI/ML work
-2. General engineering (React, Flask, Node, SQL, DevOps, APIs) is NEVER AI work
-3. Never infer AI skills from company description or product marketing
-4. No explicit model tasks = has_ai_skill: false, ai_skills_mentioned: []
+1. Judge by ACTUAL JOB DUTIES, not company description or buzzwords
+2. "AI-powered company" does NOT mean the job involves AI work
+3. Using TensorFlow/PyTorch for inference-only = ai_integration, NOT applied_ai
+4. Fine-tuning = applied_ai; Prompt engineering only = ai_integration
+5. When uncertain, lean toward the LOWER tier (e.g., none over ai_integration)
     """
     return dedent(template).strip()
 
@@ -45,7 +59,7 @@ def job_analysis_batch_prompt(batch_items: list[tuple[str, str]]) -> str:
         """
         Analyze each of the following job descriptions independently.
         Return a JSON object with a top-level `results` array.
-        Each entry must include: id, has_ai_skill, ai_skills_mentioned, confidence.
+        Each entry must include: id, ai_tier (one of: core_ai, applied_ai, ai_integration, none), ai_skills_mentioned, confidence, rationale.
         """
     ).strip()
 

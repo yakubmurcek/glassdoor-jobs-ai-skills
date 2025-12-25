@@ -2,15 +2,25 @@
 # -*- coding: utf-8 -*-
 """Shared Pydantic models used across the analysis pipeline."""
 
+from enum import Enum
 from typing import List
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
+class AITier(str, Enum):
+    """Classification tier for AI involvement in a job."""
+
+    CORE_AI = "core_ai"  # Building AI from scratch (model architecture, training, ML research)
+    APPLIED_AI = "applied_ai"  # Meaningful AI work using frameworks (fine-tuning, TensorFlow, MLOps)
+    AI_INTEGRATION = "ai_integration"  # Using AI as a tool (OpenAI API, Copilot, ChatGPT)
+    NONE = "none"  # No AI involvement
+
+
 class JobAnalysisResult(BaseModel):
     """Normalized representation of OpenAI analysis output."""
 
-    has_ai_skill: bool = False
+    ai_tier: AITier = AITier.NONE
     ai_skills_mentioned: List[str] = Field(default_factory=list)
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     rationale: str = ""
@@ -24,23 +34,27 @@ class JobAnalysisResult(BaseModel):
     def as_columns(self) -> dict:
         """Map the result to the output DataFrame columns."""
         return {
-            "AI_skill_openai": int(self.has_ai_skill),
+            "AI_tier_openai": self.ai_tier.value,
             "AI_skills_openai_mentioned": ", ".join(self.ai_skills_mentioned),
             "AI_skill_openai_confidence": self.confidence,
             "AI_skill_openai_rationale": self.rationale,
         }
 
-    model_config = ConfigDict(frozen=True)  # Maintain immutability like the original dataclass
+    model_config = ConfigDict(frozen=True)
 
 
 class JobAnalysisResultWithId(BaseModel):
-    """Job analysis result with ID field for batch responses."""
+    """Job analysis result with ID field for batch responses.
+    
+    Note: This model is used for OpenAI structured output, which requires
+    all fields to be explicitly present (no defaults with $ref types).
+    """
 
     id: str
-    has_ai_skill: bool = False
-    ai_skills_mentioned: List[str] = Field(default_factory=list)
-    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
-    rationale: str = ""
+    ai_tier: AITier  # No default - required by OpenAI
+    ai_skills_mentioned: List[str]  # No default - required by OpenAI
+    confidence: float = Field(ge=0.0, le=1.0)  # No default - required by OpenAI
+    rationale: str  # No default - required by OpenAI
 
     @field_validator("confidence")
     @classmethod
@@ -51,7 +65,7 @@ class JobAnalysisResultWithId(BaseModel):
     def to_job_analysis_result(self) -> JobAnalysisResult:
         """Convert to JobAnalysisResult by removing the id field."""
         return JobAnalysisResult(
-            has_ai_skill=self.has_ai_skill,
+            ai_tier=self.ai_tier,
             ai_skills_mentioned=self.ai_skills_mentioned,
             confidence=self.confidence,
             rationale=self.rationale,

@@ -64,7 +64,29 @@ python main.py analyze --input-csv data/inputs/us_relevant_100.csv --no-progress
 
 Run `python -m ai_skills.cli --help` for the full command reference.
 
-## 3. Configuration model
+## 3. View results
+
+Use the included CSV viewer to inspect output files with colored formatting:
+
+```bash
+./show_csv.py data/outputs/us_relevant_30-new-3.csv
+```
+
+Or without the executable flag:
+
+```bash
+.venv/bin/python show_csv.py data/outputs/us_relevant_30-new-3.csv
+```
+
+Select specific columns with `-c`:
+
+```bash
+./show_csv.py data/outputs/file.csv -c title tier conf
+```
+
+Available columns: `title`, `tier`, `conf`, `hard`, `agree`, `skills_hard`, `skills_openai`
+
+## 4. Configuration model
 
 - Shared defaults live in `config/settings.toml`.
 - Create `config/settings.local.toml` (ignored by git) for machine-specific overrides.

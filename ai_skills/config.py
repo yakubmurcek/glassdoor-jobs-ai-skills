@@ -160,7 +160,7 @@ DEFAULT_COLUMN_ORDER: Tuple[str, ...] = (
     "job_desc_text",
     "AI_skills_found",
     "AI_skill_hard",
-    "AI_skill_openai",
+    "AI_tier_openai",
     "AI_skill_openai_confidence",
     "AI_skills_openai_mentioned",
     "AI_skill_openai_rationale",

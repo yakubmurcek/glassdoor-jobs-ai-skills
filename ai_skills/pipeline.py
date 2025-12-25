@@ -55,7 +55,7 @@ class JobAnalysisPipeline:
         results = self.analyzer.analyze_texts(
             job_texts, progress_callback=progress_callback
         )
-        annotated_df["AI_skill_openai"] = [self._as_indicator(r) for r in results]
+        annotated_df["AI_tier_openai"] = [self._as_tier(r) for r in results]
         annotated_df["AI_skills_openai_mentioned"] = [
             self._as_joined_skills(r) for r in results
         ]
@@ -66,17 +66,18 @@ class JobAnalysisPipeline:
             self._as_rationale(r) for r in results
         ]
         # Compute agreement between hard-coded skill matcher and OpenAI classification
+        # A job is considered "AI" if tier is not "none"
         annotated_df["AI_skill_agreement"] = (
-            annotated_df["AI_skill_hard"] == annotated_df["AI_skill_openai"]
+            annotated_df["AI_skill_hard"] == (annotated_df["AI_tier_openai"] != "none").astype(int)
         ).astype(int)
         return annotated_df
 
     @staticmethod
-    def _as_indicator(result: JobAnalysisResult) -> int | None:
+    def _as_tier(result: JobAnalysisResult) -> str | None:
         # Return None if this looks like an unprocessed default result
-        if not result.has_ai_skill and result.confidence == 0.0 and not result.ai_skills_mentioned:
+        if result.ai_tier.value == "none" and result.confidence == 0.0 and not result.ai_skills_mentioned:
             return None
-        return int(result.has_ai_skill)
+        return result.ai_tier.value
 
     @staticmethod
     def _as_joined_skills(result: JobAnalysisResult) -> str | None:
@@ -87,7 +88,7 @@ class JobAnalysisPipeline:
     @staticmethod
     def _as_confidence(result: JobAnalysisResult) -> float | None:
         # Return None if this looks like an unprocessed default result
-        if not result.has_ai_skill and result.confidence == 0.0 and not result.ai_skills_mentioned:
+        if result.ai_tier.value == "none" and result.confidence == 0.0 and not result.ai_skills_mentioned:
             return None
         return result.confidence
 
