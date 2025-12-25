@@ -13,7 +13,7 @@ output_csv = "data/outputs/us_relevant_ai_50.csv"
 model = "gpt-4o-mini"
 temperature = 0.1
 rate_limit_delay = 0.1
-batch_size = 40
+batch_size = 20
 max_parallel_requests = 3
 
 [processing]
