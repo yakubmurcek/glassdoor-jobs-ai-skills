@@ -251,7 +251,7 @@ AI_SKILLS = [
     "text generation",
     "text-generation",
     "prompt engineering",
-    "prompt"
+    "prompt",
     # Vision / Speech
     "computer vision",
     "image recognition",
