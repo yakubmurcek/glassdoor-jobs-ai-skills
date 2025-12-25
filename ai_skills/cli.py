@@ -94,6 +94,24 @@ def _handle_prepare_inputs(args: argparse.Namespace) -> int:
     return 0
 
 
+def _get_versioned_output_path(base_dir: Path, stem: str, suffix: str) -> Path:
+    """Generate a versioned output path to avoid overwriting existing files.
+    
+    If no file exists, returns {stem}_ai{suffix}.
+    If {stem}_ai{suffix} exists, returns {stem}_ai_v1{suffix}, then _v2, etc.
+    """
+    base_path = base_dir / f"{stem}_ai{suffix}"
+    if not base_path.exists():
+        return base_path
+    
+    version = 1
+    while True:
+        versioned_path = base_dir / f"{stem}_ai_v{version}{suffix}"
+        if not versioned_path.exists():
+            return versioned_path
+        version += 1
+
+
 def _handle_analyze(args: argparse.Namespace) -> int:
     from .config import OUTPUT_CSV, PATHS  # Imported lazily to avoid requiring an API key early.
     from .pipeline import JobAnalysisPipeline
@@ -108,7 +126,7 @@ def _handle_analyze(args: argparse.Namespace) -> int:
     output_path: Path | None = args.output_csv
     if output_path is None and args.input_csv is not None:
         input_path = Path(args.input_csv)
-        output_path = PATHS.outputs_dir / f"{input_path.stem}_ai{input_path.suffix}"
+        output_path = _get_versioned_output_path(PATHS.outputs_dir, input_path.stem, input_path.suffix)
 
     start_time = time.perf_counter()
     try:

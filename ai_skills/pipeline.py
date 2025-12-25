@@ -52,8 +52,12 @@ class JobAnalysisPipeline:
             None if pd.isna(text) else str(text)
             for text in annotated_df["job_desc_text"].tolist()
         ]
+        job_titles = [
+            "" if pd.isna(title) else str(title)
+            for title in annotated_df["job_title"].tolist()
+        ]
         results = self.analyzer.analyze_texts(
-            job_texts, progress_callback=progress_callback
+            job_texts, job_titles=job_titles, progress_callback=progress_callback
         )
         annotated_df["AI_tier_openai"] = [self._as_tier(r) for r in results]
         annotated_df["AI_skills_openai_mentioned"] = [

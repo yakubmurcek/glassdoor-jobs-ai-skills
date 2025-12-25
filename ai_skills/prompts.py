@@ -10,13 +10,14 @@ def job_analysis_instructions() -> str:
     template = """
 Classify each job into one of four AI involvement tiers based on the PRIMARY responsibilities:
 
-**core_ai**: Building AI systems from scratch (RARE - most jobs don't qualify)
+**core_ai**: THE ENGINEER DIRECTLY DEVELOPS/TRAINS AI MODELS (VERY RARE)
   - Designing novel model architectures from the ground up
   - Pre-training foundation models, training models from scratch
   - ML/AI research, publishing papers, algorithm development
   - Building custom neural networks (not just using existing ones)
+  - Not just building features around AI — must directly contribute to AI/ML work
   
-**applied_ai**: Meaningful hands-on AI work using existing frameworks
+**applied_ai**: Meaningful hands-on AI/ML work using existing frameworks
   - Fine-tuning LLMs or other pre-trained models
   - Building ML pipelines with TensorFlow, PyTorch, scikit-learn
   - Feature engineering, model evaluation, hyperparameter tuning
@@ -40,6 +41,11 @@ CRITICAL RULES:
 3. Using TensorFlow/PyTorch for inference-only = ai_integration, NOT applied_ai
 4. Fine-tuning = applied_ai; Prompt engineering only = ai_integration
 5. When uncertain, lean toward the LOWER tier (e.g., none over ai_integration)
+
+COMMON MISTAKES TO AVOID:
+- Full-stack engineer at an "AI-powered platform" building React/Python features = **none** or **ai_integration**, NOT core_ai
+- Building UI/backend for an AI product without touching ML code = **none** or **ai_integration**
+- core_ai is ONLY for roles where ML model development is the PRIMARY duty
     """
     return dedent(template).strip()
 
@@ -53,8 +59,12 @@ def job_analysis_prompt(job_description: str) -> str:
     return dedent(template).strip().format(job_description=job_description)
 
 
-def job_analysis_batch_prompt(batch_items: list[tuple[str, str]]) -> str:
-    """Build a prompt covering multiple job descriptions in a single request."""
+def job_analysis_batch_prompt(batch_items: list[tuple[str, str, str]]) -> str:
+    """Build a prompt covering multiple job descriptions in a single request.
+    
+    Args:
+        batch_items: List of tuples (identifier, job_title, description)
+    """
     header = dedent(
         """
         Analyze each of the following job descriptions independently.
@@ -64,11 +74,12 @@ def job_analysis_batch_prompt(batch_items: list[tuple[str, str]]) -> str:
     ).strip()
 
     body_parts = []
-    for identifier, description in batch_items:
+    for identifier, title, description in batch_items:
         body_parts.append(
             dedent(
                 f"""
                 Job id: {identifier}
+                Job Title: {title}
                 Job Description:
                 {description}
                 """

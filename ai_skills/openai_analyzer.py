@@ -102,6 +102,7 @@ class OpenAIJobAnalyzer:
         self,
         job_desc_texts: Sequence[Optional[str]],
         *,
+        job_titles: Sequence[str] | None = None,
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> list[JobAnalysisResult]:
         """Analyze multiple job descriptions using batched OpenAI requests."""
@@ -109,6 +110,8 @@ class OpenAIJobAnalyzer:
             return []
 
         normalized_texts = [self._prepare_text(text) for text in job_desc_texts]
+        # Default to empty titles if not provided
+        titles = list(job_titles) if job_titles else [""] * len(normalized_texts)
         results: list[JobAnalysisResult] = [
             JobAnalysisResult() for _ in normalized_texts
         ]
@@ -133,14 +136,15 @@ class OpenAIJobAnalyzer:
                 )
                 progress_callback(processed_counter, total_trackable)
 
-        pending_batches: list[tuple[list[tuple[str, str]], dict[str, int]]] = []
-        batch: list[tuple[str, str]] = []
+        pending_batches: list[tuple[list[tuple[str, str, str]], dict[str, int]]] = []
+        batch: list[tuple[str, str, str]] = []
         index_lookup: dict[str, int] = {}
         for idx, text in enumerate(normalized_texts):
             if not text:
                 continue
             job_id = f"job_{idx}"
-            batch.append((job_id, text))
+            title = titles[idx] if idx < len(titles) else ""
+            batch.append((job_id, title, text))
             index_lookup[job_id] = idx
             if len(batch) >= self.batch_size:
                 pending_batches.append((batch, index_lookup))
@@ -170,7 +174,7 @@ class OpenAIJobAnalyzer:
 
     def _process_batches(
         self,
-        pending_batches: list[tuple[list[tuple[str, str]], dict[str, int]]],
+        pending_batches: list[tuple[list[tuple[str, str, str]], dict[str, int]]],
         results: list[JobAnalysisResult],
         *,
         progress_reporter: Callable[[int], None] | None = None,
@@ -202,7 +206,7 @@ class OpenAIJobAnalyzer:
 
     def _dispatch_batch(
         self,
-        batch: list[tuple[str, str]],
+        batch: list[tuple[str, str, str]],
         index_lookup: dict[str, int],
         results: list[JobAnalysisResult],
         *,
@@ -235,7 +239,7 @@ class OpenAIJobAnalyzer:
 
         time.sleep(self.delay_seconds)
 
-    def _call_openai_batch(self, batch_items: list[tuple[str, str]]) -> str:
+    def _call_openai_batch(self, batch_items: list[tuple[str, str, str]]) -> str:
         system_prompt = (
             "You are an expert at analyzing job descriptions for AI and "
             "machine learning skills. Always respond with valid JSON only.\n\n"
