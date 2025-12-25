@@ -75,9 +75,10 @@ HARD RULES (CRITICAL):
 
 Output JSON example:
 {
-  "ai_job": true or false,
-  "rationale": "short explanation",
-  "confidence": 0-1
+  "has_ai_skill": true or false,
+  "ai_skills_mentioned": ["skill1", "skill2"],
+  "confidence": 0.0 to 1.0,
+  "rationale": "Brief explanation of why this job does or does not involve AI/ML work"
 }
     """
     return dedent(template).strip()

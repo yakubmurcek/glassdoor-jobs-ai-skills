@@ -13,6 +13,7 @@ class JobAnalysisResult(BaseModel):
     has_ai_skill: bool = False
     ai_skills_mentioned: List[str] = Field(default_factory=list)
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    rationale: str = ""
 
     @field_validator("confidence")
     @classmethod
@@ -26,6 +27,7 @@ class JobAnalysisResult(BaseModel):
             "AI_skill_openai": int(self.has_ai_skill),
             "AI_skills_openai_mentioned": ", ".join(self.ai_skills_mentioned),
             "AI_skill_openai_confidence": self.confidence,
+            "AI_skill_openai_rationale": self.rationale,
         }
 
     model_config = ConfigDict(frozen=True)  # Maintain immutability like the original dataclass
@@ -38,6 +40,7 @@ class JobAnalysisResultWithId(BaseModel):
     has_ai_skill: bool = False
     ai_skills_mentioned: List[str] = Field(default_factory=list)
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    rationale: str = ""
 
     @field_validator("confidence")
     @classmethod
@@ -51,6 +54,7 @@ class JobAnalysisResultWithId(BaseModel):
             has_ai_skill=self.has_ai_skill,
             ai_skills_mentioned=self.ai_skills_mentioned,
             confidence=self.confidence,
+            rationale=self.rationale,
         )
 
     model_config = ConfigDict(frozen=True)

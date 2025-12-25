@@ -62,6 +62,13 @@ class JobAnalysisPipeline:
         annotated_df["AI_skill_openai_confidence"] = [
             self._as_confidence(r) for r in results
         ]
+        annotated_df["AI_skill_openai_rationale"] = [
+            self._as_rationale(r) for r in results
+        ]
+        # Compute agreement between hard-coded skill matcher and OpenAI classification
+        annotated_df["AI_skill_agreement"] = (
+            annotated_df["AI_skill_hard"] == annotated_df["AI_skill_openai"]
+        ).astype(int)
         return annotated_df
 
     @staticmethod
@@ -75,3 +82,7 @@ class JobAnalysisPipeline:
     @staticmethod
     def _as_confidence(result: JobAnalysisResult) -> float:
         return result.confidence
+
+    @staticmethod
+    def _as_rationale(result: JobAnalysisResult) -> str:
+        return result.rationale
