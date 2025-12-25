@@ -46,6 +46,16 @@ COMMON MISTAKES TO AVOID:
 - Full-stack engineer at an "AI-powered platform" building React/Python features = **none** or **ai_integration**, NOT core_ai
 - Building UI/backend for an AI product without touching ML code = **none** or **ai_integration**
 - core_ai is ONLY for roles where ML model development is the PRIMARY duty
+
+EXAMPLES (for calibration):
+- "ML Engineer training LLMs from scratch" → core_ai
+- "AI Researcher publishing papers on novel architectures" → core_ai
+- "Data Scientist fine-tuning models, building ML pipelines" → applied_ai
+- "MLOps Engineer deploying models, building inference servers" → applied_ai
+- "Backend dev calling OpenAI API" → ai_integration
+- "Developer using GitHub Copilot for coding" → ai_integration
+- "Fullstack engineer at AI company, builds React/Flask features" → none
+- "Software engineer, company mentions AI but role is standard web dev" → none
     """
     return dedent(template).strip()
 
