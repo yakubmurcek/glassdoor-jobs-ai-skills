@@ -36,6 +36,9 @@ def colorize(text: str, color: str) -> str:
 
 def format_value(col_key: str, value, width: int) -> str:
     """Format a cell value with optional coloring."""
+    if value is None:
+        return " " * width
+
     if col_key == "tier":
         if value == "none":
             return " " * width
@@ -43,20 +46,36 @@ def format_value(col_key: str, value, width: int) -> str:
         return colorize(tier_str, COLORS.get(value, ""))
     elif col_key == "conf":
         if pd.notna(value):
-            conf_str = f"{value:.2f}"
-            if value <= 0.75:
-                return colorize(conf_str, RED)
-            elif value < 0.85:
-                return colorize(conf_str, YELLOW)
-            return conf_str
-        return " N/A"
+            try:
+                val_float = float(value)
+                conf_str = f"{val_float:.2f}"
+                if val_float <= 0.75:
+                    return colorize(conf_str, RED)
+                elif val_float < 0.85:
+                    return colorize(conf_str, YELLOW)
+                return conf_str
+            except (ValueError, TypeError):
+                return f"{str(value)[:width]:<{width}}"
+        return " " * width
     elif col_key == "hard":
-        return colorize(" Yes", GREEN) if value else "  No"
+        # Check explicit True/False or 1/0, carefully handling None
+        if pd.isna(value):
+             return " " * width
+        val_bool = bool(int(value)) if str(value).isdigit() else bool(value)
+        return colorize(" Yes", GREEN) if val_bool else "  No"
     elif col_key == "agree":
-        return colorize(" Yes", GREEN) if value else colorize("  No", RED)
+        if pd.isna(value):
+             return " " * width
+        # agreement is usually 1 or 0
+        try:
+            val_bool = bool(int(value))
+            return colorize(" Yes", GREEN) if val_bool else colorize("  No", RED)
+        except (ValueError, TypeError):
+             return " " * width
     elif col_key in ("skills_hard", "skills_openai"):
         s = str(value) if pd.notna(value) else ""
-        s = "" if s == "nan" else s[:width]
+        s = "" if s.lower() == "nan" else s
+        s = s[:width]
         return f"{s:<{width}}"
     else:
         s = str(value)[:width] if pd.notna(value) else ""
@@ -64,15 +83,27 @@ def format_value(col_key: str, value, width: int) -> str:
 
 def show_csv(filepath: str, sep: str, cols: list):
     """Display CSV with distribution and all rows."""
-    df = pd.read_csv(filepath, sep=sep)
-    df["job_title_short"] = df["job_title"].str[:40]
-    
-    # Show AI tier distribution
-    print(f"{BOLD}AI_tier_openai distribution:{RESET}")
-    counts = df["AI_tier_openai"].value_counts()
-    for tier, count in counts.items():
-        color = COLORS.get(tier, "")
-        print(f"  {colorize(f'{tier:<14}', color)} {count}")
+    try:
+        df = pd.read_csv(filepath, sep=sep, encoding="utf-8-sig", low_memory=False)
+    except Exception as e:
+        print(f"{RED}Error reading CSV: {e}{RESET}")
+        sys.exit(1)
+
+    # Ensure job_title exists
+    if "job_title" in df.columns:
+        df["job_title_short"] = df["job_title"].fillna("").astype(str).str[:40]
+    else:
+        df["job_title_short"] = ""
+
+    # Show AI tier distribution only if column exists
+    if "AI_tier_openai" in df.columns:
+        print(f"{BOLD}AI_tier_openai distribution:{RESET}")
+        counts = df["AI_tier_openai"].value_counts()
+        for tier, count in counts.items():
+            color = COLORS.get(tier, "")
+            print(f"  {colorize(f'{tier:<14}', color)} {count}")
+    else:
+        print(f"{YELLOW}No AI tier data found.{RESET}")
     print()
     
     # Build header
