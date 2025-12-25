@@ -40,11 +40,12 @@ CRITICAL RULES:
 2. "AI-powered company" does NOT mean the job involves AI work
 3. Using TensorFlow/PyTorch for inference-only = ai_integration, NOT applied_ai
 4. Fine-tuning = applied_ai; Prompt engineering only = ai_integration
-5. When uncertain, lean toward the LOWER tier (e.g., none over ai_integration)
+5. When uncertain, ALWAYS choose the LOWER tier — it's better to under-classify than over-classify
 
 COMMON MISTAKES TO AVOID:
-- Full-stack engineer at an "AI-powered platform" building React/Python features = **none** or **ai_integration**, NOT core_ai
-- Building UI/backend for an AI product without touching ML code = **none** or **ai_integration**
+- Full-stack engineer at an "AI-powered platform" building React/Python features = **none**, NOT applied_ai
+- Building UI/backend for an AI product without touching ML code = **none**
+- applied_ai requires HANDS-ON work with ML models (training, tuning, pipelines) — not just building around them
 - core_ai is ONLY for roles where ML model development is the PRIMARY duty
 
 EXAMPLES (for calibration):
