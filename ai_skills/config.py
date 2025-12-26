@@ -164,7 +164,11 @@ DEFAULT_COLUMN_ORDER: Tuple[str, ...] = (
     "AI_skill_openai_confidence",
     "AI_skills_openai_mentioned",
     "AI_skill_openai_rationale",
+    "hardskills_dict",
+    "hardskills_llm",
     "hardskills",
+    "softskills_dict",
+    "softskills_llm",
     "softskills",
     "AI_skill_agreement",
 )

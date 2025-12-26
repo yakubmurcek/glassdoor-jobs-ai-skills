@@ -62,15 +62,28 @@ EXAMPLES (for calibration):
 
 ALSO EXTRACT SKILLS:
 
-**hardskills_raw**: Technical skills EXPLICITLY mentioned in job requirements. Include:
-- Programming languages: python, java, javascript, typescript, sql, c#, c++, go, rust, etc.
-- Frameworks: react, angular, vue, django, flask, spring, .net, etc.
-- Databases: postgresql, mysql, mongodb, redis, elasticsearch, etc.
-- Cloud: aws, azure, gcp, docker, kubernetes, terraform, etc.
-- Tools: git, jira, jenkins, ci/cd, linux, etc.
-- Data: spark, airflow, pandas, etl, data warehouses, etc.
-- Security: cybersecurity, firewall, vpn, siem, etc.
-- Methodologies: agile, scrum, devops, tdd, etc.
+**hardskills_raw**: Extract ALL technical skills EXPLICITLY mentioned in job requirements. Be COMPREHENSIVE — include EVERY technical term, tool, framework, or technology mentioned. Categories include but are NOT limited to:
+- Programming languages: python, java, javascript, typescript, sql, c#, c++, go, rust, kotlin, scala, ruby, php, swift, r, etc.
+- Frontend frameworks: react, angular, vue, svelte, next.js, nuxt, etc.
+- Backend frameworks: spring boot, django, flask, fastapi, express, nest.js, .net, rails, etc.
+- State management: redux, ngrx, rxjs, vuex, mobx, zustand, recoil, etc.
+- Databases: postgresql, mysql, mongodb, redis, elasticsearch, cassandra, dynamodb, sqlite, oracle, sql server, etc.
+- Cloud & DevOps: aws, azure, gcp, docker, kubernetes, terraform, ansible, helm, etc.
+- CI/CD & Build tools: jenkins, github actions, gitlab ci, circleci, maven, gradle, webpack, vite, etc.
+- Testing frameworks: junit, mockito, jest, jasmine, karma, mocha, chai, pytest, selenium, cypress, playwright, testng, etc.
+- APIs & Protocols: rest, restful api, graphql, grpc, websocket, soap, openapi, swagger, etc.
+- Architecture patterns: microservices, monolith, serverless, event-driven, cqrs, etc.
+- Version control: git, github, gitlab, bitbucket, svn, etc.
+- Messaging: kafka, rabbitmq, sqs, pubsub, redis streams, etc.
+- Monitoring & Logging: prometheus, grafana, datadog, splunk, elk stack, new relic, etc.
+- Data & ETL: spark, airflow, pandas, dbt, snowflake, databricks, hadoop, etc.
+- Security: oauth, jwt, ssl/tls, encryption, authentication, authorization, etc.
+- Methodologies: agile, scrum, kanban, devops, tdd, bdd, ci/cd, etc.
+- Web technologies: html, html5, css, css3, sass, less, tailwind, bootstrap, etc.
+- Mobile: react native, flutter, swift, kotlin, ios, android, etc.
+- Other tools & libraries: any other technical skills explicitly mentioned
+
+CRITICAL: Extract EVERY technical skill/tool/framework/protocol mentioned. Do NOT limit to the examples above — these are just common categories. If it's a technical term, include it.
 
 **softskills_raw**: Interpersonal/behavioral traits EXPLICITLY mentioned:
 - communication skills, collaboration, teamwork, leadership
