@@ -93,6 +93,11 @@ class EvaluationReport:
     evaluation_timestamp: str
     total_jobs: int
     
+    # Column info
+    baseline_columns: int
+    candidate_columns: int
+    new_columns: list[str]
+    
     # Core metrics
     match_count: int
     match_rate: float
@@ -266,11 +271,19 @@ class PipelineEvaluator:
         # Skills stats
         avg_hard, avg_soft = self._skills_stats(self.candidate_df)
         
+        # New columns
+        baseline_cols = set(self.baseline_df.columns)
+        candidate_cols = set(self.candidate_df.columns)
+        new_cols = sorted(candidate_cols - baseline_cols)
+        
         return EvaluationReport(
             baseline_path=str(self.baseline_path),
             candidate_path=str(self.candidate_path),
             evaluation_timestamp=datetime.now().isoformat(),
             total_jobs=len(self.baseline_df),
+            baseline_columns=len(self.baseline_df.columns),
+            candidate_columns=len(self.candidate_df.columns),
+            new_columns=new_cols,
             match_count=match_count,
             match_rate=match_rate,
             baseline_tier_distribution=self._tier_distribution(self.baseline_df),
