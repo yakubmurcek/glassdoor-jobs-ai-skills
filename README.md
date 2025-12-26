@@ -1,5 +1,7 @@
 # AI Skills Analyzer
 
+> **Thesis Context**: This project is part of a master's thesis in Economics. The main goal is to analyze current skills wanted in US vs EU job postings to compare the respective job markets.
+
 Evaluate job descriptions for AI-related skills using a reproducible CLI
 workflow. The project ships with a small orchestration layer so you and your
 advisor can prepare sample data and run the full OpenAI-powered analysis
