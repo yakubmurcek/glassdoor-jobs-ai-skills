@@ -77,6 +77,53 @@ def build_parser() -> argparse.ArgumentParser:
     )
     analyze.set_defaults(func=_handle_analyze)
 
+    # Evaluate command
+    evaluate = sub.add_parser(
+        "evaluate",
+        help="Compare baseline and candidate CSV outputs to evaluate changes.",
+    )
+    evaluate.add_argument(
+        "--baseline",
+        type=Path,
+        required=True,
+        help="Baseline CSV (previous/known-good output).",
+    )
+    evaluate.add_argument(
+        "--candidate",
+        type=Path,
+        required=True,
+        help="Candidate CSV (new output to evaluate).",
+    )
+    evaluate.add_argument(
+        "--output-dir",
+        type=Path,
+        default=None,
+        help="Directory for report outputs (default: same as candidate).",
+    )
+    evaluate.add_argument(
+        "--no-chart",
+        action="store_true",
+        help="Skip generating comparison chart.",
+    )
+    evaluate.add_argument(
+        "--min-match-rate",
+        type=float,
+        default=0.85,
+        help="Minimum match rate threshold for warnings (default: 0.85).",
+    )
+    evaluate.add_argument(
+        "--min-agreement",
+        type=float,
+        default=0.80,
+        help="Minimum agreement rate threshold for warnings (default: 0.80).",
+    )
+    evaluate.add_argument(
+        "--no-history",
+        action="store_true",
+        help="Skip saving evaluation to history.",
+    )
+    evaluate.set_defaults(func=_handle_evaluate)
+
     return parser
 
 
@@ -145,6 +192,82 @@ def _handle_analyze(args: argparse.Namespace) -> int:
         f"Added AI columns and saved results to {(output_path or OUTPUT_CSV)}. "
         f"(Elapsed: {elapsed:.1f}s)"
     )
+    return 0
+
+
+def _handle_evaluate(args: argparse.Namespace) -> int:
+    import json
+    from .evaluator import PipelineEvaluator, EvaluationThresholds, save_evaluation_history
+    from .chart_generator import generate_comparison_chart
+
+    # Determine output directory
+    output_dir = args.output_dir or args.candidate.parent
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Configure thresholds
+    thresholds = EvaluationThresholds(
+        min_match_rate=args.min_match_rate,
+        min_agreement_rate=args.min_agreement,
+    )
+
+    print(f"Comparing baseline: {args.baseline.name}")
+    print(f"      vs candidate: {args.candidate.name}")
+    print()
+
+    # Run evaluation
+    evaluator = PipelineEvaluator(
+        baseline_path=args.baseline,
+        candidate_path=args.candidate,
+        thresholds=thresholds,
+    )
+    report = evaluator.compare()
+
+    # Print summary
+    print(f"Match rate: {report.match_rate:.1%} ({report.match_count}/{report.total_jobs})")
+    print(f"Changes:    {len(report.changes)}")
+    if report.warnings:
+        print()
+        for w in report.warnings:
+            icon = "🔴" if w.level == "critical" else "🟡"
+            print(f"{icon} {w.message}")
+    print()
+
+    # Generate outputs
+    outputs_generated = []
+
+    # 1. Markdown report
+    md_path = output_dir / "evaluation_report.md"
+    md_path.write_text(report.to_markdown())
+    outputs_generated.append(f"Report:       {md_path}")
+
+    # 2. JSON output
+    json_path = output_dir / "evaluation.json"
+    with open(json_path, "w") as f:
+        json.dump(report.to_json(), f, indent=2)
+    outputs_generated.append(f"JSON:         {json_path}")
+
+    # 3. Disagreements CSV
+    if report.changes:
+        disagree_path = output_dir / "disagreements.csv"
+        evaluator.export_disagreements(disagree_path)
+        outputs_generated.append(f"Disagreements: {disagree_path}")
+
+    # 4. Comparison chart
+    if not args.no_chart:
+        chart_path = output_dir / "comparison_chart.png"
+        generate_comparison_chart(report, chart_path)
+        outputs_generated.append(f"Chart:        {chart_path}")
+
+    # 5. History tracking
+    if not args.no_history:
+        history_dir = output_dir / "evaluation_history"
+        history_path = save_evaluation_history(report, history_dir)
+        outputs_generated.append(f"History:      {history_path}")
+
+    print("Generated outputs:")
+    for out in outputs_generated:
+        print(f"  {out}")
+
     return 0
 
 
