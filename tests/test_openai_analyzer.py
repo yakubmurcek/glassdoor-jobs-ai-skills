@@ -2,17 +2,29 @@
 import unittest
 from unittest.mock import MagicMock, patch
 from ai_skills.openai_analyzer import OpenAIJobAnalyzer
-from ai_skills.models import JobAnalysisResult, BatchAnalysisResponse, JobAnalysisResultWithId
+from ai_skills.models import (
+    JobAnalysisResult, 
+    BatchAnalysisResponse, 
+    JobAnalysisResultWithId,
+    AITierBatchResponse,
+    AITierResultWithId,
+    SkillsBatchResponse,
+    SkillsResultWithId,
+    EducationBatchResponse,
+    EducationResultWithId,
+)
 
 class TestOpenAIJobAnalyzer(unittest.TestCase):
     def setUp(self):
         # Patch the OpenAI client creation so we don't need a real API key
         with patch('ai_skills.openai_analyzer.OpenAI'):
-            self.analyzer = OpenAIJobAnalyzer(api_key="fake-key")
+            # Test with legacy monolithic mode for backwards compatibility
+            self.analyzer = OpenAIJobAnalyzer(api_key="fake-key", use_decomposed=False)
             # Mock the client.responses.parse method
             self.analyzer.client.responses = MagicMock()
 
     def test_analyze_texts_chunking_and_logic(self):
+        """Test legacy monolithic batching still works."""
         # Create dummy inputs
         texts = ["text1", "text2", "text3"]
         titles = ["title1", "title2", "title3"]
@@ -74,7 +86,73 @@ class TestOpenAIJobAnalyzer(unittest.TestCase):
         
         # Verify the client was called twice (batch size 2, total 3 items)
         self.assertEqual(self.analyzer.client.responses.parse.call_count, 2)
-        print("Test passed: Logic flow handles batching and response parsing correctly.")
+        print("Test passed: Legacy monolithic batching works correctly.")
+
+
+class TestDecomposedAnalyzer(unittest.TestCase):
+    """Test the new decomposed task-based batching."""
+    
+    def setUp(self):
+        with patch('ai_skills.openai_analyzer.OpenAI'):
+            self.analyzer = OpenAIJobAnalyzer(api_key="fake-key", use_decomposed=True)
+            self.analyzer.client.responses = MagicMock()
+
+    def test_decomposed_combines_task_results(self):
+        """Test that decomposed mode combines results from 3 tasks correctly."""
+        texts = ["ML Engineer job description", "Web dev job description"]
+        titles = ["ML Engineer", "Web Developer"]
+        
+        # Mock responses for each task
+        # Task 1: AI Tier
+        tier_response = MagicMock()
+        tier_response.output = AITierBatchResponse(results=[
+            AITierResultWithId(id="job_0", ai_tier="applied_ai", confidence=0.9, rationale="ML work"),
+            AITierResultWithId(id="job_1", ai_tier="none", confidence=0.95, rationale="Standard web dev"),
+        ])
+        
+        # Task 2: Skills
+        skills_response = MagicMock()
+        skills_response.output = SkillsBatchResponse(results=[
+            SkillsResultWithId(id="job_0", ai_skills_mentioned=["tensorflow"], hardskills_raw=["python", "tensorflow"], softskills_raw=["teamwork"]),
+            SkillsResultWithId(id="job_1", ai_skills_mentioned=[], hardskills_raw=["javascript", "react"], softskills_raw=["communication"]),
+        ])
+        
+        # Task 3: Education
+        edu_response = MagicMock()
+        edu_response.output = EducationBatchResponse(results=[
+            EducationResultWithId(id="job_0", education_required=1),
+            EducationResultWithId(id="job_1", education_required=0),
+        ])
+        
+        # Return different responses for each task call
+        self.analyzer.client.responses.parse.side_effect = [
+            tier_response,    # AI Tier task
+            skills_response,  # Skills task
+            edu_response,     # Education task
+        ]
+        
+        results = self.analyzer.analyze_texts(texts, job_titles=titles)
+        
+        # Verify results are combined correctly
+        self.assertEqual(len(results), 2)
+        
+        # Job 0: ML Engineer
+        self.assertEqual(results[0].ai_tier, "applied_ai")
+        self.assertEqual(results[0].confidence, 0.9)
+        self.assertEqual(results[0].ai_skills_mentioned, ["tensorflow"])
+        self.assertEqual(results[0].hardskills_raw, ["python", "tensorflow"])
+        self.assertEqual(results[0].education_required, 1)
+        
+        # Job 1: Web Developer
+        self.assertEqual(results[1].ai_tier, "none")
+        self.assertEqual(results[1].ai_skills_mentioned, [])
+        self.assertEqual(results[1].hardskills_raw, ["javascript", "react"])
+        self.assertEqual(results[1].education_required, 0)
+        
+        # Verify 3 API calls (one per task)
+        self.assertEqual(self.analyzer.client.responses.parse.call_count, 3)
+        print("Test passed: Decomposed task-based batching combines results correctly.")
+
 
 if __name__ == '__main__':
     unittest.main()

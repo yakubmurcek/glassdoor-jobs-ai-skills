@@ -90,8 +90,75 @@ class JobAnalysisResultWithId(BaseModel):
 
 
 class BatchAnalysisResponse(BaseModel):
-    """Response model for batch job analysis from OpenAI."""
+    """Response model for batch job analysis from OpenAI (legacy monolithic)."""
 
     results: List[JobAnalysisResultWithId]
+
+    model_config = ConfigDict(frozen=True)
+
+
+# =============================================================================
+# Task-Specific Models for Decomposed Batching
+# =============================================================================
+# Each task has its own focused model with minimal fields.
+# This allows 4o-mini/Gemma to focus on one thing at a time.
+
+
+class AITierResultWithId(BaseModel):
+    """Task 1: AI tier classification result."""
+
+    id: str
+    ai_tier: AITier
+    confidence: float = Field(ge=0.0, le=1.0)
+    rationale: str
+
+    @field_validator("confidence")
+    @classmethod
+    def validate_confidence(cls, v: float) -> float:
+        return max(0.0, min(1.0, float(v)))
+
+    model_config = ConfigDict(frozen=True)
+
+
+class AITierBatchResponse(BaseModel):
+    """Batch response for AI tier classification task."""
+
+    results: List[AITierResultWithId]
+
+    model_config = ConfigDict(frozen=True)
+
+
+class SkillsResultWithId(BaseModel):
+    """Task 2: Skills extraction result."""
+
+    id: str
+    ai_skills_mentioned: List[str]
+    hardskills_raw: List[str]
+    softskills_raw: List[str]
+
+    model_config = ConfigDict(frozen=True)
+
+
+class SkillsBatchResponse(BaseModel):
+    """Batch response for skills extraction task."""
+
+    results: List[SkillsResultWithId]
+
+    model_config = ConfigDict(frozen=True)
+
+
+class EducationResultWithId(BaseModel):
+    """Task 3: Education requirement result."""
+
+    id: str
+    education_required: int = Field(ge=0, le=1)
+
+    model_config = ConfigDict(frozen=True)
+
+
+class EducationBatchResponse(BaseModel):
+    """Batch response for education requirement task."""
+
+    results: List[EducationResultWithId]
 
     model_config = ConfigDict(frozen=True)

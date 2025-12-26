@@ -1,12 +1,35 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Houses editable prompt templates for OpenAI calls."""
+"""Prompt templates for LLM job analysis.
+
+This module contains two sets of prompts:
+
+1. LEGACY (monolithic): `job_analysis_instructions()` + `job_analysis_batch_prompt()`
+   - Single prompt asks for ALL fields at once (tier, skills, education)
+   - Used when OpenAIJobAnalyzer(use_decomposed=False)
+   - Kept for backwards compatibility
+
+2. DECOMPOSED (default): Task-specific prompts
+   - `ai_tier_*`: AI tier classification only
+   - `skills_*`: Skills extraction only  
+   - `education_*`: Education requirement only
+   - Each task runs separately with focused prompts for better accuracy
+   - Used when OpenAIJobAnalyzer(use_decomposed=True) [default]
+"""
 
 from textwrap import dedent
 
 
+# =============================================================================
+# LEGACY MONOLITHIC PROMPTS (use_decomposed=False)
+# =============================================================================
+# These prompts ask the LLM to do multiple tasks at once.
+# Kept for backwards compatibility but decomposed mode is recommended.
+
+
 def job_analysis_instructions() -> str:
-    """Return the static instructions for the OpenAI job analysis prompt."""
+    """System prompt for legacy monolithic mode (all tasks in one prompt)."""
+
     template = """
 Classify each job into one of four AI involvement tiers based on the PRIMARY responsibilities:
 
@@ -119,20 +142,14 @@ EXAMPLES:
     return dedent(template).strip()
 
 
-def job_analysis_prompt(job_description: str) -> str:
-    """Generate the user prompt that only contains the job description text."""
-    template = """
-    Job Description:
-    {job_description}
-    """
-    return dedent(template).strip().format(job_description=job_description)
-
-
 def job_analysis_batch_prompt(batch_items: list[tuple[str, str, str]]) -> str:
     """Build a prompt covering multiple job descriptions in a single request.
     
     Args:
         batch_items: List of tuples (identifier, job_title, description)
+    
+    Note: This is the legacy monolithic prompt. Consider using task-specific
+    prompts (ai_tier_*, skills_*, education_*) for better accuracy.
     """
     header = dedent(
         """
@@ -155,3 +172,162 @@ def job_analysis_batch_prompt(batch_items: list[tuple[str, str, str]]) -> str:
             ).strip()
         )
     return f"{header}\n\n" + "\n\n".join(body_parts)
+
+
+# =============================================================================
+# Task-Specific Prompts for Decomposed Batching
+# =============================================================================
+# Each prompt focuses on ONE task only, reducing cognitive load on the model.
+
+
+def ai_tier_instructions() -> str:
+    """Focused instructions ONLY for AI tier classification."""
+    template = """
+Classify each job into one of four AI involvement tiers based on the PRIMARY responsibilities:
+
+**core_ai**: THE ENGINEER DIRECTLY DEVELOPS/TRAINS AI MODELS (VERY RARE)
+  - Designing novel model architectures from the ground up
+  - Pre-training foundation models, training models from scratch
+  - ML/AI research, publishing papers, algorithm development
+  - Building custom neural networks (not just using existing ones)
+  
+**applied_ai**: Meaningful hands-on AI/ML work using existing frameworks
+  - Fine-tuning LLMs or other pre-trained models
+  - Building ML pipelines with TensorFlow, PyTorch, scikit-learn
+  - Feature engineering, model evaluation, hyperparameter tuning
+  - MLOps, model deployment, inference optimization
+  - Building RAG pipelines, embeddings, vector search
+
+**ai_integration**: Using AI as a tool (NOT developing/training models)
+  - Calling OpenAI/Claude/Anthropic APIs from application code
+  - Integrating pre-built AI services (no training involved)
+  - Using Copilot, ChatGPT, or AI coding assistants
+
+**none**: No AI involvement in job responsibilities
+  - Standard software engineering (web, mobile, backend)
+  - Mentions "AI" only in company description or marketing
+  - Working at an "AI company" but role is non-AI (HR, sales, ops)
+
+CRITICAL RULES:
+1. Judge by ACTUAL JOB DUTIES, not company description or buzzwords
+2. "AI-powered company" does NOT mean the job involves AI work
+3. Using TensorFlow/PyTorch for inference-only = ai_integration, NOT applied_ai
+4. Fine-tuning = applied_ai; Prompt engineering only = ai_integration
+5. When uncertain, ALWAYS choose the LOWER tier
+
+EXAMPLES:
+- "ML Engineer training LLMs from scratch" → core_ai
+- "Data Scientist fine-tuning models, building ML pipelines" → applied_ai
+- "Backend dev calling OpenAI API" → ai_integration
+- "Fullstack engineer at AI company, builds React/Flask features" → none
+    """
+    return dedent(template).strip()
+
+
+def ai_tier_batch_prompt(batch_items: list[tuple[str, str, str]]) -> str:
+    """Build batch prompt for AI tier classification task.
+    
+    Args:
+        batch_items: List of tuples (identifier, job_title, description)
+    """
+    header = dedent(
+        """
+        For each job, return: id, ai_tier (core_ai/applied_ai/ai_integration/none), confidence (0.0-1.0), rationale (brief).
+        """
+    ).strip()
+
+    body_parts = []
+    for identifier, title, description in batch_items:
+        body_parts.append(f"[{identifier}] {title}\n{description}")
+    
+    return f"{header}\n\n" + "\n\n---\n\n".join(body_parts)
+
+
+def skills_instructions() -> str:
+    """Focused instructions ONLY for skills extraction."""
+    template = """
+Extract skills from each job description. Return three lists:
+
+**ai_skills_mentioned**: AI/ML specific skills mentioned:
+  - Frameworks: tensorflow, pytorch, keras, scikit-learn, huggingface
+  - Concepts: machine learning, deep learning, nlp, computer vision
+  - Tools: mlflow, kubeflow, sagemaker, vertex ai
+  - Terms: llm, transformer, embedding, fine-tuning, rag
+
+**hardskills_raw**: ALL technical skills EXPLICITLY mentioned:
+  - Programming languages, frameworks, databases, cloud platforms
+  - DevOps tools, CI/CD, testing frameworks, APIs
+  - Include EVERY technical term, tool, or technology mentioned
+
+**softskills_raw**: Interpersonal/behavioral traits EXPLICITLY mentioned:
+  - communication, collaboration, teamwork, leadership
+  - problem-solving, analytical thinking, attention to detail
+  - adaptability, initiative, mentorship
+
+RULES:
+1. Extract ONLY skills explicitly mentioned — do NOT infer
+2. Return raw skill names as written
+3. If a skill appears multiple times, include it once
+    """
+    return dedent(template).strip()
+
+
+def skills_batch_prompt(batch_items: list[tuple[str, str, str]]) -> str:
+    """Build batch prompt for skills extraction task.
+    
+    Args:
+        batch_items: List of tuples (identifier, job_title, description)
+    """
+    header = dedent(
+        """
+        For each job, return: id, ai_skills_mentioned (list), hardskills_raw (list), softskills_raw (list).
+        """
+    ).strip()
+
+    body_parts = []
+    for identifier, title, description in batch_items:
+        body_parts.append(f"[{identifier}] {title}\n{description}")
+    
+    return f"{header}\n\n" + "\n\n---\n\n".join(body_parts)
+
+
+def education_instructions() -> str:
+    """Focused instructions ONLY for education requirement detection."""
+    template = """
+Determine if education is REQUIRED or just preferred for each job.
+
+Return **1** if education appears under:
+  - Requirements, Must have, Required, Mandatory
+  - Prerequisite, Essential, Minimum qualifications
+
+Return **0** if education appears under:
+  - Preferred, Nice to have, Optional, Desired, Plus, Bonus
+  - Not mentioned or context is unclear
+
+EXAMPLES:
+- "Requirements: Bachelor's degree in CS" → 1
+- "Preferred: Master's degree" → 0
+- "Must have: BS/MS in Engineering" → 1
+- "Nice to have: Advanced degree" → 0
+- No education mentioned → 0
+    """
+    return dedent(template).strip()
+
+
+def education_batch_prompt(batch_items: list[tuple[str, str, str]]) -> str:
+    """Build batch prompt for education requirement task.
+    
+    Args:
+        batch_items: List of tuples (identifier, job_title, description)
+    """
+    header = dedent(
+        """
+        For each job, return: id, education_required (0 or 1).
+        """
+    ).strip()
+
+    body_parts = []
+    for identifier, title, description in batch_items:
+        body_parts.append(f"[{identifier}] {title}\n{description}")
+    
+    return f"{header}\n\n" + "\n\n---\n\n".join(body_parts)

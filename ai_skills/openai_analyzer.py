@@ -3,6 +3,7 @@
 """LLM API integration for analyzing job descriptions.
 
 Supports both OpenAI API and Ollama (via OpenAI-compatible endpoint).
+Now features decomposed task-based batching for improved accuracy.
 """
 
 import json
@@ -11,10 +12,10 @@ import re
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Callable, Optional, Sequence
+from typing import Any, Callable, Optional, Sequence, Type, TypeVar
 
 from openai import OpenAI
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from .config import (
     MAX_JOB_DESC_LENGTH,
@@ -27,16 +28,44 @@ from .config import (
     OPENAI_TEMPERATURE,
     RATE_LIMIT_DELAY,
 )
-from .models import BatchAnalysisResponse, JobAnalysisResult, JobAnalysisResultWithId
-from .prompts import job_analysis_batch_prompt, job_analysis_instructions
+from .models import (
+    AITierBatchResponse,
+    AITierResultWithId,
+    BatchAnalysisResponse,
+    EducationBatchResponse,
+    EducationResultWithId,
+    JobAnalysisResult,
+    JobAnalysisResultWithId,
+    SkillsBatchResponse,
+    SkillsResultWithId,
+)
+from .prompts import (
+    ai_tier_batch_prompt,
+    ai_tier_instructions,
+    education_batch_prompt,
+    education_instructions,
+    job_analysis_batch_prompt,
+    job_analysis_instructions,
+    skills_batch_prompt,
+    skills_instructions,
+)
 
 logger = logging.getLogger(__name__)
+
+# Type variable for generic batch response handling
+T = TypeVar("T", bound=BaseModel)
+
+# Task-specific batch sizes (optimized for 4o-mini / Gemma 12B)
+AI_TIER_BATCH_SIZE = 20      # Classification needs reasoning
+SKILLS_BATCH_SIZE = 20       # Extraction is moderately complex
+EDUCATION_BATCH_SIZE = 25    # Simple binary, larger batches OK
 
 
 class OpenAIJobAnalyzer:
     """Encapsulates the LLM client and response parsing logic.
     
     Supports both OpenAI API and Ollama (via OpenAI-compatible endpoint).
+    Uses decomposed task-based batching for improved accuracy.
     """
 
     def __init__(
@@ -50,6 +79,7 @@ class OpenAIJobAnalyzer:
         delay_seconds: float = RATE_LIMIT_DELAY,
         batch_size: int = OPENAI_BATCH_SIZE,
         max_concurrent_requests: int = OPENAI_MAX_PARALLEL_REQUESTS,
+        use_decomposed: bool = True,  # New: enable decomposed mode by default
     ) -> None:
         # Build client with optional base_url for Ollama support
         client_kwargs = {"api_key": api_key or "ollama"}
@@ -63,11 +93,15 @@ class OpenAIJobAnalyzer:
         self.delay_seconds = delay_seconds
         self.batch_size = max(1, batch_size)
         self.max_concurrent_requests = max(1, max_concurrent_requests)
+        self.use_decomposed = use_decomposed
         
         if self.provider == "ollama":
             logger.info(f"Using Ollama provider with model '{model}' at {base_url}")
         else:
             logger.info(f"Using OpenAI provider with model '{model}'")
+        
+        if self.use_decomposed:
+            logger.info("Decomposed task-based batching ENABLED")
 
     def analyze_text(
         self,
@@ -87,12 +121,312 @@ class OpenAIJobAnalyzer:
         job_titles: Sequence[str] | None = None,
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> list[JobAnalysisResult]:
-        """Analyze multiple job descriptions using batched OpenAI requests."""
+        """Analyze multiple job descriptions.
+        
+        Uses decomposed task-based batching if enabled (default), 
+        otherwise falls back to legacy monolithic batching.
+        """
         if not job_desc_texts:
             return []
 
+        if self.use_decomposed:
+            return self._analyze_texts_decomposed(
+                job_desc_texts, job_titles, progress_callback
+            )
+        else:
+            return self._analyze_texts_monolithic(
+                job_desc_texts, job_titles, progress_callback
+            )
+
+    # =========================================================================
+    # Decomposed Task-Based Analysis (NEW)
+    # =========================================================================
+
+    def _analyze_texts_decomposed(
+        self,
+        job_desc_texts: Sequence[Optional[str]],
+        job_titles: Sequence[str] | None,
+        progress_callback: Callable[[int, int], None] | None,
+    ) -> list[JobAnalysisResult]:
+        """Analyze texts using decomposed single-task prompts."""
         normalized_texts = [self._prepare_text(text) for text in job_desc_texts]
-        # Default to empty titles if not provided
+        titles = list(job_titles) if job_titles else [""] * len(normalized_texts)
+        
+        # Prepare batch items with IDs
+        batch_items: list[tuple[str, str, str]] = []
+        index_lookup: dict[str, int] = {}
+        for idx, text in enumerate(normalized_texts):
+            if not text:
+                continue
+            job_id = f"job_{idx}"
+            title = titles[idx] if idx < len(titles) else ""
+            batch_items.append((job_id, title, text))
+            index_lookup[job_id] = idx
+        
+        total_items = len(batch_items)
+        total_tasks = 3  # AI tier, Skills, Education
+        if progress_callback:
+            progress_callback(0, total_items * total_tasks)
+        
+        processed = 0
+        
+        # Task 1: AI Tier Classification
+        logger.info(f"Task 1/3: AI Tier Classification ({total_items} jobs)")
+        tier_results = self._run_task(
+            batch_items,
+            task_name="ai_tier",
+            batch_size=AI_TIER_BATCH_SIZE,
+            system_prompt=ai_tier_instructions(),
+            prompt_builder=ai_tier_batch_prompt,
+            response_model=AITierBatchResponse,
+        )
+        processed += total_items
+        if progress_callback:
+            progress_callback(processed, total_items * total_tasks)
+        
+        # Task 2: Skills Extraction
+        logger.info(f"Task 2/3: Skills Extraction ({total_items} jobs)")
+        skills_results = self._run_task(
+            batch_items,
+            task_name="skills",
+            batch_size=SKILLS_BATCH_SIZE,
+            system_prompt=skills_instructions(),
+            prompt_builder=skills_batch_prompt,
+            response_model=SkillsBatchResponse,
+        )
+        processed += total_items
+        if progress_callback:
+            progress_callback(processed, total_items * total_tasks)
+        
+        # Task 3: Education Required
+        logger.info(f"Task 3/3: Education Requirement ({total_items} jobs)")
+        edu_results = self._run_task(
+            batch_items,
+            task_name="education",
+            batch_size=EDUCATION_BATCH_SIZE,
+            system_prompt=education_instructions(),
+            prompt_builder=education_batch_prompt,
+            response_model=EducationBatchResponse,
+        )
+        processed += total_items
+        if progress_callback:
+            progress_callback(processed, total_items * total_tasks)
+        
+        # Combine results
+        return self._combine_decomposed_results(
+            normalized_texts, index_lookup, tier_results, skills_results, edu_results
+        )
+
+    def _run_task(
+        self,
+        all_items: list[tuple[str, str, str]],
+        *,
+        task_name: str,
+        batch_size: int,
+        system_prompt: str,
+        prompt_builder: Callable[[list[tuple[str, str, str]]], str],
+        response_model: Type[T],
+    ) -> dict[str, Any]:
+        """Run a single-task batch analysis with error isolation.
+        
+        Returns a dict mapping job_id -> task-specific result.
+        Failed items are retried individually before giving up.
+        """
+        results: dict[str, Any] = {}
+        failed_ids: list[str] = []
+        
+        # Process in batches
+        for i in range(0, len(all_items), batch_size):
+            batch = all_items[i:i + batch_size]
+            batch_ids = [item[0] for item in batch]
+            
+            try:
+                prompt = prompt_builder(batch)
+                response = self._call_llm_task(
+                    system_prompt, prompt, response_model, len(batch)
+                )
+                
+                # Match results by ID
+                for result in response.results:
+                    results[result.id] = result
+                
+                # Check for missing IDs
+                received_ids = {r.id for r in response.results}
+                for job_id in batch_ids:
+                    if job_id not in received_ids:
+                        failed_ids.append(job_id)
+                        logger.warning(f"[{task_name}] Missing result for {job_id}")
+                
+            except Exception as e:
+                logger.error(f"[{task_name}] Batch failed: {e}")
+                failed_ids.extend(batch_ids)
+            
+            time.sleep(self.delay_seconds)
+        
+        # Retry failed items individually (max 2 retries each)
+        if failed_ids:
+            logger.info(f"[{task_name}] Retrying {len(failed_ids)} failed items...")
+            items_by_id = {item[0]: item for item in all_items}
+            
+            for job_id in failed_ids:
+                item = items_by_id.get(job_id)
+                if not item:
+                    continue
+                
+                for attempt in range(2):
+                    try:
+                        prompt = prompt_builder([item])
+                        response = self._call_llm_task(
+                            system_prompt, prompt, response_model, 1
+                        )
+                        if response.results:
+                            results[job_id] = response.results[0]
+                            logger.info(f"[{task_name}] Retry succeeded for {job_id}")
+                            break
+                    except Exception as e:
+                        logger.warning(f"[{task_name}] Retry {attempt+1} failed for {job_id}: {e}")
+                        time.sleep(self.delay_seconds)
+        
+        return results
+
+    def _call_llm_task(
+        self,
+        system_prompt: str,
+        prompt: str,
+        response_model: Type[T],
+        batch_count: int,
+    ) -> T:
+        """Call LLM for a specific task with structured output."""
+        if self.provider == "ollama":
+            return self._call_ollama_task(system_prompt, prompt, response_model, batch_count)
+        else:
+            return self._call_openai_task(system_prompt, prompt, response_model, batch_count)
+
+    def _call_openai_task(
+        self,
+        system_prompt: str,
+        prompt: str,
+        response_model: Type[T],
+        batch_count: int,
+    ) -> T:
+        """Call OpenAI API with structured output for a specific task."""
+        response = self.client.responses.parse(
+            model=self.model,
+            input=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            text_format=response_model,
+            temperature=self.temperature,
+        )
+        
+        parsed = self._extract_parsed_response_generic(response, response_model)
+        if not parsed:
+            raise ValueError("Failed to parse OpenAI response")
+        
+        self._log_token_usage(response, batch_count)
+        return parsed
+
+    def _call_ollama_task(
+        self,
+        system_prompt: str,
+        prompt: str,
+        response_model: Type[T],
+        batch_count: int,
+    ) -> T:
+        """Call Ollama API with JSON mode for a specific task."""
+        # Generate schema hint from the response model
+        schema_hint = self._generate_schema_hint(response_model)
+        enhanced_system_prompt = system_prompt + "\n\n" + schema_hint
+        
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": enhanced_system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=self.temperature,
+        )
+        
+        content = response.choices[0].message.content
+        if not content:
+            raise ValueError("Ollama returned empty response")
+        
+        parsed = self._parse_json_response_generic(content, response_model)
+        self._log_token_usage(response, batch_count)
+        return parsed
+
+    def _generate_schema_hint(self, response_model: Type[T]) -> str:
+        """Generate a JSON schema hint for Ollama from a Pydantic model."""
+        schema = response_model.model_json_schema()
+        return f"You MUST respond with valid JSON matching this schema:\n{json.dumps(schema, indent=2)}"
+
+    def _parse_json_response_generic(self, content: str, response_model: Type[T]) -> T:
+        """Parse JSON response into a specific Pydantic model."""
+        # Handle markdown code blocks
+        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)```', content)
+        if json_match:
+            json_str = json_match.group(1).strip()
+        else:
+            json_str = content.strip()
+        
+        data = json.loads(json_str)
+        return response_model.model_validate(data)
+
+    def _extract_parsed_response_generic(
+        self, response: Any, response_model: Type[T]
+    ) -> T | None:
+        """Extract the parsed model from the API response object."""
+        if hasattr(response, "output") and isinstance(response.output, response_model):
+            return response.output
+        elif hasattr(response, "output_parsed") and response.output_parsed:
+            return response.output_parsed
+        elif hasattr(response, "parsed") and response.parsed:
+            return response.parsed
+        
+        logger.error(f"Could not find parsed model in response. attributes: {dir(response)}")
+        return None
+
+    def _combine_decomposed_results(
+        self,
+        normalized_texts: list[Optional[str]],
+        index_lookup: dict[str, int],
+        tier_results: dict[str, AITierResultWithId],
+        skills_results: dict[str, SkillsResultWithId],
+        edu_results: dict[str, EducationResultWithId],
+    ) -> list[JobAnalysisResult]:
+        """Combine results from all tasks into JobAnalysisResult objects."""
+        results: list[JobAnalysisResult] = [JobAnalysisResult() for _ in normalized_texts]
+        
+        for job_id, idx in index_lookup.items():
+            tier = tier_results.get(job_id)
+            skills = skills_results.get(job_id)
+            edu = edu_results.get(job_id)
+            
+            results[idx] = JobAnalysisResult(
+                ai_tier=tier.ai_tier if tier else results[idx].ai_tier,
+                confidence=tier.confidence if tier else 0.0,
+                rationale=tier.rationale if tier else "",
+                ai_skills_mentioned=skills.ai_skills_mentioned if skills else [],
+                hardskills_raw=skills.hardskills_raw if skills else [],
+                softskills_raw=skills.softskills_raw if skills else [],
+                education_required=edu.education_required if edu else 0,
+            )
+        
+        return results
+
+    # =========================================================================
+    # Legacy Monolithic Analysis (for backwards compatibility)
+    # =========================================================================
+
+    def _analyze_texts_monolithic(
+        self,
+        job_desc_texts: Sequence[Optional[str]],
+        job_titles: Sequence[str] | None,
+        progress_callback: Callable[[int, int], None] | None,
+    ) -> list[JobAnalysisResult]:
+        """Legacy method: analyze using monolithic prompts."""
+        normalized_texts = [self._prepare_text(text) for text in job_desc_texts]
         titles = list(job_titles) if job_titles else [""] * len(normalized_texts)
         results: list[JobAnalysisResult] = [
             JobAnalysisResult() for _ in normalized_texts
@@ -167,7 +501,6 @@ class OpenAIJobAnalyzer:
             return None
 
         text = str(job_desc_text).strip()
-        # More robust check for "nan" or empty strings
         if not text or text.lower() == "nan":
             return None
 
@@ -242,7 +575,6 @@ class OpenAIJobAnalyzer:
             logger.error(f"Failed to process batch of {len(batch)} items: {e}")
             parsed_entries = []
 
-        # Track which job IDs we received results for
         received_ids = set()
         for entry in parsed_entries:
             job_id = entry.id
@@ -251,7 +583,6 @@ class OpenAIJobAnalyzer:
                 continue
             results[index_lookup[job_id]] = self._to_result(entry)
         
-        # Validate that we got all expected results
         expected_ids = set(index_lookup.keys())
         missing_ids = expected_ids - received_ids
         if missing_ids:
@@ -266,19 +597,14 @@ class OpenAIJobAnalyzer:
         time.sleep(self.delay_seconds)
 
     def _call_openai_batch(self, batch_items: list[tuple[str, str, str]]) -> list[JobAnalysisResultWithId]:
-        """Call the LLM API with batch items.
-        
-        Uses structured outputs for OpenAI, falls back to JSON mode for Ollama.
-        """
+        """Call the LLM API with batch items (legacy monolithic)."""
         system_prompt = job_analysis_instructions()
         prompt = job_analysis_batch_prompt(batch_items)
         
         try:
             if self.provider == "ollama":
-                # Ollama: Use chat.completions with JSON mode
                 return self._call_ollama_batch(system_prompt, prompt, len(batch_items))
             else:
-                # OpenAI: Use structured outputs
                 return self._call_openai_structured(system_prompt, prompt, len(batch_items))
 
         except Exception as e:
@@ -288,7 +614,7 @@ class OpenAIJobAnalyzer:
     def _call_openai_structured(
         self, system_prompt: str, prompt: str, batch_count: int
     ) -> list[JobAnalysisResultWithId]:
-        """Call OpenAI API with structured output parsing."""
+        """Call OpenAI API with structured output parsing (legacy)."""
         response = self.client.responses.parse(
             model=self.model,
             input=[
@@ -309,12 +635,7 @@ class OpenAIJobAnalyzer:
     def _call_ollama_batch(
         self, system_prompt: str, prompt: str, batch_count: int
     ) -> list[JobAnalysisResultWithId]:
-        """Call Ollama API with JSON mode and manual parsing.
-        
-        Ollama's OpenAI-compatible endpoint may not support structured outputs,
-        so we use JSON mode and parse the response manually.
-        """
-        # Add JSON schema hint to system prompt for Ollama
+        """Call Ollama API with JSON mode and manual parsing (legacy)."""
         schema_hint = '''
 
 You MUST respond with valid JSON matching this exact schema:
@@ -344,7 +665,6 @@ You MUST respond with valid JSON matching this exact schema:
             temperature=self.temperature,
         )
         
-        # Extract and parse JSON from response
         content = response.choices[0].message.content
         if not content:
             logger.error("Ollama returned empty response")
@@ -360,27 +680,22 @@ You MUST respond with valid JSON matching this exact schema:
             return []
 
     def _parse_json_response(self, content: str) -> BatchAnalysisResponse:
-        """Parse JSON response from Ollama into BatchAnalysisResponse."""
-        # Try to extract JSON from response (handle markdown code blocks)
+        """Parse JSON response from Ollama into BatchAnalysisResponse (legacy)."""
         json_match = re.search(r'```(?:json)?\s*([\s\S]*?)```', content)
         if json_match:
             json_str = json_match.group(1).strip()
         else:
-            # Assume the entire content is JSON
             json_str = content.strip()
         
         data = json.loads(json_str)
         return BatchAnalysisResponse.model_validate(data)
 
     def _extract_parsed_response(self, response: Any) -> BatchAnalysisResponse | None:
-        """Extract the parsed model from the API response object."""
-        # 1. Check if 'output' is the model instance
+        """Extract the parsed model from the API response object (legacy)."""
         if hasattr(response, "output") and isinstance(response.output, BatchAnalysisResponse):
             return response.output
-        # 2. Check 'output_parsed'
         elif hasattr(response, "output_parsed") and response.output_parsed:
             return response.output_parsed
-        # 3. Check 'parsed' (like in beta.chat)
         elif hasattr(response, "parsed") and response.parsed:
             return response.parsed
         
@@ -394,7 +709,7 @@ You MUST respond with valid JSON matching this exact schema:
             input_tokens = getattr(usage, "input_tokens", getattr(usage, "prompt_tokens", 0))
             output_tokens = getattr(usage, "output_tokens", getattr(usage, "completion_tokens", 0))
             logger.info(
-                f"[OpenAI] Batch of {batch_count}: "
+                f"[LLM] Batch of {batch_count}: "
                 f"input={input_tokens}, output={output_tokens}"
             )
 

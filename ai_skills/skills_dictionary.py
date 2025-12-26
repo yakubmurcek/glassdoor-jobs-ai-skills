@@ -1581,15 +1581,3 @@ def get_all_hardskill_patterns() -> list[str]:
 def get_all_softskill_patterns() -> list[str]:
     """Return all softskill patterns sorted by length (longest first)."""
     return sorted(SOFTSKILL_VARIANTS.keys(), key=len, reverse=True)
-
-
-def normalize_hardskill(skill: str) -> str | None:
-    """Normalize a hardskill to its canonical form."""
-    skill_lower = skill.lower().strip()
-    return HARDSKILL_VARIANTS.get(skill_lower)
-
-
-def normalize_softskill(skill: str) -> str | None:
-    """Normalize a softskill to its canonical form."""
-    skill_lower = skill.lower().strip()
-    return SOFTSKILL_VARIANTS.get(skill_lower)
