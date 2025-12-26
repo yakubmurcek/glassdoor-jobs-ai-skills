@@ -124,10 +124,12 @@ class PathSettings:
 
 
 @dataclass(frozen=True)
-class OpenAISettings:
-    """Options that control OpenAI API usage."""
+class LLMSettings:
+    """Options that control LLM API usage (OpenAI or Ollama)."""
 
-    api_key: str
+    provider: str  # "openai" or "ollama"
+    api_key: Optional[str]
+    base_url: Optional[str]
     model: str
     temperature: float
     rate_limit_delay: float
@@ -135,17 +137,30 @@ class OpenAISettings:
     max_parallel_requests: int
 
     @classmethod
-    def build(cls) -> "OpenAISettings":
-        api_key = _get_env_only_setting("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError(
-                "OPENAI_API_KEY environment variable is not set. "
-                "Please set it in your .env file or as an environment variable."
-            )
+    def build(cls) -> "LLMSettings":
+        provider = (_get_raw_setting("MODEL_PROVIDER") or "openai").lower()
+        
+        if provider == "ollama":
+            # Ollama: API key is optional (use dummy), base_url points to local server
+            api_key = _get_env_only_setting("OPENAI_API_KEY") or "ollama"
+            base_url = _get_raw_setting("OLLAMA_BASE_URL") or "http://localhost:11434/v1"
+            model = _get_raw_setting("OLLAMA_MODEL") or "gemma3:12b"
+        else:
+            # OpenAI: require API key, no custom base_url
+            api_key = _get_env_only_setting("OPENAI_API_KEY")
+            if not api_key:
+                raise ValueError(
+                    "OPENAI_API_KEY environment variable is not set. "
+                    "Please set it in your .env file or as an environment variable."
+                )
+            base_url = None
+            model = _get_raw_setting("OPENAI_MODEL") or "gpt-4o-mini"
 
         return cls(
+            provider=provider,
             api_key=api_key,
-            model=_get_raw_setting("OPENAI_MODEL") or "gpt-4o-mini",
+            base_url=base_url,
+            model=model,
             temperature=_get_float_setting("OPENAI_TEMPERATURE", 0.1),
             rate_limit_delay=_get_float_setting("RATE_LIMIT_DELAY", 0.1),
             batch_size=max(1, _get_int_setting("OPENAI_BATCH_SIZE", 20)),
@@ -153,6 +168,10 @@ class OpenAISettings:
                 1, _get_int_setting("OPENAI_MAX_PARALLEL_REQUESTS", 3)
             ),
         )
+
+
+# Backwards compatibility alias
+OpenAISettings = LLMSettings
 
 
 DEFAULT_COLUMN_ORDER: Tuple[str, ...] = (
@@ -203,14 +222,20 @@ class AppConfig:
     """Aggregate configuration for consumers that prefer structured access."""
 
     paths: PathSettings
-    openai: OpenAISettings
+    llm: LLMSettings
     processing: ProcessingSettings
+
+    # Backwards compatibility property
+    @property
+    def openai(self) -> LLMSettings:
+        return self.llm
 
 
 PATHS = PathSettings.build(PROJECT_ROOT)
-OPENAI = OpenAISettings.build()
+LLM = LLMSettings.build()
+OPENAI = LLM  # Backwards compatibility alias
 PROCESSING = ProcessingSettings.build()
-CONFIG = AppConfig(paths=PATHS, openai=OPENAI, processing=PROCESSING)
+CONFIG = AppConfig(paths=PATHS, llm=LLM, processing=PROCESSING)
 
 # Backwards-compatible module-level exports
 DATA_DIR = PATHS.data_dir
@@ -218,12 +243,14 @@ INPUTS_DIR = PATHS.inputs_dir
 OUTPUTS_DIR = PATHS.outputs_dir
 INPUT_CSV = PATHS.input_csv
 OUTPUT_CSV = PATHS.output_csv
-OPENAI_API_KEY = OPENAI.api_key
-OPENAI_MODEL = OPENAI.model
-OPENAI_TEMPERATURE = OPENAI.temperature
-RATE_LIMIT_DELAY = OPENAI.rate_limit_delay
-OPENAI_BATCH_SIZE = OPENAI.batch_size
-OPENAI_MAX_PARALLEL_REQUESTS = OPENAI.max_parallel_requests
+MODEL_PROVIDER = LLM.provider
+OPENAI_API_KEY = LLM.api_key
+OPENAI_BASE_URL = LLM.base_url
+OPENAI_MODEL = LLM.model
+OPENAI_TEMPERATURE = LLM.temperature
+RATE_LIMIT_DELAY = LLM.rate_limit_delay
+OPENAI_BATCH_SIZE = LLM.batch_size
+OPENAI_MAX_PARALLEL_REQUESTS = LLM.max_parallel_requests
 MAX_JOB_DESC_LENGTH = PROCESSING.max_job_desc_length
 PREFERRED_COLUMN_ORDER = list(PROCESSING.preferred_column_order)
 

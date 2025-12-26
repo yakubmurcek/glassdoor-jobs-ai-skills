@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""OpenAI API integration for analyzing job descriptions."""
+"""LLM API integration for analyzing job descriptions.
 
+Supports both OpenAI API and Ollama (via OpenAI-compatible endpoint).
+"""
+
+import json
 import logging
+import re
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -13,9 +18,11 @@ from pydantic import ValidationError
 
 from .config import (
     MAX_JOB_DESC_LENGTH,
+    MODEL_PROVIDER,
+    OPENAI_API_KEY,
+    OPENAI_BASE_URL,
     OPENAI_BATCH_SIZE,
     OPENAI_MAX_PARALLEL_REQUESTS,
-    OPENAI_API_KEY,
     OPENAI_MODEL,
     OPENAI_TEMPERATURE,
     RATE_LIMIT_DELAY,
@@ -27,24 +34,40 @@ logger = logging.getLogger(__name__)
 
 
 class OpenAIJobAnalyzer:
-    """Encapsulates the OpenAI client and response parsing logic."""
+    """Encapsulates the LLM client and response parsing logic.
+    
+    Supports both OpenAI API and Ollama (via OpenAI-compatible endpoint).
+    """
 
     def __init__(
         self,
         *,
-        api_key: str = OPENAI_API_KEY,
+        api_key: Optional[str] = OPENAI_API_KEY,
+        base_url: Optional[str] = OPENAI_BASE_URL,
+        provider: str = MODEL_PROVIDER,
         model: str = OPENAI_MODEL,
         temperature: float = OPENAI_TEMPERATURE,
         delay_seconds: float = RATE_LIMIT_DELAY,
         batch_size: int = OPENAI_BATCH_SIZE,
         max_concurrent_requests: int = OPENAI_MAX_PARALLEL_REQUESTS,
     ) -> None:
-        self.client = OpenAI(api_key=api_key)
+        # Build client with optional base_url for Ollama support
+        client_kwargs = {"api_key": api_key or "ollama"}
+        if base_url:
+            client_kwargs["base_url"] = base_url
+        self.client = OpenAI(**client_kwargs)
+        
+        self.provider = provider.lower()
         self.model = model
         self.temperature = temperature
         self.delay_seconds = delay_seconds
         self.batch_size = max(1, batch_size)
         self.max_concurrent_requests = max(1, max_concurrent_requests)
+        
+        if self.provider == "ollama":
+            logger.info(f"Using Ollama provider with model '{model}' at {base_url}")
+        else:
+            logger.info(f"Using OpenAI provider with model '{model}'")
 
     def analyze_text(
         self,
@@ -243,30 +266,111 @@ class OpenAIJobAnalyzer:
         time.sleep(self.delay_seconds)
 
     def _call_openai_batch(self, batch_items: list[tuple[str, str, str]]) -> list[JobAnalysisResultWithId]:
+        """Call the LLM API with batch items.
+        
+        Uses structured outputs for OpenAI, falls back to JSON mode for Ollama.
+        """
         system_prompt = job_analysis_instructions()
         prompt = job_analysis_batch_prompt(batch_items)
         
         try:
-            response = self.client.responses.parse(
-                model=self.model,
-                input=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt},
-                ],
-                text_format=BatchAnalysisResponse,
-                temperature=self.temperature,
-            )
-            
-            batch_response = self._extract_parsed_response(response)
-            if not batch_response:
-                return []
-
-            self._log_token_usage(response, len(batch_items))
-            return batch_response.results
+            if self.provider == "ollama":
+                # Ollama: Use chat.completions with JSON mode
+                return self._call_ollama_batch(system_prompt, prompt, len(batch_items))
+            else:
+                # OpenAI: Use structured outputs
+                return self._call_openai_structured(system_prompt, prompt, len(batch_items))
 
         except Exception as e:
-            logger.error(f"OpenAI API call failed: {e}")
+            logger.error(f"LLM API call failed: {e}")
             raise
+
+    def _call_openai_structured(
+        self, system_prompt: str, prompt: str, batch_count: int
+    ) -> list[JobAnalysisResultWithId]:
+        """Call OpenAI API with structured output parsing."""
+        response = self.client.responses.parse(
+            model=self.model,
+            input=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            text_format=BatchAnalysisResponse,
+            temperature=self.temperature,
+        )
+        
+        batch_response = self._extract_parsed_response(response)
+        if not batch_response:
+            return []
+
+        self._log_token_usage(response, batch_count)
+        return batch_response.results
+
+    def _call_ollama_batch(
+        self, system_prompt: str, prompt: str, batch_count: int
+    ) -> list[JobAnalysisResultWithId]:
+        """Call Ollama API with JSON mode and manual parsing.
+        
+        Ollama's OpenAI-compatible endpoint may not support structured outputs,
+        so we use JSON mode and parse the response manually.
+        """
+        # Add JSON schema hint to system prompt for Ollama
+        schema_hint = '''
+
+You MUST respond with valid JSON matching this exact schema:
+{
+  "results": [
+    {
+      "id": "job_0",
+      "ai_tier": "none|ai_integration|applied_ai|core_ai",
+      "ai_skills_mentioned": ["skill1", "skill2"],
+      "confidence": 0.0-1.0,
+      "rationale": "brief explanation",
+      "hardskills_raw": ["skill1", "skill2"],
+      "softskills_raw": ["skill1", "skill2"],
+      "education_required": 0 or 1
+    }
+  ]
+}
+'''
+        enhanced_system_prompt = system_prompt + schema_hint
+        
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": enhanced_system_prompt},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=self.temperature,
+        )
+        
+        # Extract and parse JSON from response
+        content = response.choices[0].message.content
+        if not content:
+            logger.error("Ollama returned empty response")
+            return []
+        
+        try:
+            batch_response = self._parse_json_response(content)
+            self._log_token_usage(response, batch_count)
+            return batch_response.results
+        except Exception as e:
+            logger.error(f"Failed to parse Ollama JSON response: {e}")
+            logger.debug(f"Raw response content: {content[:500]}...")
+            return []
+
+    def _parse_json_response(self, content: str) -> BatchAnalysisResponse:
+        """Parse JSON response from Ollama into BatchAnalysisResponse."""
+        # Try to extract JSON from response (handle markdown code blocks)
+        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)```', content)
+        if json_match:
+            json_str = json_match.group(1).strip()
+        else:
+            # Assume the entire content is JSON
+            json_str = content.strip()
+        
+        data = json.loads(json_str)
+        return BatchAnalysisResponse.model_validate(data)
 
     def _extract_parsed_response(self, response: Any) -> BatchAnalysisResponse | None:
         """Extract the parsed model from the API response object."""
