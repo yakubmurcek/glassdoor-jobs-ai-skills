@@ -156,21 +156,27 @@ class OpenAISettings:
 
 
 DEFAULT_COLUMN_ORDER: Tuple[str, ...] = (
+    # Source data
     "skills",
     "job_desc_text",
+    # AI detection from source skills
     "AI_skills_found",
     "AI_skill_hard",
+    # AI classification from LLM
     "AI_tier_openai",
     "AI_skill_openai_confidence",
     "AI_skills_openai_mentioned",
     "AI_skill_openai_rationale",
+    # Final merged skills (main output)
+    "hardskills",
+    "softskills",
+    # Agreement metric
+    "AI_skill_agreement",
+    # Working columns (intermediate results)
     "hardskills_dict",
     "hardskills_llm",
-    "hardskills",
     "softskills_dict",
     "softskills_llm",
-    "softskills",
-    "AI_skill_agreement",
 )
 
 
