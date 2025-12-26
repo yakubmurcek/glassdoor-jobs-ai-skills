@@ -27,13 +27,14 @@ COLUMNS = {
     "agree": ("AI_skill_agreement", "AGREE", 5),
     "edu": ("EDUCATION2", "EDU", 10),
     "edu_req": ("EDUCATION2_REQUIRED", "EDU_REQ", 7),
-    "hardskills": ("hardskills", "HARDSKILLS", 50),
+    "families": ("hardskills_families", "SKILL FAMILIES", 80),
     "softskills": ("softskills", "SOFTSKILLS", 30),
     "skills_hard": ("AI_skills_found", "SKILLS (HARD)", 30),
     "skills_openai": ("AI_skills_openai_mentioned", "SKILLS (OPENAI)", 40),
+    "is_ai": ("IS_AI_JOB", "AI?", 4),
 }
 
-DEFAULT_COLS = ["title", "tier", "conf", "hard", "agree", "edu", "edu_req", "hardskills", "softskills", "skills_hard", "skills_openai"]
+DEFAULT_COLS = ["title", "is_ai", "tier", "conf", "hard", "agree", "edu", "edu_req", "families", "softskills", "skills_hard", "skills_openai"]
 
 def colorize(text: str, color: str) -> str:
     return f"{color}{text}{RESET}"
@@ -76,6 +77,13 @@ def format_value(col_key: str, value, width: int) -> str:
             return colorize(" Yes", GREEN) if val_bool else colorize("  No", RED)
         except (ValueError, TypeError):
              return " " * width
+    elif col_key == "is_ai":
+        if pd.isna(value):
+            return " " * width
+        val_str = str(value).lower()
+        if val_str == "yes":
+            return colorize(" yes", GREEN)
+        return colorize("  no", COLORS["none"])  # Gray
     elif col_key in ("skills_hard", "skills_openai"):
         s = str(value) if pd.notna(value) else ""
         s = "" if s.lower() == "nan" else s

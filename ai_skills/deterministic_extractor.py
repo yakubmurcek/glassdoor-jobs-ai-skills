@@ -16,6 +16,7 @@ from .skills_dictionary import (
     SOFTSKILL_VARIANTS,
     get_all_hardskill_patterns,
     get_all_softskill_patterns,
+    format_skills_by_family,  # re-export for pipeline
 )
 
 

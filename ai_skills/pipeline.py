@@ -16,6 +16,7 @@ from .deterministic_extractor import (
     extract_softskills_deterministic,
     merge_skills,
     format_skills_string,
+    format_skills_by_family,
 )
 from .education_extractor import extract_education_from_row
 from .models import JobAnalysisResult
@@ -140,6 +141,7 @@ class JobAnalysisPipeline:
         df["hardskills_dict"] = [format_skills_string(s) for s in hardskills_dict]
         df["hardskills_llm"] = [format_skills_string(s) for s in hardskills_llm]
         df["hardskills"] = [format_skills_string(s) for s in hardskills_merged]
+        df["hardskills_families"] = [format_skills_by_family(s) for s in hardskills_merged]
         
         df["softskills_dict"] = [format_skills_string(s) for s in softskills_dict]
         df["softskills_llm"] = [format_skills_string(s) for s in softskills_llm]
@@ -150,6 +152,33 @@ class JobAnalysisPipeline:
         df["AI_skill_agreement"] = (
             df["AI_skill_hard"] == (df["AI_tier_openai"] != "none").astype(int)
         ).astype(int)
+        
+        # IS_AI_JOB: Binary indicator for "real AI" jobs (building/training models)
+        # Hybrid approach: tier-based OR skill-based detection
+        REAL_AI_SKILLS = {
+            "tensorflow", "pytorch", "keras", "scikit-learn", 
+            "machine learning", "deep learning", "neural networks", 
+            "nlp", "computer vision", "mlops", "mlflow", "kubeflow",
+            "huggingface", "transformers", "sagemaker", "vertex ai", "azure ml",
+            "model serving", "model deployment", "model monitoring", 
+            "feature store", "experiment tracking",
+        }
+        
+        def is_real_ai_job(tier: str, skills_str: str) -> str:
+            # Check tier first
+            if tier in ["core_ai", "applied_ai"]:
+                return "yes"
+            # Check skills intersection
+            if skills_str:
+                detected_skills = {s.strip().lower() for s in skills_str.split(",")}
+                if detected_skills & REAL_AI_SKILLS:
+                    return "yes"
+            return "no"
+        
+        df["IS_AI_JOB"] = df.apply(
+            lambda row: is_real_ai_job(row["AI_tier_openai"], row.get("hardskills", "")),
+            axis=1
+        )
         
         # --- EDUCATION EXTRACTION ---
         # EDUCATION2: Deterministic extraction from existing 'educations' column

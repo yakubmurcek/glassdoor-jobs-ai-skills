@@ -1117,6 +1117,335 @@ HARDSKILL_VARIANTS: dict[str, str] = {
 HARDSKILLS: set[str] = set(HARDSKILL_VARIANTS.values())
 
 # =============================================================================
+# SKILL FAMILIES: Categorization of skills by domain
+# =============================================================================
+
+# Family A: Programming Languages & Frameworks
+FAMILY_PROGRAMMING: set[str] = {
+    # Languages
+    "javascript", "typescript", "python", "java", "java ee", "c++", "c#", 
+    "golang", "kotlin", "scala", "swift", "objective-c", "ruby", "php", 
+    "perl", "lua", "haskell", "erlang", "elixir", "clojure", "f#", "dart", 
+    "groovy", "cobol", "fortran", "assembly", "vba", "visual basic", "vb.net", 
+    "matlab", "sas", "stata", "spss", "r", "rust",
+    # Web frameworks
+    "react", "react native", "angular", "vue", "vuex", "node.js", "express", 
+    "next.js", "nuxt", "spring", "spring boot", "django", "flask", "fastapi",
+    "rails", "laravel", "symfony", "codeigniter", "cakephp", "nest.js", "koa", 
+    "hapi", "svelte", "ember", "backbone", "jquery", "gatsby", "remix", "astro",
+    # Mobile
+    "flutter", "xamarin", "ionic", "cordova", "phonegap", "swiftui", "jetpack compose",
+    # .NET
+    "dotnet", "asp.net", "ado.net",
+    # SQL/DB languages
+    "sql", "mysql", "postgresql", "sql server", "sqlite", "pl/sql", "t-sql",
+    # Scripting
+    "bash", "shell", "shell scripting", "powershell", "zsh",
+    # Markup/Styling
+    "html", "html5", "css", "css3", "sass", "scss", "less",
+}
+
+# Family B: Data, Cloud, and Orchestration
+FAMILY_DATA_CLOUD: set[str] = {
+    # Cloud platforms
+    "aws", "azure", "gcp", "cloud computing", "cloud infrastructure", 
+    "cloud architecture", "cloud services", "cloud native", "multi-cloud", 
+    "hybrid cloud", "serverless",
+    # Cloud services
+    "ec2", "lambda", "s3", "rds", "aurora", "cloudfront", "route53", 
+    "vpc", "iam", "ecs", "eks", "aks", "gke", "fargate", "sqs", "sns",
+    "azure functions", "cloud functions", "step functions",
+    # Containers & orchestration
+    "docker", "kubernetes", "helm", "openshift", "container orchestration",
+    # IaC
+    "terraform", "ansible", "puppet", "chef", "cloudformation", 
+    "infrastructure as code",
+    # Data engineering
+    "data engineering", "data pipelines", "data warehouses", "data modeling",
+    "data governance", "data architecture", "data quality", "data management",
+    "data lake", "data lakehouse", "data mesh", "data catalog", "data lineage",
+    "master data management", "data integration", "data migration", 
+    "data transformation", "batch processing", "stream processing", "real-time data",
+    # ETL/Data platforms
+    "etl", "elt", "dbt", "talend", "informatica", "ssis", "fivetran", 
+    "airbyte", "stitch", "snowflake", "databricks", "redshift", "bigquery",
+    # Big data
+    "spark", "pyspark", "hadoop", "kafka",
+    # Orchestration
+    "airflow", "orchestration", "workflow orchestration", "data orchestration",
+    "prefect", "dagster", "luigi", "argo", "argo workflows", "mage",
+    # MLOps
+    "mlops", "aiops", "mlflow", "kubeflow", "feature store", "model serving",
+    "model deployment", "model monitoring", "experiment tracking", "sagemaker",
+    "vertex ai", "azure ml",
+    # Databases (NoSQL)
+    "nosql", "mongodb", "redis", "cassandra", "couchdb", "dynamodb", 
+    "elasticsearch", "neo4j",
+    # Message queues
+    "rabbitmq", "activemq", "redis pub/sub", "redis queue",
+    # Storage
+    "storage", "blob storage", "gcs",
+    # Virtualization
+    "virtualization", "vmware", "hyper-v", "virtual machines",
+}
+
+# Family C: Integration & Data Exchange
+FAMILY_INTEGRATION: set[str] = {
+    # API & protocols
+    "api", "rest", "restful api", "graphql", "grpc", "websocket", "soap",
+    "openapi", "swagger", "web services", "web api", "http", "https",
+    "api design", "api development", "api integration", "api management", 
+    "api security", "api gateway",
+    # Data formats
+    "json", "xml", "yaml", "csv", "protobuf", "avro", "parquet",
+    # Architecture
+    "microservices", "monolith", "event-driven", "soa", "service mesh",
+    "istio", "envoy", "linkerd",
+    # Auth
+    "oauth", "oauth2", "jwt", "saml", "ldap", "active directory", "sso",
+    "ssl", "tls",
+}
+
+# Family D: Security & Infrastructure
+FAMILY_SECURITY: set[str] = {
+    # Security domains
+    "cybersecurity", "information security", "network security", 
+    "application security", "cloud security", "endpoint security",
+    "security architecture", "security operations", "soc", "devsecops",
+    # Threat & vulnerability
+    "incident response", "forensics", "digital forensics", "malware analysis",
+    "threat detection", "threat hunting", "threat intelligence",
+    "vulnerability management", "vulnerability scanning", "vulnerability assessment",
+    "patch management", "risk assessment", "security assessment",
+    "penetration testing",
+    # Security technologies
+    "firewall", "firewall management", "vpn", "siem", "ids", "ips", 
+    "edr", "xdr", "soar", "dlp", "pam", "identity management", "zero trust",
+    # Encryption & network
+    "encryption", "networking", "tcp/ip", "dns", "dhcp", "routing", 
+    "switching", "load balancing", "cdn",
+    # Security frameworks & standards
+    "nist", "iso27001", "iso27002", "soc 2", "pci dss", "hipaa", "gdpr",
+    "fedramp", "cis benchmarks", "owasp", "mitre att&ck",
+    # Security certifications
+    "cissp", "cism", "cisa", "giac", "ceh", "oscp", 
+    "comptia security+", "comptia network+", "comptia a+",
+    "ccna", "ccnp", "ccie",
+}
+
+# Family E: Software Engineering Domains & Tools
+FAMILY_SOFTWARE_ENGINEERING: set[str] = {
+    # Development practices
+    "software development", "software engineering", "web development",
+    "frontend development", "backend development", "full stack", 
+    "mobile development", "cross-platform",
+    # Architecture & design
+    "system integration", "software architecture", "system design",
+    "solution architecture", "enterprise architecture", "technical architecture",
+    "oop", "object-oriented design", "ooad", "uml", "design patterns", 
+    "solid", "clean code", "clean architecture", "ddd", "cqrs", "event sourcing",
+    # Testing
+    "debugging", "troubleshooting", "qa", "qa automation", "test automation",
+    "automated testing", "manual testing", "unit testing", "integration testing",
+    "e2e testing", "regression testing", "functional testing", "performance testing",
+    "load testing", "stress testing", "security testing", "api testing", 
+    "mobile testing", "test planning", "test strategy", "test cases", "test management",
+    # Testing tools
+    "junit", "mockito", "jest", "jasmine", "karma", "mocha", "chai", 
+    "pytest", "unittest", "selenium", "cypress", "playwright", "puppeteer",
+    "testng", "nunit", "xunit", "rspec", "cucumber", "postman",
+    "jmeter", "gatling", "k6", "locust", "appium", "robot framework", "testcafe",
+    # Code quality
+    "sonarqube", "code quality", "static analysis", "code coverage", "code review",
+    # Version control
+    "git", "github", "gitlab", "bitbucket", "svn", "version control",
+    "branching strategies", "gitflow", "trunk-based development",
+    # CI/CD & DevOps
+    "ci/cd", "jenkins", "github actions", "gitlab ci", "circleci", 
+    "travis ci", "azure devops", "azure pipelines", "bamboo", "teamcity",
+    "devops", "continuous integration", "continuous deployment", "continuous delivery",
+    # Methodologies
+    "agile", "scrum", "kanban", "tdd", "bdd", "waterfall", "lean", "six sigma",
+    "pair programming",
+    # Build tools
+    "webpack", "vite", "rollup", "parcel", "babel", "gulp", "grunt",
+    "maven", "gradle", "npm", "yarn", "pnpm", "esbuild", "swc", 
+    "turbopack", "turborepo", "nx", "lerna", "monorepo",
+    # IDEs
+    "visual studio code", "visual studio", "intellij", "pycharm", "webstorm",
+    "eclipse", "xcode", "android studio", "rider", "sublime text", "vim", 
+    "neovim", "emacs",
+    # Collaboration tools
+    "jira", "confluence", "slack", "trello", "asana", "notion",
+    # Servers & infrastructure
+    "nginx", "apache", "tomcat", "iis", "haproxy", "kong",
+    # Linux/OS
+    "linux", "ubuntu", "centos", "redhat", "debian", "unix", 
+    "windows", "windows server", "macos", "ios", "android",
+    # Monitoring
+    "prometheus", "grafana", "datadog", "new relic", "splunk", 
+    "elk stack", "logstash", "kibana", "cloudwatch",
+    # Performance
+    "performance tuning", "optimization", "scalability", "high availability", 
+    "caching",
+}
+
+# Family F: Analytics & Visualization
+FAMILY_ANALYTICS: set[str] = {
+    # Analytics concepts
+    "data analysis", "data analytics", "business analytics", "data science",
+    "predictive analytics", "prescriptive analytics", "descriptive analytics",
+    "statistical analysis", "statistics", "statistical modeling",
+    "a/b testing", "experimentation", "hypothesis testing",
+    # Visualization
+    "data visualization", "dashboards", "reporting",
+    # BI tools
+    "power bi", "tableau", "looker", "metabase", "qlik", "qlikview", 
+    "qliksense", "sisense", "excel", "business intelligence",
+    "dax", "power query", "m language", "calculated columns", "measures",
+    "data studio", "looker studio", "superset", "redash", "mode analytics",
+    # Product analytics
+    "amplitude", "mixpanel", "google analytics", "ga4", "adobe analytics", "segment",
+    # Charting libraries
+    "d3.js", "chart.js", "highcharts", "plotly", "echarts", "recharts", "nivo",
+    # ML/AI (analytics aspect)
+    "machine learning", "deep learning", "neural networks", "nlp", 
+    "computer vision", "llm", "gpt", "chatgpt", "openai", "langchain",
+    "huggingface", "transformers",
+    # ML frameworks
+    "pandas", "numpy", "scipy", "scikit-learn", "tensorflow", "pytorch", "keras",
+}
+
+# Family G: Certifications & Standards
+FAMILY_CERTIFICATIONS: set[str] = {
+    # Cloud certifications
+    "aws certified", "aws solutions architect", "aws developer", "aws sysops",
+    "aws devops engineer", "aws data engineer", "aws machine learning specialty",
+    "cloud practitioner",
+    "azure administrator", "azure developer", "azure solutions architect",
+    "azure devops engineer", "azure data engineer",
+    "az-900", "az-104", "az-204", "az-305", "az-400",
+    "gcp certified", "gcp professional", "gcp associate",
+    # Kubernetes certifications
+    "cka", "ckad", "cks",
+    # Other tech certifications
+    "terraform certified", "hashicorp certified",
+    # Management certifications
+    "pmp", "csm", "safe", "togaf", "itil",
+}
+
+# Family H: UI Frameworks & Tools
+FAMILY_UI_TOOLS: set[str] = {
+    # CSS frameworks
+    "tailwind", "bootstrap", "material ui", "styled-components", "bulma",
+    "foundation", "semantic ui",
+    # Component libraries
+    "ant design", "chakra ui", "radix", "radix ui", "headless ui", "shadcn",
+    "daisyui", "primereact", "primevue", "vuetify", "quasar",
+    # Testing libraries
+    "testing library", "react testing library", "vue testing library", 
+    "enzyme", "vitest", "storybook",
+    # State management
+    "redux", "ngrx", "rxjs", "mobx", "zustand", "recoil", 
+    "tanstack query", "swr", "jotai", "xstate", "pinia",
+    # Form handling
+    "react hook form", "formik", "yup", "zod",
+    # Design tools
+    "figma", "sketch", "adobe xd", "invision", "zeplin",
+    # UI/UX
+    "ui/ux", "ui", "ux", "responsive design", "accessibility", "wcag", 
+    "aria", "screen reader", "seo",
+    # Micro frontends
+    "micro frontends", "module federation", "single-spa",
+    # Animation & Graphics
+    "css animations", "web animations", "gsap", "framer motion", "lottie",
+    "three.js", "webgl", "canvas", "svg",
+    # Web scraping
+    "web scraping", "beautifulsoup", "scrapy", "requests", "httpx", "aiohttp",
+    # Async
+    "celery",
+    # Documentation
+    "swagger ui", "redoc", "readme", "jsdoc", "typedoc", "sphinx", "mkdocs",
+    # SDK
+    "sdk",
+}
+
+# Combined mapping: canonical skill -> family name
+SKILL_TO_FAMILY: dict[str, str] = {}
+
+# Build the mapping
+for skill in FAMILY_PROGRAMMING:
+    SKILL_TO_FAMILY[skill] = "Programming"
+for skill in FAMILY_DATA_CLOUD:
+    SKILL_TO_FAMILY[skill] = "Data & Cloud"
+for skill in FAMILY_INTEGRATION:
+    SKILL_TO_FAMILY[skill] = "Integration"
+for skill in FAMILY_SECURITY:
+    SKILL_TO_FAMILY[skill] = "Security"
+for skill in FAMILY_SOFTWARE_ENGINEERING:
+    SKILL_TO_FAMILY[skill] = "Software Engineering"
+for skill in FAMILY_ANALYTICS:
+    SKILL_TO_FAMILY[skill] = "Analytics"
+for skill in FAMILY_CERTIFICATIONS:
+    SKILL_TO_FAMILY[skill] = "Certifications"
+for skill in FAMILY_UI_TOOLS:
+    SKILL_TO_FAMILY[skill] = "UI & Tools"
+
+
+def get_skill_family(skill: str) -> str | None:
+    """Get the family name for a canonical skill.
+    
+    Args:
+        skill: The canonical skill name (lowercase).
+        
+    Returns:
+        The family name (e.g., "Programming", "Security") or None if not found.
+    """
+    return SKILL_TO_FAMILY.get(skill.lower().strip())
+
+
+def get_skill_families(skills: list[str]) -> dict[str, list[str]]:
+    """Categorize a list of skills by their families.
+    
+    Args:
+        skills: List of canonical skill names.
+        
+    Returns:
+        Dictionary mapping family names to lists of skills in that family.
+    """
+    families: dict[str, list[str]] = {}
+    for skill in skills:
+        family = get_skill_family(skill)
+        if family:
+            if family not in families:
+                families[family] = []
+            families[family].append(skill)
+    return families
+
+
+def format_skills_by_family(skills: list[str]) -> str:
+    """Format skills grouped by family as a string.
+    
+    Args:
+        skills: List of canonical skill names.
+        
+    Returns:
+        String like "Programming: python, java; Security: cissp, nist"
+    """
+    families = get_skill_families(skills)
+    if not families:
+        return ""
+    
+    parts = []
+    # Sort families for consistent output
+    for family in sorted(families.keys()):
+        family_skills = sorted(families[family])
+        parts.append(f"{family}: {', '.join(family_skills)}")
+    
+    return "; ".join(parts)
+
+
+# =============================================================================
 # SOFTSKILLS: Interpersonal/behavioral traits
 # =============================================================================
 
