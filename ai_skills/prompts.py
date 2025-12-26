@@ -97,6 +97,24 @@ SKILL EXTRACTION RULES:
 2. Return raw skill names as written (normalization handled separately)
 3. If a skill appears multiple times, include it once
 4. Include both specific tools (e.g., "TensorFlow") AND domains (e.g., "machine learning")
+
+---
+
+EDUCATION REQUIREMENT:
+
+**education_required**: Binary indicator (0 or 1) whether education is REQUIRED or just preferred.
+
+Determine based on CONTEXT where education is mentioned:
+- Return **1** if education appears under: Requirements, Must have, Required, Mandatory, Prerequisite, Essential, Minimum qualifications, "Required qualifications"
+- Return **0** if education appears under: Preferred, Nice to have, Optional, Preferred Qualifications, Desired, Plus, Bonus, "Preferred qualifications"
+- Return **0** if education is not mentioned or context is unclear
+
+EXAMPLES:
+- "Requirements: Bachelor's degree in CS" → education_required = 1
+- "Preferred: Master's degree" → education_required = 0
+- "Must have: BS/MS in Engineering" → education_required = 1
+- "Nice to have: Advanced degree" → education_required = 0
+- No education mentioned → education_required = 0
     """
     return dedent(template).strip()
 
@@ -120,7 +138,7 @@ def job_analysis_batch_prompt(batch_items: list[tuple[str, str, str]]) -> str:
         """
         Analyze each of the following job descriptions independently.
         Return a JSON object with a top-level `results` array.
-        Each entry must include: id, ai_tier (one of: core_ai, applied_ai, ai_integration, none), ai_skills_mentioned, confidence, rationale, hardskills_raw, softskills_raw.
+        Each entry must include: id, ai_tier (one of: core_ai, applied_ai, ai_integration, none), ai_skills_mentioned, confidence, rationale, hardskills_raw, softskills_raw, education_required (0 or 1).
         """
     ).strip()
 

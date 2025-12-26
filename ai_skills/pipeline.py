@@ -17,6 +17,7 @@ from .deterministic_extractor import (
     merge_skills,
     format_skills_string,
 )
+from .education_extractor import extract_education_from_row
 from .models import JobAnalysisResult
 from .openai_analyzer import OpenAIJobAnalyzer
 from .skill_normalizer import normalize_hardskills, normalize_softskills
@@ -149,6 +150,18 @@ class JobAnalysisPipeline:
         df["AI_skill_agreement"] = (
             df["AI_skill_hard"] == (df["AI_tier_openai"] != "none").astype(int)
         ).astype(int)
+        
+        # --- EDUCATION EXTRACTION ---
+        # EDUCATION2: Deterministic extraction from existing 'educations' column
+        if "educations" in df.columns:
+            df["EDUCATION2"] = df["educations"].apply(
+                lambda x: extract_education_from_row(x if pd.notna(x) else None)
+            )
+        else:
+            df["EDUCATION2"] = ""
+            logger.warning("'educations' column not found, EDUCATION2 will be empty.")
+        
+        # EDUCATION2_REQUIRED: Already added from LLM results via as_columns()
         
         return df
 

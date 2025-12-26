@@ -27,6 +27,8 @@ class JobAnalysisResult(BaseModel):
     # Raw skill extractions from LLM (normalized in pipeline)
     hardskills_raw: List[str] = Field(default_factory=list)
     softskills_raw: List[str] = Field(default_factory=list)
+    # Education requirement: 1 if required, 0 if preferred/optional/undeterminable
+    education_required: int = Field(default=0, ge=0, le=1)
 
     @field_validator("confidence")
     @classmethod
@@ -44,6 +46,7 @@ class JobAnalysisResult(BaseModel):
             "AI_skills_openai_mentioned": ", ".join(self.ai_skills_mentioned),
             "AI_skill_openai_confidence": self.confidence,
             "AI_skill_openai_rationale": self.rationale,
+            "EDUCATION2_REQUIRED": self.education_required,
         }
 
     model_config = ConfigDict(frozen=True)
@@ -63,6 +66,7 @@ class JobAnalysisResultWithId(BaseModel):
     rationale: str  # No default - required by OpenAI
     hardskills_raw: List[str]  # No default - required by OpenAI
     softskills_raw: List[str]  # No default - required by OpenAI
+    education_required: int = Field(ge=0, le=1)  # No default - required by OpenAI
 
     @field_validator("confidence")
     @classmethod
@@ -79,6 +83,7 @@ class JobAnalysisResultWithId(BaseModel):
             rationale=self.rationale,
             hardskills_raw=self.hardskills_raw,
             softskills_raw=self.softskills_raw,
+            education_required=self.education_required,
         )
 
     model_config = ConfigDict(frozen=True)

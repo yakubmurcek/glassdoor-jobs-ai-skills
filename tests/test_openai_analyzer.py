@@ -31,7 +31,8 @@ class TestOpenAIJobAnalyzer(unittest.TestCase):
                 confidence=1.0, 
                 rationale="Reason 1",
                 hardskills_raw=["python"],
-                softskills_raw=["teamwork"]
+                softskills_raw=["teamwork"],
+                education_required=0
             ),
             JobAnalysisResultWithId(
                 id="job_1", 
@@ -40,7 +41,8 @@ class TestOpenAIJobAnalyzer(unittest.TestCase):
                 confidence=0.9, 
                 rationale="Reason 2",
                 hardskills_raw=["tensorflow", "python"],
-                softskills_raw=[]
+                softskills_raw=[],
+                education_required=1
             )
         ])
         
@@ -53,7 +55,8 @@ class TestOpenAIJobAnalyzer(unittest.TestCase):
                 confidence=0.8, 
                 rationale="Reason 3",
                 hardskills_raw=["pytorch"],
-                softskills_raw=["communication"]
+                softskills_raw=["communication"],
+                education_required=0
             )
         ])
         

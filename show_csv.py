@@ -25,11 +25,15 @@ COLUMNS = {
     "conf": ("AI_skill_openai_confidence", "CONF", 5),
     "hard": ("AI_skill_hard", "HARD", 4),
     "agree": ("AI_skill_agreement", "AGREE", 5),
+    "edu": ("EDUCATION2", "EDU", 10),
+    "edu_req": ("EDUCATION2_REQUIRED", "EDU_REQ", 7),
+    "hardskills": ("hardskills", "HARDSKILLS", 50),
+    "softskills": ("softskills", "SOFTSKILLS", 30),
     "skills_hard": ("AI_skills_found", "SKILLS (HARD)", 30),
     "skills_openai": ("AI_skills_openai_mentioned", "SKILLS (OPENAI)", 40),
 }
 
-DEFAULT_COLS = ["title", "tier", "conf", "hard", "agree", "skills_hard", "skills_openai"]
+DEFAULT_COLS = ["title", "tier", "conf", "hard", "agree", "edu", "edu_req", "hardskills", "softskills", "skills_hard", "skills_openai"]
 
 def colorize(text: str, color: str) -> str:
     return f"{color}{text}{RESET}"

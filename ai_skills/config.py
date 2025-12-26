@@ -170,6 +170,9 @@ DEFAULT_COLUMN_ORDER: Tuple[str, ...] = (
     # Final merged skills (main output)
     "hardskills",
     "softskills",
+    # Education
+    "EDUCATION2",
+    "EDUCATION2_REQUIRED",
     # Agreement metric
     "AI_skill_agreement",
     # Working columns (intermediate results)
