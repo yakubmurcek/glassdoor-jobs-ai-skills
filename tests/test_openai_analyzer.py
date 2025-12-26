@@ -29,14 +29,18 @@ class TestOpenAIJobAnalyzer(unittest.TestCase):
                 ai_tier="none",
                 ai_skills_mentioned=[],
                 confidence=1.0, 
-                rationale="Reason 1"
+                rationale="Reason 1",
+                hardskills_raw=["python"],
+                softskills_raw=["teamwork"]
             ),
             JobAnalysisResultWithId(
                 id="job_1", 
                 ai_tier="core_ai", 
                 ai_skills_mentioned=["TensorFlow"],
                 confidence=0.9, 
-                rationale="Reason 2"
+                rationale="Reason 2",
+                hardskills_raw=["tensorflow", "python"],
+                softskills_raw=[]
             )
         ])
         
@@ -47,7 +51,9 @@ class TestOpenAIJobAnalyzer(unittest.TestCase):
                 ai_tier="applied_ai",
                 ai_skills_mentioned=[],
                 confidence=0.8, 
-                rationale="Reason 3"
+                rationale="Reason 3",
+                hardskills_raw=["pytorch"],
+                softskills_raw=["communication"]
             )
         ])
         

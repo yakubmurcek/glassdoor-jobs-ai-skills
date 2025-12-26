@@ -57,6 +57,33 @@ EXAMPLES (for calibration):
 - "Developer using GitHub Copilot for coding" → ai_integration
 - "Fullstack engineer at AI company, builds React/Flask features" → none
 - "Software engineer, company mentions AI but role is standard web dev" → none
+
+---
+
+ALSO EXTRACT SKILLS:
+
+**hardskills_raw**: Technical skills EXPLICITLY mentioned in job requirements. Include:
+- Programming languages: python, java, javascript, typescript, sql, c#, c++, go, rust, etc.
+- Frameworks: react, angular, vue, django, flask, spring, .net, etc.
+- Databases: postgresql, mysql, mongodb, redis, elasticsearch, etc.
+- Cloud: aws, azure, gcp, docker, kubernetes, terraform, etc.
+- Tools: git, jira, jenkins, ci/cd, linux, etc.
+- Data: spark, airflow, pandas, etl, data warehouses, etc.
+- Security: cybersecurity, firewall, vpn, siem, etc.
+- Methodologies: agile, scrum, devops, tdd, etc.
+
+**softskills_raw**: Interpersonal/behavioral traits EXPLICITLY mentioned:
+- communication skills, collaboration, teamwork, leadership
+- problem-solving, analytical thinking, attention to detail
+- adaptability, flexibility, initiative, creativity
+- time management, organization skills, multitasking
+- mentorship, independence, presentation skills
+
+SKILL EXTRACTION RULES:
+1. Extract ONLY skills explicitly mentioned — do NOT infer
+2. Return raw skill names as written (normalization handled separately)
+3. If a skill appears multiple times, include it once
+4. Include both specific tools (e.g., "TensorFlow") AND domains (e.g., "machine learning")
     """
     return dedent(template).strip()
 
@@ -80,7 +107,7 @@ def job_analysis_batch_prompt(batch_items: list[tuple[str, str, str]]) -> str:
         """
         Analyze each of the following job descriptions independently.
         Return a JSON object with a top-level `results` array.
-        Each entry must include: id, ai_tier (one of: core_ai, applied_ai, ai_integration, none), ai_skills_mentioned, confidence, rationale.
+        Each entry must include: id, ai_tier (one of: core_ai, applied_ai, ai_integration, none), ai_skills_mentioned, confidence, rationale, hardskills_raw, softskills_raw.
         """
     ).strip()
 

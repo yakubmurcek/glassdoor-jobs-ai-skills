@@ -13,6 +13,7 @@ import pandas as pd
 from .data_io import load_input_data, reorder_columns, save_results
 from .models import JobAnalysisResult
 from .openai_analyzer import OpenAIJobAnalyzer
+from .skill_normalizer import normalize_hardskills, normalize_softskills
 from .skill_processing import annotate_declared_skills
 
 logger = logging.getLogger(__name__)
@@ -88,6 +89,10 @@ class JobAnalysisPipeline:
         
         for col in results_df.columns:
             df[col] = results_df[col].values
+
+        # Add normalized skill columns (deterministic post-processing)
+        df["hardskills"] = [normalize_hardskills(r.hardskills_raw) for r in results]
+        df["softskills"] = [normalize_softskills(r.softskills_raw) for r in results]
 
         # Compute agreement between hard-coded skill matcher and OpenAI classification
         # A job is considered "AI" if tier is not "none"

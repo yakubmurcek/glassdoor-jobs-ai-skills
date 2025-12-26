@@ -24,6 +24,9 @@ class JobAnalysisResult(BaseModel):
     ai_skills_mentioned: List[str] = Field(default_factory=list)
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     rationale: str = ""
+    # Raw skill extractions from LLM (normalized in pipeline)
+    hardskills_raw: List[str] = Field(default_factory=list)
+    softskills_raw: List[str] = Field(default_factory=list)
 
     @field_validator("confidence")
     @classmethod
@@ -32,7 +35,10 @@ class JobAnalysisResult(BaseModel):
         return max(0.0, min(1.0, float(v)))
 
     def as_columns(self) -> dict:
-        """Map the result to the output DataFrame columns."""
+        """Map the result to the output DataFrame columns.
+        
+        Note: hardskills/softskills normalization happens in the pipeline.
+        """
         return {
             "AI_tier_openai": self.ai_tier.value,
             "AI_skills_openai_mentioned": ", ".join(self.ai_skills_mentioned),
@@ -55,6 +61,8 @@ class JobAnalysisResultWithId(BaseModel):
     ai_skills_mentioned: List[str]  # No default - required by OpenAI
     confidence: float = Field(ge=0.0, le=1.0)  # No default - required by OpenAI
     rationale: str  # No default - required by OpenAI
+    hardskills_raw: List[str]  # No default - required by OpenAI
+    softskills_raw: List[str]  # No default - required by OpenAI
 
     @field_validator("confidence")
     @classmethod
@@ -69,6 +77,8 @@ class JobAnalysisResultWithId(BaseModel):
             ai_skills_mentioned=self.ai_skills_mentioned,
             confidence=self.confidence,
             rationale=self.rationale,
+            hardskills_raw=self.hardskills_raw,
+            softskills_raw=self.softskills_raw,
         )
 
     model_config = ConfigDict(frozen=True)
