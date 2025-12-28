@@ -44,8 +44,9 @@ def _ensure_required_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 def reorder_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Place the preferred columns first while preserving the rest."""
-    remaining_columns = [col for col in df.columns if col not in PREFERRED_COLUMN_ORDER]
-    return df[PREFERRED_COLUMN_ORDER + remaining_columns]
+    existing_preferred = [col for col in PREFERRED_COLUMN_ORDER if col in df.columns]
+    remaining_columns = [col for col in df.columns if col not in existing_preferred]
+    return df[existing_preferred + remaining_columns]
 
 
 def save_results(df: pd.DataFrame, path=OUTPUT_CSV) -> None:

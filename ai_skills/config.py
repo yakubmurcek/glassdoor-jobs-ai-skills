@@ -341,7 +341,7 @@ AI_SKILLS = [
     "gpt-4o",
     "gpt4",
     "gpt3",
-    "gpt5"
+    "gpt5",
     "chatgpt",
     "openai",
     "anthropic",
