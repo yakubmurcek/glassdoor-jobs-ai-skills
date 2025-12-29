@@ -1201,10 +1201,10 @@ AI_SKILLS = [
 ]
 
 
-# Skills that indicate "Real AI" work (building/training/deploying)
-# vs just using AI tools.
+# Skills that indicate "Real AI" work (building/training/deploying models)
+# vs just using AI tools or APIs. Tightened to reduce false positives.
 REAL_AI_SKILLS = {
-    # Frameworks & Libraries
+    # ML/DL Frameworks (implies hands-on model work)
     "tensorflow",
     "pytorch",
     "keras",
@@ -1216,57 +1216,48 @@ REAL_AI_SKILLS = {
     "xgboost",
     "lightgbm",
     "catboost",
-    "spacy",
-    "nltk",
-    "gensim",
+    
+    # Specialized AI Libraries (implies building, not just using)
     "huggingface",
     "transformers",
     "diffusers",
     "timm",
     "detectron2",
-    "yolo",
-    "opencv",
     
-    # Core Concepts & Techniques
-    "machine learning",
+    # Core Model Development Activities
+    "model training",
+    "fine-tuning",
+    "model serving",
+    "model deployment",
+    "model evaluation",
+    "model monitoring",
+    
+    # Deep Learning Concepts (specific enough to imply real work)
     "deep learning",
     "neural networks",
-    "nlp",
-    "natural language processing",
-    "computer vision",
     "reinforcement learning",
-    "supervised learning",
-    "unsupervised learning",
-    "generative ai",
+    
+    # GenAI / LLM Specific
     "llm",
     "large language model",
+    "generative ai",
     "foundation model",
-    "retrieval augmented generation",
     "rag",
-    "fine-tuning",
-    "model training",
-    "model evaluation",
-    "feature engineering",
+    "retrieval augmented generation",
     
-    # MLOps & Engineering
+    # MLOps Platforms (implies production ML work)
     "mlops",
     "mlflow",
     "kubeflow",
     "sagemaker",
     "vertex ai",
     "azure ml",
-    "model serving",
-    "model deployment",
-    "model monitoring",
     "feature store",
     "experiment tracking",
-    "data pipeline",
-    "airflow",
-    "prefect",
-    "dagster",
-    "dvc",
     "weights and biases",
     "wandb",
+    
+    # Model Optimization (implies hands-on work)
     "onnx",
     "tensorrt",
     "triton inference server",
