@@ -117,7 +117,6 @@ class JobAnalysisPipeline:
         ]
         
         # --- LLM-BASED EXTRACTION (normalized) ---
-        # --- LLM-BASED EXTRACTION (normalized) ---
         hardskills_llm = []
         for r in results:
             norm_h = normalize_hardskills(r.hardskills_raw)
