@@ -127,7 +127,8 @@ SOFTSKILL_CANONICALIZATION: dict[str, str] = {
 def _apply_regex_canonicalization(skill: str) -> str:
     """Apply regex-based canonicalization for complex patterns."""
     # .NET pattern: .net, . net, .net core, .net 6, etc.
-    if re.match(r"\.?\s*net(\s+(core|\d+))?", skill, re.IGNORECASE):
+    # Note: Regex must be anchored to avoid matching words starting with "net" like "network"
+    if re.match(r"^\.?\s*net(\s+(core|\d+))?$", skill, re.IGNORECASE):
         return "dotnet"
     return skill
 

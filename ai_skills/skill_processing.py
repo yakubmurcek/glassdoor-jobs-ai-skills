@@ -16,6 +16,8 @@ AI_SKILLS_SET: Set[str] = set(AI_SKILLS_LOWER)
 
 def tokenize_skills(skill_string: str) -> List[str]:
     """Split comma-delimited skills into normalized tokens."""
+    if not isinstance(skill_string, str):
+        return []
     parts = re.split(r",|\n", skill_string)
     return [part.strip().lower() for part in parts if part.strip()]
 

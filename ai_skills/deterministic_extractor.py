@@ -120,14 +120,24 @@ def merge_skills(dict_skills: List[str], llm_skills: List[str]) -> List[str]:
     Returns:
         Sorted list of unique merged skills.
     """
-    # Normalize both to lowercase for comparison
-    dict_normalized = {s.lower().strip() for s in dict_skills if s}
-    llm_normalized = {s.lower().strip() for s in llm_skills if s}
+    # Create a map of lowercase -> original casing
+    # Priority: dict_skills (canonical) > llm_skills (variable)
+    case_map = {}
     
-    # Union
-    merged = dict_normalized | llm_normalized
+    # Process LLM skills first (lower priority casing)
+    for skill in llm_skills:
+        if skill:
+            case_map[skill.lower().strip()] = skill.strip()
+            
+    # Process Dictionary skills second (overwrite with canonical casing)
+    for skill in dict_skills:
+        if skill:
+            case_map[skill.lower().strip()] = skill.strip()
     
-    return sorted(merged)
+    # Sort by the final case-preserved strings
+    merged = sorted(case_map.values())
+    
+    return merged
 
 
 def format_skills_string(skills: List[str]) -> str:

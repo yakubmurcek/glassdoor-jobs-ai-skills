@@ -322,7 +322,7 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     # Message queues
     "kafka": "kafka",
     "apache kafka": "kafka",
-    "rabbitmq": "rabbitmq",
+
     "rabbit mq": "rabbitmq",
     "activemq": "activemq",
     "sqs": "sqs",
@@ -432,9 +432,7 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     "haproxy": "haproxy",
     "kong": "kong",
     "api gateway": "api gateway",
-    "oauth": "oauth",
-    "oauth2": "oauth2",
-    "jwt": "jwt",
+
     "json web token": "jwt",
     "saml": "saml",
     "ldap": "ldap",
@@ -518,9 +516,7 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     "big query": "bigquery",
     
     # Other common skills
-    "api": "api",
-    "apis": "api",
-    "sdk": "sdk",
+
     "oop": "oop",
     "object oriented": "oop",
     "object-oriented": "oop",
@@ -555,9 +551,7 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     "iac": "infrastructure as code",
     "container orchestration": "container orchestration",
     "web development": "web development",
-    "frontend development": "frontend development",
-    "front-end development": "frontend development",
-    "front end development": "frontend development",
+
     "backend development": "backend development",
     "back-end development": "backend development",
     "back end development": "backend development",
@@ -597,9 +591,7 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     "cdn": "cdn",
     "content delivery network": "cdn",
     "storage": "storage",
-    "s3": "s3",
-    "amazon s3": "s3",
-    "blob storage": "blob storage",
+
     "gcs": "gcs",
     "google cloud storage": "gcs",
     "virtualization": "virtualization",

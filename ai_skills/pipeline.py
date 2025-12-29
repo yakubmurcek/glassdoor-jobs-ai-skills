@@ -10,6 +10,7 @@ from typing import Callable, List
 
 import pandas as pd
 
+from .config import REAL_AI_SKILLS
 from .data_io import load_input_data, reorder_columns, save_results
 from .deterministic_extractor import (
     extract_hardskills_deterministic,
@@ -116,16 +117,16 @@ class JobAnalysisPipeline:
         ]
         
         # --- LLM-BASED EXTRACTION (normalized) ---
-        hardskills_llm = [
-            normalize_hardskills(r.hardskills_raw).split(", ") 
-            if normalize_hardskills(r.hardskills_raw) else []
-            for r in results
-        ]
-        softskills_llm = [
-            normalize_softskills(r.softskills_raw).split(", ")
-            if normalize_softskills(r.softskills_raw) else []
-            for r in results
-        ]
+        # --- LLM-BASED EXTRACTION (normalized) ---
+        hardskills_llm = []
+        for r in results:
+            norm_h = normalize_hardskills(r.hardskills_raw)
+            hardskills_llm.append(norm_h.split(", ") if norm_h else [])
+            
+        softskills_llm = []
+        for r in results:
+            norm_s = normalize_softskills(r.softskills_raw)
+            softskills_llm.append(norm_s.split(", ") if norm_s else [])
         
         # --- MERGE: Union of both methods ---
         hardskills_merged = [
@@ -153,16 +154,8 @@ class JobAnalysisPipeline:
             df["AI_skill_hard"] == (df["AI_tier_openai"] != "none").astype(int)
         ).astype(int)
         
-        # IS_AI_JOB: Binary indicator for "real AI" jobs (building/training models)
+        # IS_AI_JOB: Binary indicator for "real AI" jobs (building/training/deploying)
         # Hybrid approach: tier-based OR skill-based detection
-        REAL_AI_SKILLS = {
-            "tensorflow", "pytorch", "keras", "scikit-learn", 
-            "machine learning", "deep learning", "neural networks", 
-            "nlp", "computer vision", "mlops", "mlflow", "kubeflow",
-            "huggingface", "transformers", "sagemaker", "vertex ai", "azure ml",
-            "model serving", "model deployment", "model monitoring", 
-            "feature store", "experiment tracking",
-        }
         
         def is_real_ai_job(tier: str, skills_str: str) -> str:
             # Check tier first

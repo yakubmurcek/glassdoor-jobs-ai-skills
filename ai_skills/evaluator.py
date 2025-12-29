@@ -248,6 +248,28 @@ class PipelineEvaluator:
                 f"Row count mismatch: baseline has {len(self.baseline_df)}, "
                 f"candidate has {len(self.candidate_df)}"
             )
+
+        # Dynamic column detection
+        self.base_cols = self._detect_ai_columns(self.baseline_df)
+        self.cand_cols = self._detect_ai_columns(self.candidate_df)
+
+    def _detect_ai_columns(self, df: pd.DataFrame) -> dict[str, str]:
+        """Dynamically find AI-related column names."""
+        cols = {}
+        
+        # Find AI Tier column (e.g., AI_tier_openai, AI_tier_ollama)
+        tier_cols = [c for c in df.columns if c.startswith("AI_tier_")]
+        cols["tier"] = tier_cols[0] if tier_cols else "AI_tier_openai"
+        
+        # Extract suffix (e.g., "openai" from "AI_tier_openai")
+        suffix = cols["tier"].replace("AI_tier_", "")
+        
+        # Construct other expected column names based on suffix
+        cols["confidence"] = f"AI_skill_{suffix}_confidence"
+        cols["rationale"] = f"AI_skill_{suffix}_rationale"
+        cols["skills"] = f"AI_skills_{suffix}_mentioned"
+        
+        return cols
     
     def compare(self) -> EvaluationReport:
         """Run all comparisons and return structured report."""
@@ -255,8 +277,8 @@ class PipelineEvaluator:
         match_count = len(self.baseline_df) - len(changes)
         match_rate = match_count / len(self.baseline_df)
         
-        baseline_conf = self._confidence_stats(self.baseline_df)
-        candidate_conf = self._confidence_stats(self.candidate_df)
+        baseline_conf = self._confidence_stats(self.baseline_df, self.base_cols["confidence"])
+        candidate_conf = self._confidence_stats(self.candidate_df, self.cand_cols["confidence"])
         
         baseline_agree = self._agreement_rate(self.baseline_df)
         candidate_agree = self._agreement_rate(self.candidate_df)
@@ -286,8 +308,8 @@ class PipelineEvaluator:
             new_columns=new_cols,
             match_count=match_count,
             match_rate=match_rate,
-            baseline_tier_distribution=self._tier_distribution(self.baseline_df),
-            candidate_tier_distribution=self._tier_distribution(self.candidate_df),
+            baseline_tier_distribution=self._tier_distribution(self.baseline_df, self.base_cols["tier"]),
+            candidate_tier_distribution=self._tier_distribution(self.candidate_df, self.cand_cols["tier"]),
             tier_changes=self._tier_changes(),
             baseline_confidence={
                 "mean": baseline_conf.mean,
@@ -343,36 +365,61 @@ class PipelineEvaluator:
         """Identify jobs where classification changed."""
         changes = []
         
-        for _, base_row in self.baseline_df.iterrows():
-            job_id = base_row["id"]
-            cand_row = self.candidate_df[self.candidate_df["id"] == job_id].iloc[0]
+        # Efficient O(N) Comparison using merge logic
+        # Ensure we are comparing jobs by ID
+        
+        # Select relevant columns from baseline
+        b_cols = ["id", "job_title", "job_desc_text",
+                  self.base_cols["tier"], self.base_cols["confidence"],
+                  self.base_cols["rationale"], self.base_cols["skills"]]
+        
+        # Select relevant columns from candidate
+        c_cols = ["id", 
+                  self.cand_cols["tier"], self.cand_cols["confidence"], 
+                  self.cand_cols["rationale"], self.cand_cols["skills"]]
+        
+        # Rename columns to avoid collision during merge
+        b_df = self.baseline_df[b_cols].copy().add_suffix('_base')
+        c_df = self.candidate_df[c_cols].copy().add_suffix('_cand')
+        
+        # Restore ID column name for merging
+        b_df = b_df.rename(columns={"id_base": "id"})
+        c_df = c_df.rename(columns={"id_cand": "id"})
+        
+        # Merge on ID
+        merged = pd.merge(b_df, c_df, on="id", how="inner")
+        
+        # Filter for changes
+        tier_base = f"{self.base_cols['tier']}_base"
+        tier_cand = f"{self.cand_cols['tier']}_cand"
+        
+        changed_rows = merged[merged[tier_base] != merged[tier_cand]]
+        
+        for _, row in changed_rows.iterrows():
+            # Get job description excerpt
+            job_desc = str(row.get("job_desc_text_base", ""))[:500]
             
-            old_tier = base_row["AI_tier_openai"]
-            new_tier = cand_row["AI_tier_openai"]
-            
-            if old_tier != new_tier:
-                # Get job description excerpt
-                job_desc = str(base_row.get("job_desc_text", ""))[:500]
-                
-                changes.append(ClassificationChange(
-                    job_id=int(job_id),
-                    job_title=str(base_row.get("job_title", "Unknown")),
-                    old_tier=str(old_tier),
-                    new_tier=str(new_tier),
-                    old_confidence=float(base_row["AI_skill_openai_confidence"]),
-                    new_confidence=float(cand_row["AI_skill_openai_confidence"]),
-                    old_rationale=str(base_row.get("AI_skill_openai_rationale", "")),
-                    new_rationale=str(cand_row.get("AI_skill_openai_rationale", "")),
-                    job_description_excerpt=job_desc,
-                    ai_skills_old=str(base_row.get("AI_skills_openai_mentioned", "")),
-                    ai_skills_new=str(cand_row.get("AI_skills_openai_mentioned", "")),
-                ))
+            changes.append(ClassificationChange(
+                job_id=int(row["id"]),
+                job_title=str(row.get("job_title_base", "Unknown")),
+                old_tier=str(row[tier_base]),
+                new_tier=str(row[tier_cand]),
+                old_confidence=float(row[f"{self.base_cols['confidence']}_base"]),
+                new_confidence=float(row[f"{self.cand_cols['confidence']}_cand"]),
+                old_rationale=str(row.get(f"{self.base_cols['rationale']}_base", "")),
+                new_rationale=str(row.get(f"{self.cand_cols['rationale']}_cand", "")),
+                job_description_excerpt=job_desc,
+                ai_skills_old=str(row.get(f"{self.base_cols['skills']}_base", "")),
+                ai_skills_new=str(row.get(f"{self.cand_cols['skills']}_cand", "")),
+            ))
         
         return changes
     
-    def _tier_distribution(self, df: pd.DataFrame) -> dict[str, int]:
+    def _tier_distribution(self, df: pd.DataFrame, tier_col: str) -> dict[str, int]:
         """Get tier distribution as dict."""
-        dist = df["AI_tier_openai"].value_counts().to_dict()
+        if tier_col not in df.columns:
+            return {}
+        dist = df[tier_col].value_counts().to_dict()
         # Ensure all tiers are present
         for tier in ["none", "ai_integration", "applied_ai", "core_ai"]:
             if tier not in dist:
@@ -381,16 +428,18 @@ class PipelineEvaluator:
     
     def _tier_changes(self) -> dict[str, int]:
         """Calculate tier count changes."""
-        base_dist = self._tier_distribution(self.baseline_df)
-        cand_dist = self._tier_distribution(self.candidate_df)
+        base_dist = self._tier_distribution(self.baseline_df, self.base_cols["tier"])
+        cand_dist = self._tier_distribution(self.candidate_df, self.cand_cols["tier"])
         return {
             tier: cand_dist.get(tier, 0) - base_dist.get(tier, 0)
             for tier in ["none", "ai_integration", "applied_ai", "core_ai"]
         }
     
-    def _confidence_stats(self, df: pd.DataFrame) -> ConfidenceStats:
+    def _confidence_stats(self, df: pd.DataFrame, conf_col: str) -> ConfidenceStats:
         """Calculate confidence statistics."""
-        conf = df["AI_skill_openai_confidence"]
+        if conf_col not in df.columns:
+            return ConfidenceStats(0.0, 0.0, 0.0, 0.0)
+        conf = df[conf_col]
         return ConfidenceStats(
             mean=float(conf.mean()),
             std=float(conf.std()),
