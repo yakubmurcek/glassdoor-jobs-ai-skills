@@ -207,6 +207,47 @@ DEFAULT_COLUMN_ORDER: Tuple[str, ...] = (
 )
 
 
+# =============================================================================
+# Display Configuration for show_csv.py
+# =============================================================================
+# Key = actual column name in DataFrame
+# Value = (display_label, width, format_type)
+# format_type: "text", "tier", "confidence", "boolean", "skills"
+
+@dataclass(frozen=True)
+class ColumnDisplay:
+    """Configuration for how a column should be displayed."""
+    label: str          # Display label in header
+    width: int          # Column width
+    format_type: str    # "text", "tier", "confidence", "boolean", "skills"
+
+
+# Columns available for display - key IS the column name
+DISPLAY_COLUMNS: Dict[str, ColumnDisplay] = {
+    "job_title": ColumnDisplay("JOB TITLE", 40, "text"),
+    "desc_tier_llm": ColumnDisplay("TIER", 14, "tier"),
+    "desc_conf_llm": ColumnDisplay("CONF", 5, "confidence"),
+    "is_real_ai": ColumnDisplay("AI?", 4, "boolean"),
+    "skills_hasai_det": ColumnDisplay("HAS_AI", 6, "boolean"),
+    "ai_det_llm_match": ColumnDisplay("AGREE", 5, "boolean"),
+    "edu_level_det": ColumnDisplay("EDU", 10, "text"),
+    "edureq_llm": ColumnDisplay("EDU_REQ", 7, "boolean"),
+    "hardskills": ColumnDisplay("HARDSKILLS", 50, "skills"),
+    "softskills": ColumnDisplay("SOFTSKILLS", 30, "skills"),
+    "skill_cluster": ColumnDisplay("SKILL FAMILIES", 80, "skills"),
+    "skills_ai_det": ColumnDisplay("AI FROM SKILLS", 30, "skills"),
+    "desc_ai_llm": ColumnDisplay("AI FROM LLM", 40, "skills"),
+}
+
+# Default columns to show (use actual column names)
+DEFAULT_DISPLAY_COLS: Tuple[str, ...] = (
+    "job_title", "is_real_ai", "desc_tier_llm", "desc_conf_llm", 
+    "skills_hasai_det", "ai_det_llm_match", "edu_level_det", "edureq_llm",
+    "skill_cluster", "softskills", "skills_ai_det", "desc_ai_llm",
+)
+
+
+
 @dataclass(frozen=True)
 class ProcessingSettings:
     """Tunable processing limits and output ordering."""

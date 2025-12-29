@@ -193,7 +193,7 @@ class JobAnalysisPipeline:
             df["edu_level_det"] = ""
             logger.warning("'educations' column not found, edu_level_det will be empty.")
         
-        # edu_req_llm: Already added from LLM results via as_columns()
+        # edureq_llm: Already added from LLM results via as_columns()
         
         return df
 
