@@ -119,19 +119,26 @@ class OpenAIJobAnalyzer:
         job_desc_texts: Sequence[Optional[str]],
         *,
         job_titles: Sequence[str] | None = None,
+        educations: Sequence[str] | None = None,
         progress_callback: Callable[[int, int], None] | None = None,
     ) -> list[JobAnalysisResult]:
         """Analyze multiple job descriptions.
         
         Uses decomposed task-based batching if enabled (default), 
         otherwise falls back to legacy monolithic batching.
+        
+        Args:
+            job_desc_texts: Job description texts to analyze
+            job_titles: Optional job titles for context
+            educations: Optional education column values for education requirement task
+            progress_callback: Optional callback for progress reporting
         """
         if not job_desc_texts:
             return []
 
         if self.use_decomposed:
             return self._analyze_texts_decomposed(
-                job_desc_texts, job_titles, progress_callback
+                job_desc_texts, job_titles, educations, progress_callback
             )
         else:
             return self._analyze_texts_monolithic(
@@ -146,13 +153,15 @@ class OpenAIJobAnalyzer:
         self,
         job_desc_texts: Sequence[Optional[str]],
         job_titles: Sequence[str] | None,
+        educations: Sequence[str] | None,
         progress_callback: Callable[[int, int], None] | None,
     ) -> list[JobAnalysisResult]:
         """Analyze texts using decomposed single-task prompts."""
         normalized_texts = [self._prepare_text(text) for text in job_desc_texts]
         titles = list(job_titles) if job_titles else [""] * len(normalized_texts)
+        edu_list = list(educations) if educations else [""] * len(normalized_texts)
         
-        # Prepare batch items with IDs
+        # Prepare batch items with IDs (3-tuples for tier/skills tasks)
         batch_items: list[tuple[str, str, str]] = []
         index_lookup: dict[str, int] = {}
         for idx, text in enumerate(normalized_texts):
@@ -162,6 +171,16 @@ class OpenAIJobAnalyzer:
             title = titles[idx] if idx < len(titles) else ""
             batch_items.append((job_id, title, text))
             index_lookup[job_id] = idx
+        
+        # Prepare education-specific batch items (4-tuples with education column)
+        edu_batch_items: list[tuple[str, str, str, str]] = []
+        for idx, text in enumerate(normalized_texts):
+            if not text:
+                continue
+            job_id = f"job_{idx}"
+            title = titles[idx] if idx < len(titles) else ""
+            edu = edu_list[idx] if idx < len(edu_list) else ""
+            edu_batch_items.append((job_id, title, text, edu))
         
         total_items = len(batch_items)
         total_tasks = 3  # AI tier, Skills, Education
@@ -198,15 +217,13 @@ class OpenAIJobAnalyzer:
         if progress_callback:
             progress_callback(processed, total_items * total_tasks)
         
-        # Task 3: Education Required
+        # Task 3: Education Required (uses 4-tuple items with education column)
         logger.info(f"Task 3/3: Education Requirement ({total_items} jobs)")
-        edu_results = self._run_task(
-            batch_items,
+        edu_results = self._run_edu_task(
+            edu_batch_items,
             task_name="education",
             batch_size=EDUCATION_BATCH_SIZE,
             system_prompt=education_instructions(),
-            prompt_builder=education_batch_prompt,
-            response_model=EducationBatchResponse,
         )
         processed += total_items
         if progress_callback:
@@ -278,6 +295,75 @@ class OpenAIJobAnalyzer:
                         prompt = prompt_builder([item])
                         response = self._call_llm_task(
                             system_prompt, prompt, response_model, 1
+                        )
+                        if response.results:
+                            results[job_id] = response.results[0]
+                            logger.info(f"[{task_name}] Retry succeeded for {job_id}")
+                            break
+                    except Exception as e:
+                        logger.warning(f"[{task_name}] Retry {attempt+1} failed for {job_id}: {e}")
+                        time.sleep(self.delay_seconds)
+        
+        return results
+
+    def _run_edu_task(
+        self,
+        all_items: list[tuple[str, str, str, str]],
+        *,
+        task_name: str,
+        batch_size: int,
+        system_prompt: str,
+    ) -> dict[str, EducationResultWithId]:
+        """Run education task with 4-tuple items (includes education column).
+        
+        Similar to _run_task but uses education_batch_prompt which expects 4-tuples.
+        """
+        results: dict[str, EducationResultWithId] = {}
+        failed_ids: list[str] = []
+        
+        # Process in batches
+        for i in range(0, len(all_items), batch_size):
+            batch = all_items[i:i + batch_size]
+            batch_ids = [item[0] for item in batch]
+            
+            try:
+                prompt = education_batch_prompt(batch)
+                response = self._call_llm_task(
+                    system_prompt, prompt, EducationBatchResponse, len(batch)
+                )
+                
+                # Match results by ID
+                for result in response.results:
+                    results[result.id] = result
+                
+                # Check for missing IDs
+                received_ids = {r.id for r in response.results}
+                for job_id in batch_ids:
+                    if job_id not in received_ids:
+                        failed_ids.append(job_id)
+                        logger.warning(f"[{task_name}] Missing result for {job_id}")
+                
+            except Exception as e:
+                logger.error(f"[{task_name}] Batch failed: {e}")
+                failed_ids.extend(batch_ids)
+            
+            time.sleep(self.delay_seconds)
+        
+        # Retry failed items individually (max 2 retries each)
+        if failed_ids:
+            logger.info(f"[{task_name}] Retrying {len(failed_ids)} failed items...")
+            items_by_id = {item[0]: item for item in all_items}
+            
+            for job_id in failed_ids:
+                item = items_by_id.get(job_id)
+                if not item:
+                    continue
+                
+                for attempt in range(2):
+                    try:
+                        prompt = education_batch_prompt([item])
+                        response = self._call_llm_task(
+                            system_prompt, prompt, EducationBatchResponse, 1
                         )
                         if response.results:
                             results[job_id] = response.results[0]

@@ -82,9 +82,20 @@ class JobAnalysisPipeline:
             for title in annotated_df["job_title"].tolist()
         ]
         
+        # Extract educations column for education requirement task
+        educations = []
+        if "educations" in annotated_df.columns:
+            educations = [
+                "" if pd.isna(edu) else str(edu)
+                for edu in annotated_df["educations"].tolist()
+            ]
+        
         logger.info(f"Analyzing {len(job_texts)} job descriptions with OpenAI...")
         results: List[JobAnalysisResult] = self.analyzer.analyze_texts(
-            job_texts, job_titles=job_titles, progress_callback=progress_callback
+            job_texts, 
+            job_titles=job_titles, 
+            educations=educations if educations else None,
+            progress_callback=progress_callback
         )
 
         return self._merge_results_into_df(annotated_df, results)

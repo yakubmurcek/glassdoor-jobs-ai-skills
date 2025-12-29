@@ -314,20 +314,25 @@ EXAMPLES:
     return dedent(template).strip()
 
 
-def education_batch_prompt(batch_items: list[tuple[str, str, str]]) -> str:
+def education_batch_prompt(batch_items: list[tuple[str, str, str, str]]) -> str:
     """Build batch prompt for education requirement task.
     
     Args:
-        batch_items: List of tuples (identifier, job_title, description)
+        batch_items: List of tuples (identifier, job_title, description, educations)
+                     where educations is the value from the 'educations' column
     """
     header = dedent(
         """
-        For each job, return: id, education_required (0 or 1).
+        For each job, determine if education is REQUIRED or just preferred.
+        You are given the job description AND the education levels mentioned.
+        Focus on whether these education levels are REQUIRED vs PREFERRED based on context.
+        Return: id, education_required (0 or 1).
         """
     ).strip()
 
     body_parts = []
-    for identifier, title, description in batch_items:
-        body_parts.append(f"[{identifier}] {title}\n{description}")
+    for identifier, title, description, educations in batch_items:
+        edu_info = f"Job posting education listed: {educations}" if educations else "Job posting education listed: None"
+        body_parts.append(f"[{identifier}] {title}\n{edu_info}\n{description}")
     
     return f"{header}\n\n" + "\n\n---\n\n".join(body_parts)

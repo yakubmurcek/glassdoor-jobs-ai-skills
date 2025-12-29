@@ -194,8 +194,8 @@ DEFAULT_COLUMN_ORDER: Tuple[str, ...] = (
     "skill_cluster",
     # From educations column (deterministic)
     "edu_level_det",
-    # From job description (LLM) - education required
-    "desc_edureq_llm",
+    # Education requirement (LLM uses educations column + job description)
+    "edureq_llm",
     # Metrics
     "ai_det_llm_match",
     # Intermediate: from job description (deterministic)

@@ -46,7 +46,7 @@ class JobAnalysisResult(BaseModel):
             "desc_ai_llm": ", ".join(self.ai_skills_mentioned),
             "desc_conf_llm": self.confidence,
             "desc_rationale_llm": self.rationale,
-            "desc_edureq_llm": self.education_required,
+            "edureq_llm": self.education_required,
         }
 
     model_config = ConfigDict(frozen=True)
