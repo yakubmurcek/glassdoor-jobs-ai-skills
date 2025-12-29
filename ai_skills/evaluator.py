@@ -257,17 +257,31 @@ class PipelineEvaluator:
         """Dynamically find AI-related column names."""
         cols = {}
         
-        # Find AI Tier column (e.g., AI_tier_openai, AI_tier_ollama)
-        tier_cols = [c for c in df.columns if c.startswith("AI_tier_")]
-        cols["tier"] = tier_cols[0] if tier_cols else "AI_tier_openai"
-        
-        # Extract suffix (e.g., "openai" from "AI_tier_openai")
-        suffix = cols["tier"].replace("AI_tier_", "")
-        
-        # Construct other expected column names based on suffix
-        cols["confidence"] = f"AI_skill_{suffix}_confidence"
-        cols["rationale"] = f"AI_skill_{suffix}_rationale"
-        cols["skills"] = f"AI_skills_{suffix}_mentioned"
+        # Find AI Tier column - try naming schemes in order
+        if "desc_tier_llm" in df.columns:
+            # Current naming: source_what_method
+            cols["tier"] = "desc_tier_llm"
+            cols["confidence"] = "desc_conf_llm"
+            cols["rationale"] = "desc_rationale_llm"
+            cols["skills"] = "desc_ai_llm"
+        elif "tier_llm" in df.columns:
+            cols["tier"] = "tier_llm"
+            cols["confidence"] = "conf_llm"
+            cols["rationale"] = "rationale_llm"
+            cols["skills"] = "desc_ai_llm"
+        elif "ai_tier" in df.columns:
+            cols["tier"] = "ai_tier"
+            cols["confidence"] = "ai_confidence"
+            cols["rationale"] = "ai_rationale"
+            cols["skills"] = "ai_skills"
+        else:
+            # Legacy naming (AI_tier_openai, AI_tier_ollama, etc.)
+            tier_cols = [c for c in df.columns if c.startswith("AI_tier_")]
+            cols["tier"] = tier_cols[0] if tier_cols else "AI_tier_openai"
+            suffix = cols["tier"].replace("AI_tier_", "")
+            cols["confidence"] = f"AI_skill_{suffix}_confidence"
+            cols["rationale"] = f"AI_skill_{suffix}_rationale"
+            cols["skills"] = f"AI_skills_{suffix}_mentioned"
         
         return cols
     
@@ -448,10 +462,12 @@ class PipelineEvaluator:
         )
     
     def _agreement_rate(self, df: pd.DataFrame) -> float:
-        """Calculate agreement rate between hard-coded and OpenAI."""
-        if "AI_skill_agreement" not in df.columns:
-            return 0.0
-        return float((df["AI_skill_agreement"] == 1).sum() / len(df))
+        """Calculate agreement rate between dictionary matcher and LLM."""
+        # Try column names in order of preference
+        for agree_col in ["ai_det_llm_match", "det_llm_match", "ai_agree", "AI_skill_agreement"]:
+            if agree_col in df.columns:
+                return float((df[agree_col] == 1).sum() / len(df))
+        return 0.0
     
     def _skills_stats(self, df: pd.DataFrame) -> tuple[float | None, float | None]:
         """Calculate average skills per job."""

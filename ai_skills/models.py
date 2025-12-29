@@ -42,11 +42,11 @@ class JobAnalysisResult(BaseModel):
         Note: hardskills/softskills normalization happens in the pipeline.
         """
         return {
-            "AI_tier_openai": self.ai_tier.value,
-            "AI_skills_openai_mentioned": ", ".join(self.ai_skills_mentioned),
-            "AI_skill_openai_confidence": self.confidence,
-            "AI_skill_openai_rationale": self.rationale,
-            "EDUCATION2_REQUIRED": self.education_required,
+            "desc_tier_llm": self.ai_tier.value,
+            "desc_ai_llm": ", ".join(self.ai_skills_mentioned),
+            "desc_conf_llm": self.confidence,
+            "desc_rationale_llm": self.rationale,
+            "desc_edureq_llm": self.education_required,
         }
 
     model_config = ConfigDict(frozen=True)

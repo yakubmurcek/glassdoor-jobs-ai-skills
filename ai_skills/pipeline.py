@@ -138,51 +138,51 @@ class JobAnalysisPipeline:
         ]
         
         # Add all columns to DataFrame
-        df["hardskills_dict"] = [format_skills_string(s) for s in hardskills_dict]
-        df["hardskills_llm"] = [format_skills_string(s) for s in hardskills_llm]
+        df["desc_hard_det"] = [format_skills_string(s) for s in hardskills_dict]
+        df["desc_hard_llm"] = [format_skills_string(s) for s in hardskills_llm]
         df["hardskills"] = [format_skills_string(s) for s in hardskills_merged]
-        df["hardskills_families"] = [format_skills_by_family(s) for s in hardskills_merged]
+        df["skill_cluster"] = [format_skills_by_family(s) for s in hardskills_merged]
         
-        df["softskills_dict"] = [format_skills_string(s) for s in softskills_dict]
-        df["softskills_llm"] = [format_skills_string(s) for s in softskills_llm]
+        df["desc_soft_det"] = [format_skills_string(s) for s in softskills_dict]
+        df["desc_soft_llm"] = [format_skills_string(s) for s in softskills_llm]
         df["softskills"] = [format_skills_string(s) for s in softskills_merged]
 
-        # Compute agreement between hard-coded skill matcher and OpenAI classification
+        # Compute agreement between dictionary matcher and LLM classification
         # A job is considered "AI" if tier is not "none"
-        df["AI_skill_agreement"] = (
-            df["AI_skill_hard"] == (df["AI_tier_openai"] != "none").astype(int)
+        df["ai_det_llm_match"] = (
+            df["skills_hasai_det"] == (df["desc_tier_llm"] != "none").astype(int)
         ).astype(int)
         
-        # IS_AI_JOB: Binary indicator for "real AI" jobs (building/training/deploying)
+        # is_real_ai: Binary indicator for "real AI" jobs (building/training/deploying)
         # Hybrid approach: tier-based OR skill-based detection
         
-        def is_real_ai_job(tier: str, skills_str: str) -> str:
+        def is_real_ai_job(tier: str, skills_str: str) -> int:
             # Check tier first
             if tier in ["core_ai", "applied_ai"]:
-                return "yes"
+                return 1
             # Check skills intersection
             if skills_str:
                 detected_skills = {s.strip().lower() for s in skills_str.split(",")}
                 if detected_skills & REAL_AI_SKILLS:
-                    return "yes"
-            return "no"
+                    return 1
+            return 0
         
-        df["IS_AI_JOB"] = df.apply(
-            lambda row: is_real_ai_job(row["AI_tier_openai"], row.get("hardskills", "")),
+        df["is_real_ai"] = df.apply(
+            lambda row: is_real_ai_job(row["desc_tier_llm"], row.get("hardskills", "")),
             axis=1
         )
         
         # --- EDUCATION EXTRACTION ---
-        # EDUCATION2: Deterministic extraction from existing 'educations' column
+        # edu_level_det: Deterministic extraction from existing 'educations' column
         if "educations" in df.columns:
-            df["EDUCATION2"] = df["educations"].apply(
+            df["edu_level_det"] = df["educations"].apply(
                 lambda x: extract_education_from_row(x if pd.notna(x) else None)
             )
         else:
-            df["EDUCATION2"] = ""
-            logger.warning("'educations' column not found, EDUCATION2 will be empty.")
+            df["edu_level_det"] = ""
+            logger.warning("'educations' column not found, edu_level_det will be empty.")
         
-        # EDUCATION2_REQUIRED: Already added from LLM results via as_columns()
+        # edu_req_llm: Already added from LLM results via as_columns()
         
         return df
 

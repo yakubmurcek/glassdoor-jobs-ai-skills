@@ -178,27 +178,32 @@ DEFAULT_COLUMN_ORDER: Tuple[str, ...] = (
     # Source data
     "skills",
     "job_desc_text",
-    # AI detection from source skills
-    "AI_skills_found",
-    "AI_skill_hard",
-    # AI classification from LLM
-    "AI_tier_openai",
-    "AI_skill_openai_confidence",
-    "AI_skills_openai_mentioned",
-    "AI_skill_openai_rationale",
-    # Final merged skills (main output)
+    # From skills column (deterministic)
+    "skills_ai_det",
+    "skills_hasai_det",
+    # From job description (LLM)
+    "desc_tier_llm",
+    "desc_conf_llm",
+    "desc_ai_llm",
+    "desc_rationale_llm",
+    # Key derived column
+    "is_real_ai",
+    # Final merged skills
     "hardskills",
     "softskills",
-    # Education
-    "EDUCATION2",
-    "EDUCATION2_REQUIRED",
-    # Agreement metric
-    "AI_skill_agreement",
-    # Working columns (intermediate results)
-    "hardskills_dict",
-    "hardskills_llm",
-    "softskills_dict",
-    "softskills_llm",
+    "skill_cluster",
+    # From educations column (deterministic)
+    "edu_level_det",
+    # From job description (LLM) - education required
+    "desc_edureq_llm",
+    # Metrics
+    "ai_det_llm_match",
+    # Intermediate: from job description (deterministic)
+    "desc_hard_det",
+    "desc_soft_det",
+    # Intermediate: from job description (LLM)
+    "desc_hard_llm",
+    "desc_soft_llm",
 )
 
 
