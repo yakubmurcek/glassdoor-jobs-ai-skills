@@ -123,6 +123,27 @@ class PathSettings:
         )
 
 
+# Available LLM tasks for decomposed mode
+LLM_TASK_AI_TIER = "ai_tier"
+LLM_TASK_SKILLS = "skills"
+LLM_TASK_EDUCATION = "education"
+
+# Default: education disabled (can be done deterministically)
+DEFAULT_ENABLED_LLM_TASKS: frozenset[str] = frozenset({LLM_TASK_AI_TIER, LLM_TASK_SKILLS})
+
+
+def _get_set_setting(env_var: str, default: frozenset[str]) -> frozenset[str]:
+    """Parse comma-separated list into a frozenset."""
+    value = _get_raw_setting(env_var)
+    if value is None:
+        return default
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return frozenset(value)
+    # Parse comma-separated string
+    items = [item.strip() for item in str(value).split(",") if item.strip()]
+    return frozenset(items) if items else default
+
+
 @dataclass(frozen=True)
 class LLMSettings:
     """Options that control LLM API usage (OpenAI or Ollama)."""
@@ -135,6 +156,7 @@ class LLMSettings:
     rate_limit_delay: float
     batch_size: int
     max_parallel_requests: int
+    enabled_tasks: frozenset[str]  # Which decomposed tasks use LLM
 
     @classmethod
     def build(cls) -> "LLMSettings":
@@ -167,6 +189,7 @@ class LLMSettings:
             max_parallel_requests=max(
                 1, _get_int_setting("OPENAI_MAX_PARALLEL_REQUESTS", 3)
             ),
+            enabled_tasks=_get_set_setting("ENABLED_LLM_TASKS", DEFAULT_ENABLED_LLM_TASKS),
         )
 
 
@@ -297,6 +320,7 @@ OPENAI_TEMPERATURE = LLM.temperature
 RATE_LIMIT_DELAY = LLM.rate_limit_delay
 OPENAI_BATCH_SIZE = LLM.batch_size
 OPENAI_MAX_PARALLEL_REQUESTS = LLM.max_parallel_requests
+ENABLED_LLM_TASKS = LLM.enabled_tasks
 MAX_JOB_DESC_LENGTH = PROCESSING.max_job_desc_length
 PREFERRED_COLUMN_ORDER = list(PROCESSING.preferred_column_order)
 

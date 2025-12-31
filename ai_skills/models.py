@@ -3,7 +3,7 @@
 """Shared Pydantic models used across the analysis pipeline."""
 
 from enum import Enum
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -27,8 +27,8 @@ class JobAnalysisResult(BaseModel):
     # Raw skill extractions from LLM (normalized in pipeline)
     hardskills_raw: List[str] = Field(default_factory=list)
     softskills_raw: List[str] = Field(default_factory=list)
-    # Education requirement: 1 if required, 0 if preferred/optional/undeterminable
-    education_required: int = Field(default=0, ge=0, le=1)
+    # Education requirement: 1 if required, 0 if preferred/optional, None if task skipped
+    education_required: Optional[int] = Field(default=None, ge=0, le=1)
 
     @field_validator("confidence")
     @classmethod
@@ -46,7 +46,8 @@ class JobAnalysisResult(BaseModel):
             "desc_ai_llm": ", ".join(self.ai_skills_mentioned),
             "desc_conf_llm": self.confidence,
             "desc_rationale_llm": self.rationale,
-            "edureq_llm": self.education_required,
+            # "-" indicates task was intentionally skipped (not an error)
+            "edureq_llm": self.education_required if self.education_required is not None else "-",
         }
 
     model_config = ConfigDict(frozen=True)

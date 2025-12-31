@@ -18,6 +18,10 @@ from openai import OpenAI
 from pydantic import BaseModel, ValidationError
 
 from .config import (
+    ENABLED_LLM_TASKS,
+    LLM_TASK_AI_TIER,
+    LLM_TASK_EDUCATION,
+    LLM_TASK_SKILLS,
     MAX_JOB_DESC_LENGTH,
     MODEL_PROVIDER,
     OPENAI_API_KEY,
@@ -183,51 +187,72 @@ class OpenAIJobAnalyzer:
             edu_batch_items.append((job_id, title, text, edu))
         
         total_items = len(batch_items)
-        total_tasks = 3  # AI tier, Skills, Education
+        # Count only enabled tasks for progress tracking
+        enabled_task_count = sum(
+            1 for t in [LLM_TASK_AI_TIER, LLM_TASK_SKILLS, LLM_TASK_EDUCATION]
+            if t in ENABLED_LLM_TASKS
+        )
+        total_tasks = max(1, enabled_task_count)
         if progress_callback:
             progress_callback(0, total_items * total_tasks)
         
         processed = 0
+        task_num = 0
         
         # Task 1: AI Tier Classification
-        logger.info(f"Task 1/3: AI Tier Classification ({total_items} jobs)")
-        tier_results = self._run_task(
-            batch_items,
-            task_name="ai_tier",
-            batch_size=AI_TIER_BATCH_SIZE,
-            system_prompt=ai_tier_instructions(),
-            prompt_builder=ai_tier_batch_prompt,
-            response_model=AITierBatchResponse,
-        )
-        processed += total_items
-        if progress_callback:
-            progress_callback(processed, total_items * total_tasks)
+        tier_results: dict[str, Any] = {}
+        if LLM_TASK_AI_TIER in ENABLED_LLM_TASKS:
+            task_num += 1
+            logger.info(f"Task {task_num}/{enabled_task_count}: AI Tier Classification ({total_items} jobs)")
+            tier_results = self._run_task(
+                batch_items,
+                task_name="ai_tier",
+                batch_size=AI_TIER_BATCH_SIZE,
+                system_prompt=ai_tier_instructions(),
+                prompt_builder=ai_tier_batch_prompt,
+                response_model=AITierBatchResponse,
+            )
+            processed += total_items
+            if progress_callback:
+                progress_callback(processed, total_items * total_tasks)
+        else:
+            logger.info("Skipping AI Tier task (disabled in ENABLED_LLM_TASKS)")
         
         # Task 2: Skills Extraction
-        logger.info(f"Task 2/3: Skills Extraction ({total_items} jobs)")
-        skills_results = self._run_task(
-            batch_items,
-            task_name="skills",
-            batch_size=SKILLS_BATCH_SIZE,
-            system_prompt=skills_instructions(),
-            prompt_builder=skills_batch_prompt,
-            response_model=SkillsBatchResponse,
-        )
-        processed += total_items
-        if progress_callback:
-            progress_callback(processed, total_items * total_tasks)
+        skills_results: dict[str, Any] = {}
+        if LLM_TASK_SKILLS in ENABLED_LLM_TASKS:
+            task_num += 1
+            logger.info(f"Task {task_num}/{enabled_task_count}: Skills Extraction ({total_items} jobs)")
+            skills_results = self._run_task(
+                batch_items,
+                task_name="skills",
+                batch_size=SKILLS_BATCH_SIZE,
+                system_prompt=skills_instructions(),
+                prompt_builder=skills_batch_prompt,
+                response_model=SkillsBatchResponse,
+            )
+            processed += total_items
+            if progress_callback:
+                progress_callback(processed, total_items * total_tasks)
+        else:
+            logger.info("Skipping Skills task (disabled in ENABLED_LLM_TASKS)")
         
         # Task 3: Education Required (uses 4-tuple items with education column)
-        logger.info(f"Task 3/3: Education Requirement ({total_items} jobs)")
-        edu_results = self._run_edu_task(
-            edu_batch_items,
-            task_name="education",
-            batch_size=EDUCATION_BATCH_SIZE,
-            system_prompt=education_instructions(),
-        )
-        processed += total_items
-        if progress_callback:
-            progress_callback(processed, total_items * total_tasks)
+        edu_results: dict[str, EducationResultWithId] = {}
+        if LLM_TASK_EDUCATION in ENABLED_LLM_TASKS:
+            task_num += 1
+            logger.info(f"Task {task_num}/{enabled_task_count}: Education Requirement ({total_items} jobs)")
+            edu_results = self._run_edu_task(
+                edu_batch_items,
+                task_name="education",
+                batch_size=EDUCATION_BATCH_SIZE,
+                system_prompt=education_instructions(),
+            )
+            processed += total_items
+            if progress_callback:
+                progress_callback(processed, total_items * total_tasks)
+        else:
+            logger.info("Skipping Education task (disabled in ENABLED_LLM_TASKS)")
         
         # Combine results
         return self._combine_decomposed_results(
@@ -496,7 +521,8 @@ class OpenAIJobAnalyzer:
                 ai_skills_mentioned=skills.ai_skills_mentioned if skills else [],
                 hardskills_raw=skills.hardskills_raw if skills else [],
                 softskills_raw=skills.softskills_raw if skills else [],
-                education_required=edu.education_required if edu else 0,
+                # Keep None if education task was skipped (shows as blank in CSV)
+                education_required=edu.education_required if edu else None,
             )
         
         return results
