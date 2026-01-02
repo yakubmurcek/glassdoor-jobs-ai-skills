@@ -5,17 +5,18 @@ WORKDIR /app
 # Install build essentials for potential c-extensions (numpy etc)
 RUN apt-get update && apt-get install -y \
     build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy project definition
 COPY pyproject.toml README.md ./
 
-# Install dependencies
+# Copy application code (needed for hatchling to build the wheel)
+COPY ai_skills ./ai_skills
+
+# Install dependencies and the package
 # We use pip to install the current directory which will read pyproject.toml
 RUN pip install --no-cache-dir .
-
-# Copy application code
-COPY ai_skills ./ai_skills
 
 # Expose port
 EXPOSE 8000
