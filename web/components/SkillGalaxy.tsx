@@ -24,8 +24,8 @@ const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
   ),
 });
 
-const HARD_SKILL_COLOR = "#1f78b4";
-const SOFT_SKILL_COLOR = "#33a02c";
+const HARD_SKILL_COLOR = "#60a5fa";
+const SOFT_SKILL_COLOR = "#34d399";
 
 interface SkillGalaxyProps {
   className?: string;
