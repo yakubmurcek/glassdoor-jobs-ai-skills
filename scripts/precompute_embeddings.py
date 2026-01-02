@@ -10,29 +10,12 @@ from pathlib import Path
 sys.path.append(os.getcwd())
 
 from ai_skills.embeddings import EmbeddingService
-from ai_skills.skill_normalizer import HARDSKILL_CANONICALIZATION, SOFTSKILL_CANONICALIZATION
+from ai_skills.skill_normalizer import HARDSKILL_CANONICALIZATION, SOFTSKILL_CANONICALIZATION, get_unique_skills
 from sklearn.manifold import TSNE
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-def get_unique_skills() -> Dict[str, Dict[str, any]]:
-    """Returns a dict of unique_skill -> {type, count}."""
-    skills = {}
-    
-    # helper to add/increment
-    def add(canonical, sk_type):
-        if canonical not in skills:
-            skills[canonical] = {"type": sk_type, "count": 0}
-        skills[canonical]["count"] += 1
-
-    for variants in HARDSKILL_CANONICALIZATION.values():
-        add(variants, "hard")
-    for variants in SOFTSKILL_CANONICALIZATION.values():
-        add(variants, "soft")
-            
-    return skills
 
 def main():
     logger.info("Starting pre-computation of skill embeddings...")

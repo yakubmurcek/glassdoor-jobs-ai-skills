@@ -298,3 +298,21 @@ def normalize_softskills(raw_skills: List[str], use_semantic: bool = False) -> s
             logger.warning(f"Semantic normalization failed: {e}")
 
     return ", ".join(sorted([s for s in final_skills if s]))
+
+
+def get_unique_skills() -> Dict[str, Dict[str, any]]:
+    """Returns a dict of unique_skill -> {type, count}."""
+    skills = {}
+    
+    # helper to add/increment
+    def add(canonical, sk_type):
+        if canonical not in skills:
+            skills[canonical] = {"type": sk_type, "count": 0}
+        skills[canonical]["count"] += 1
+
+    for variants in HARDSKILL_CANONICALIZATION.values():
+        add(variants, "hard")
+    for variants in SOFTSKILL_CANONICALIZATION.values():
+        add(variants, "soft")
+            
+    return skills

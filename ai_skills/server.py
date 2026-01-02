@@ -9,7 +9,7 @@ import json
 import os
 
 # from ai_skills.embeddings import EmbeddingService  <-- Moved inside startup_event to avoid heavy load
-from ai_skills.skill_normalizer import HARDSKILL_CANONICALIZATION, SOFTSKILL_CANONICALIZATION
+from ai_skills.skill_normalizer import HARDSKILL_CANONICALIZATION, SOFTSKILL_CANONICALIZATION, get_unique_skills
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -44,23 +44,6 @@ class SkillPoint(BaseModel):
     y: float
     frequency: int
 
-def get_unique_skills() -> Dict[str, Dict[str, any]]:
-    """Returns a dict of unique_skill -> {type, count}."""
-    skills = {}
-    
-    # helper to add/increment
-    def add(canonical, sk_type):
-        if canonical not in skills:
-            skills[canonical] = {"type": sk_type, "count": 0}
-        skills[canonical]["count"] += 1
-
-    for variants in HARDSKILL_CANONICALIZATION.values():
-        add(variants, "hard")
-    for variants in SOFTSKILL_CANONICALIZATION.values():
-        add(variants, "soft")
-            
-    return skills
-
 from sklearn.manifold import TSNE
 import numpy as np
 
@@ -84,6 +67,13 @@ async def startup_event():
     # Fallback to full semantic mode
     SEARCH_MODE = "semantic"
     logger.info("No pre-computed embeddings found. Starting logic for Semantic Mode...")
+    
+    # DEBUG: List data directory to help troubleshoot
+    if os.path.exists("data"):
+        logger.info(f"Contents of 'data' directory: {os.listdir('data')}")
+    else:
+        logger.info("'data' directory not found in current working directory.")
+    logger.info(f"Current working directory: {os.getcwd()}")
     
     # Lazy import to avoid loading torch/transformers if not needed
     from ai_skills.embeddings import EmbeddingService

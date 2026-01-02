@@ -13,6 +13,7 @@ COPY pyproject.toml README.md ./
 
 # Copy application code (needed for hatchling to build the wheel)
 COPY ai_skills ./ai_skills
+COPY data ./data
 
 # Install dependencies and the package
 # We use pip to install the current directory which will read pyproject.toml
