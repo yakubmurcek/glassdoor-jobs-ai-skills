@@ -5,7 +5,10 @@ from typing import List, Dict, Any
 import uvicorn
 import logging
 
-from ai_skills.embeddings import EmbeddingService
+import json
+import os
+
+# from ai_skills.embeddings import EmbeddingService  <-- Moved inside startup_event to avoid heavy load
 from ai_skills.skill_normalizer import HARDSKILL_CANONICALIZATION, SOFTSKILL_CANONICALIZATION
 
 # Configure logging
@@ -26,6 +29,7 @@ app.add_middleware(
 # Global services
 embedding_service = None
 skill_embeddings_cache = {}
+SEARCH_MODE = "semantic"  # "semantic" or "simple"
 
 class SearchRequest(BaseModel):
     query: str
@@ -65,8 +69,26 @@ import numpy as np
 @app.on_event("startup")
 async def startup_event():
     """Initialize embedding service and cache skill embeddings on startup."""
-    global embedding_service, skill_embeddings_cache
-    logger.info("Starting up... Initializing EmbeddingService")
+    global embedding_service, skill_embeddings_cache, SEARCH_MODE
+    
+    # Check for pre-computed embeddings
+    embeddings_file = "data/skills_embeddings.json"
+    if os.path.exists(embeddings_file):
+        logger.info(f"Found pre-computed embeddings at {embeddings_file}. Running in Lite Mode.")
+        SEARCH_MODE = "simple"
+        with open(embeddings_file, "r") as f:
+            skill_embeddings_cache = json.load(f)
+        logger.info(f"Loaded {len(skill_embeddings_cache)} skills from cache.")
+        return
+
+    # Fallback to full semantic mode
+    SEARCH_MODE = "semantic"
+    logger.info("No pre-computed embeddings found. Starting logic for Semantic Mode...")
+    
+    # Lazy import to avoid loading torch/transformers if not needed
+    from ai_skills.embeddings import EmbeddingService
+    
+    logger.info("Initializing EmbeddingService (this may take memory)...")
     embedding_service = EmbeddingService()
     
     # Pre-compute embeddings for all unique skills
@@ -107,7 +129,7 @@ async def startup_event():
 
 @app.get("/api/health")
 async def health_check():
-    return {"status": "ok", "service": "ai-skills-backend"}
+    return {"status": "ok", "service": "ai-skills-backend", "mode": SEARCH_MODE}
 
 @app.get("/api/skills", response_model=List[SkillPoint])
 async def get_skills():
@@ -127,42 +149,59 @@ async def get_skills():
 
 @app.post("/api/search")
 async def search_skills(request: SearchRequest):
-    """Semantic search for skills."""
-    if not embedding_service:
-        raise HTTPException(status_code=503, detail="Service not initialized")
-        
-    query_emb = embedding_service.embed_text(request.query)
-    # embed_text might return a numpy array, so use len check explicitly
-    if query_emb is None or len(query_emb) == 0:
-        return {"results": []}
-        
-    # Simple cosine similarity search against cache
-    # In a real app with >10k items we'd use ChromaDB/FAISS, 
-    # but for ~1000 items, numpy dot product is instant.
-    import numpy as np
-    
-    q_vec = np.array(query_emb)
-    q_norm = np.linalg.norm(q_vec)
+    """Search for skills. Uses semantic search if available, otherwise simple substring matching."""
     
     results = []
-    for skill_name, data in skill_embeddings_cache.items():
-        s_vec = np.array(data["embedding"])
-        s_norm = np.linalg.norm(s_vec)
-        
-        if q_norm == 0 or s_norm == 0:
-            score = 0
-        else:
-            score = np.dot(q_vec, s_vec) / (q_norm * s_norm)
+    
+    if SEARCH_MODE == "semantic" and embedding_service:
+        # Semantic search
+        query_emb = embedding_service.embed_text(request.query)
+        if query_emb is None or len(query_emb) == 0:
+            return {"results": [], "mode": SEARCH_MODE}
             
-        results.append({
-            "skill": skill_name,
-            "type": data["type"],
-            "score": float(score)
-        })
+        import numpy as np
+        q_vec = np.array(query_emb)
+        q_norm = np.linalg.norm(q_vec)
         
-    # Sort by score descending
-    results.sort(key=lambda x: x["score"], reverse=True)
-    return {"results": results[:request.limit]}
+        for skill_name, data in skill_embeddings_cache.items():
+            s_vec = np.array(data["embedding"])
+            s_norm = np.linalg.norm(s_vec)
+            
+            if q_norm == 0 or s_norm == 0:
+                score = 0
+            else:
+                score = np.dot(q_vec, s_vec) / (q_norm * s_norm)
+                
+            results.append({
+                "skill": skill_name,
+                "type": data["type"],
+                "score": float(score)
+            })
+            
+        results.sort(key=lambda x: x["score"], reverse=True)
+        
+    else:
+        # Simple search (Lite Mode)
+        query = request.query.lower()
+        for skill_name, data in skill_embeddings_cache.items():
+            if query in skill_name.lower():
+                # Score can be simple: 1.0 for exact, 0.8 for starts with, 0.5 for contains
+                if query == skill_name.lower():
+                    score = 1.0
+                elif skill_name.lower().startswith(query):
+                    score = 0.8
+                else:
+                    score = 0.5
+                
+                results.append({
+                    "skill": skill_name,
+                    "type": data["type"],
+                    "score": score
+                })
+        # Sort by score then by length (shorter match is likely better)
+        results.sort(key=lambda x: (x["score"], -len(x["skill"])), reverse=True)
+
+    return {"results": results[:request.limit], "mode": SEARCH_MODE}
 
 def start():
     """Entry point for helping to run the app directly if needed"""
