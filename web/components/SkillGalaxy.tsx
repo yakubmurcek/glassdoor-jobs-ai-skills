@@ -12,7 +12,7 @@ import dynamic from "next/dynamic";
 import { getSkills } from "@/lib/api";
 import { SkillPoint } from "@/types/api";
 import { Card } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Loader2, ZoomIn, ZoomOut, Maximize } from "lucide-react";
 
 // Dynamic import for client-side only rendering of the graph
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
@@ -31,10 +31,23 @@ interface SkillGalaxyProps {
   className?: string;
 }
 
+interface GraphNode {
+  id: string;
+  label: string;
+  group: "hard" | "soft" | "layout-helper";
+  val: number;
+  frequency: number;
+  fx: number;
+  fy: number;
+  x: number;
+  y: number;
+}
+
 const SkillGalaxy = forwardRef<{ resetView: () => void }, SkillGalaxyProps>(
   ({ className }, ref) => {
     const [skills, setSkills] = useState<SkillPoint[]>([]);
     const [loading, setLoading] = useState(true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const graphRef = useRef<any>(null);
 
     useImperativeHandle(ref, () => ({
@@ -69,7 +82,7 @@ const SkillGalaxy = forwardRef<{ resetView: () => void }, SkillGalaxyProps>(
       const height = maxY - minY;
 
       // Create standard nodes
-      const nodes = skills.map((s) => ({
+      const nodes: GraphNode[] = skills.map((s) => ({
         id: s.id,
         label: s.label,
         group: s.type,
@@ -123,7 +136,6 @@ const SkillGalaxy = forwardRef<{ resetView: () => void }, SkillGalaxyProps>(
         )}
 
         {!loading && (
-          // @ts-ignore
           <ForceGraph2D
             ref={graphRef}
             graphData={graphData}
@@ -131,6 +143,7 @@ const SkillGalaxy = forwardRef<{ resetView: () => void }, SkillGalaxyProps>(
             backgroundColor="#020617" // slate-950
             enableNodeDrag={false}
             // Custom rendering to show labels permanently
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             nodeCanvasObject={(node: any, ctx, globalScale) => {
               if (node.group === "layout-helper") return;
 
@@ -172,6 +185,7 @@ const SkillGalaxy = forwardRef<{ resetView: () => void }, SkillGalaxyProps>(
           />
         )}
 
+        {/* Legend */}
         <div className="absolute bottom-4 left-4 pointer-events-none">
           <Card className="p-4 bg-slate-900/80 border-slate-800 backdrop-blur-sm pointer-events-auto text-slate-100">
             <h3 className="font-bold text-slate-100 mb-2">Legend</h3>
@@ -194,6 +208,44 @@ const SkillGalaxy = forwardRef<{ resetView: () => void }, SkillGalaxyProps>(
             <div className="mt-2 text-xs text-slate-400">
               {skills.length} skills loaded
             </div>
+          </Card>
+        </div>
+
+        {/* Zoom Controls */}
+        <div className="absolute bottom-4 right-4 pointer-events-none">
+          <Card className="flex flex-col gap-1 p-2 bg-slate-900/80 border-slate-800 backdrop-blur-sm pointer-events-auto text-slate-100">
+            <button
+              className="p-2 hover:bg-slate-800 rounded transition-colors text-slate-200"
+              onClick={() => {
+                const currentZoom = graphRef.current?.zoom?.();
+                if (currentZoom !== undefined && graphRef.current?.zoom) {
+                  graphRef.current.zoom(currentZoom * 1.5, 400);
+                }
+              }}
+              title="Zoom In"
+            >
+              <ZoomIn className="w-5 h-5" />
+            </button>
+            <button
+              className="p-2 hover:bg-slate-800 rounded transition-colors text-slate-200"
+              onClick={() => {
+                const currentZoom = graphRef.current?.zoom?.();
+                if (currentZoom !== undefined && graphRef.current?.zoom) {
+                  graphRef.current.zoom(currentZoom / 1.5, 400);
+                }
+              }}
+              title="Zoom Out"
+            >
+              <ZoomOut className="w-5 h-5" />
+            </button>
+            <div className="h-px bg-slate-700 my-1" />
+            <button
+              className="p-2 hover:bg-slate-800 rounded transition-colors text-slate-200"
+              onClick={() => graphRef.current?.zoomToFit(400, 50)}
+              title="Fit to View"
+            >
+              <Maximize className="w-5 h-5" />
+            </button>
           </Card>
         </div>
       </div>
