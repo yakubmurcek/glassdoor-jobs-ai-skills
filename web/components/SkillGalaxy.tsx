@@ -43,12 +43,23 @@ interface GraphNode {
   y: number;
 }
 
+interface BoundingBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 const SkillGalaxy = forwardRef<{ resetView: () => void }, SkillGalaxyProps>(
   ({ className }, ref) => {
     const [skills, setSkills] = useState<SkillPoint[]>([]);
     const [loading, setLoading] = useState(true);
+    const [fps, setFps] = useState(0);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const graphRef = useRef<any>(null);
+    const occupiedRegions = useRef<BoundingBox[]>([]);
+    const frameTimes = useRef<number[]>([]);
+    const lastFpsUpdate = useRef<number>(0);
 
     useImperativeHandle(ref, () => ({
       resetView: () => {
@@ -113,6 +124,10 @@ const SkillGalaxy = forwardRef<{ resetView: () => void }, SkillGalaxyProps>(
         y: maxY + height * 0.5,
       });
 
+      // Sort nodes by frequency descending so larger/more important nodes are rendered first
+      // and claim their label space.
+      nodes.sort((a, b) => b.frequency - a.frequency);
+
       return {
         nodes,
         links: [], // No links needed if we have fixed positions
@@ -142,6 +157,29 @@ const SkillGalaxy = forwardRef<{ resetView: () => void }, SkillGalaxyProps>(
             // Removed nodeAutoColorBy to ensure custom renderer is the source of truth
             backgroundColor="#020617" // slate-950
             enableNodeDrag={false}
+            onRenderFramePre={() => {
+              // Reset occupied regions at the start of every frame
+              occupiedRegions.current = [];
+            }}
+            onRenderFramePost={() => {
+              // FPS Calculation
+              const now = performance.now();
+              frameTimes.current.push(now);
+
+              // Remove frames older than 1 second
+              while (
+                frameTimes.current.length > 0 &&
+                frameTimes.current[0] <= now - 1000
+              ) {
+                frameTimes.current.shift();
+              }
+
+              // Update FPS state at most every 500ms to avoid UI flicker
+              if (now - lastFpsUpdate.current > 500) {
+                setFps(frameTimes.current.length);
+                lastFpsUpdate.current = now;
+              }
+            }}
             // Custom rendering to show labels permanently
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             nodeCanvasObject={(node: any, ctx, globalScale) => {
@@ -165,11 +203,42 @@ const SkillGalaxy = forwardRef<{ resetView: () => void }, SkillGalaxyProps>(
                 node.group === "hard" ? HARD_SKILL_COLOR : SOFT_SKILL_COLOR;
               ctx.fill();
 
-              // Draw Text
-              ctx.textAlign = "center";
-              ctx.textBaseline = "middle";
-              ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-              ctx.fillText(label, node.x, node.y + size + fontSize); // Draw below the node
+              // Collision Detection for Labels
+              // 1. Calculate bounding box for the proposed label
+              const textWidth = ctx.measureText(label).width;
+              // Add some padding to the box
+              const padding = 2 / globalScale;
+              const boxWidth = textWidth + padding * 2;
+              const boxHeight = fontSize + padding * 2;
+              // Position: labeled below the node
+              const boxX = node.x - boxWidth / 2;
+              const boxY = node.y + size; // Starts right under the node circle
+
+              // 2. Check overlap with existing regions
+              const isColliding = occupiedRegions.current.some((region) => {
+                return (
+                  boxX < region.x + region.width &&
+                  boxX + boxWidth > region.x &&
+                  boxY < region.y + region.height &&
+                  boxY + boxHeight > region.y
+                );
+              });
+
+              // 3. Draw or Skip
+              if (!isColliding) {
+                ctx.textAlign = "center";
+                ctx.textBaseline = "top"; // Draw below the node
+                ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+                ctx.fillText(label, node.x, node.y + size + padding);
+
+                // Add to occupied regions
+                occupiedRegions.current.push({
+                  x: boxX,
+                  y: boxY,
+                  width: boxWidth,
+                  height: boxHeight,
+                });
+              }
             }}
             nodeCanvasObjectMode={() => "replace"} // We carry out the full render
             d3VelocityDecay={0.1}
@@ -248,6 +317,15 @@ const SkillGalaxy = forwardRef<{ resetView: () => void }, SkillGalaxyProps>(
             </button>
           </Card>
         </div>
+
+        {/* FPS Counter (Dev only) */}
+        {process.env.NODE_ENV === "development" && (
+          <div className="absolute top-4 left-4 pointer-events-none z-50">
+            <div className="bg-slate-900/80 text-green-400 text-xs font-mono p-1 rounded border border-slate-800/50 backdrop-blur-sm">
+              FPS: {fps}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
