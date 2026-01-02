@@ -119,26 +119,47 @@ class JobAnalysisPipeline:
         # Get job description texts for dictionary extraction
         job_texts = df["job_desc_text"].fillna("").astype(str).tolist()
         
-        # --- DICTIONARY-BASED EXTRACTION ---
-        hardskills_dict = [
+        # --- DICTIONARY-BASED EXTRACTION FROM JOB DESCRIPTION ---
+        hardskills_desc = [
             extract_hardskills_deterministic(text) for text in job_texts
         ]
-        softskills_dict = [
+        softskills_desc = [
             extract_softskills_deterministic(text) for text in job_texts
+        ]
+        
+        # --- DICTIONARY-BASED EXTRACTION FROM SKILLS COLUMN ---
+        # The skills column is already comma-separated, join for dictionary matching
+        skills_texts = df["skills"].fillna("").astype(str).tolist()
+        hardskills_skills = [
+            extract_hardskills_deterministic(text) for text in skills_texts
+        ]
+        softskills_skills = [
+            extract_softskills_deterministic(text) for text in skills_texts
+        ]
+        
+        # Merge skills column + job description extraction (deterministic)
+        hardskills_dict = [
+            merge_skills(desc, skills)
+            for desc, skills in zip(hardskills_desc, hardskills_skills)
+        ]
+        softskills_dict = [
+            merge_skills(desc, skills)
+            for desc, skills in zip(softskills_desc, softskills_skills)
         ]
         
         # --- LLM-BASED EXTRACTION (normalized) ---
         hardskills_llm = []
         for r in results:
-            norm_h = normalize_hardskills(r.hardskills_raw)
+            # Enable semantic matching for LLM extraction to catch variations
+            norm_h = normalize_hardskills(r.hardskills_raw, use_semantic=True)
             hardskills_llm.append(norm_h.split(", ") if norm_h else [])
             
         softskills_llm = []
         for r in results:
-            norm_s = normalize_softskills(r.softskills_raw)
+            norm_s = normalize_softskills(r.softskills_raw, use_semantic=True)
             softskills_llm.append(norm_s.split(", ") if norm_s else [])
         
-        # --- MERGE: Union of both methods ---
+        # --- MERGE: Union of deterministic + LLM ---
         hardskills_merged = [
             merge_skills(dict_skills, llm_skills)
             for dict_skills, llm_skills in zip(hardskills_dict, hardskills_llm)

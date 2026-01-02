@@ -221,3 +221,75 @@ def generate_comparison_chart(report: "EvaluationReport", output_path: Path) -> 
     plt.close()
     
     return output_path
+
+
+def plot_skill_embeddings(skills: list[str], output_path: Path) -> Path:
+    """Generate a 2D scatter plot of skill embeddings.
+    
+    Args:
+        skills: List of skill strings to visualize.
+        output_path: Path to save the PNG file.
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from .embeddings import EmbeddingService
+    
+    try:
+        from sklearn.manifold import TSNE
+        from sklearn.decomposition import PCA
+    except ImportError:
+        print("scikit-learn is required for visualization.")
+        return output_path
+
+    if not skills:
+        return output_path
+
+    # Embed
+    service = EmbeddingService()
+    embeddings = service.embed_batch(skills)
+    X = np.array(embeddings)
+    
+    # Reduce dimensionality
+    # Use PCA first if dimensions are high, then TSNE, or just TSNE
+    # For small datasets, TSNE perplexity needs care
+    n_samples = len(skills)
+    if n_samples < 2:
+        return output_path
+
+    # Use PCA if very few samples, otherwise TSNE
+    if n_samples < 50:
+        reducer = PCA(n_components=2)
+        coords = reducer.fit_transform(X)
+        title_suffix = "(PCA)"
+    else:
+        perplexity = min(30, n_samples - 1)
+        reducer = TSNE(n_components=2, perplexity=perplexity, random_state=42, init='pca', learning_rate='auto')
+        coords = reducer.fit_transform(X)
+        title_suffix = "(t-SNE)"
+
+    # Plot
+    plt.figure(figsize=(12, 8))
+    plt.scatter(coords[:, 0], coords[:, 1], c='#4ECDC4', alpha=0.6, edgecolors='k')
+    
+    # Label distinct points
+    # Naive labeling for now
+    for i, skill in enumerate(skills):
+        plt.annotate(
+            skill, 
+            (coords[i, 0], coords[i, 1]),
+            fontsize=8, 
+            alpha=0.8,
+            xytext=(3, 3), 
+            textcoords='offset points'
+        )
+
+    plt.title(f'Skill Embedding Space {title_suffix}', fontsize=14, fontweight='bold')
+    plt.xlabel('Dimension 1')
+    plt.ylabel('Dimension 2')
+    plt.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+    
+    return output_path

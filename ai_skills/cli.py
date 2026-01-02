@@ -124,6 +124,121 @@ def build_parser() -> argparse.ArgumentParser:
     )
     evaluate.set_defaults(func=_handle_evaluate)
 
+    # Search command
+    search = sub.add_parser(
+        "search",
+        help="Search for jobs using natural language queries (semantic search).",
+    )
+    search.add_argument(
+        "query",
+        type=str,
+        help="The search query string.",
+    )
+    search.add_argument(
+        "--limit",
+        type=int,
+        default=5,
+        help="Number of results to return (default: 5).",
+    )
+    search.set_defaults(func=_handle_search)
+
+    # Cluster command
+    cluster = sub.add_parser(
+        "cluster",
+        help="Cluster skills to find synonyms and groupings.",
+    )
+    cluster.add_argument(
+        "--input-csv",
+        type=Path,
+        required=True,
+        help="CSV file containing skills to cluster.",
+    )
+    cluster.add_argument(
+        "--column",
+        type=str,
+        default="skills",
+        help="Column name containing skill lists (default: 'skills').",
+    )
+    cluster.add_argument(
+        "--clusters",
+        type=int,
+        default=20,
+        help="Number of clusters to generate (default: 20).",
+    )
+    cluster.set_defaults(func=_handle_cluster)
+
+    cluster.set_defaults(func=_handle_cluster)
+
+    # Visualize command
+    viz = sub.add_parser(
+        "visualize-skills",
+        help="Generate a 2D plot of skill embeddings.",
+    )
+    viz.add_argument(
+        "--input-csv",
+        type=Path,
+        required=True,
+        help="CSV file containing skills.",
+    )
+    viz.add_argument(
+        "--column",
+        type=str,
+        default="skills",
+        help="Column name containing skill lists (default: 'skills').",
+    )
+    viz.add_argument(
+        "--output-image",
+        type=Path,
+        default=Path("skill_map.png"),
+        help="Path to save the output image (default: skill_map.png).",
+    )
+    viz.set_defaults(func=_handle_visualize_skills)
+
+    # Classify command
+    classify = sub.add_parser(
+        "classify",
+        help="Classify text against a list of labels (zero-shot).",
+    )
+    classify.add_argument(
+        "text",
+        type=str,
+        help="The text to classify.",
+    )
+    classify.add_argument(
+        "--labels",
+        nargs="+",
+        required=True,
+        help="List of candidate labels (e.g. 'Senior' 'Junior').",
+    )
+    classify.set_defaults(func=_handle_classify)
+
+    classify.set_defaults(func=_handle_classify)
+
+    # Index command
+    index = sub.add_parser(
+        "index",
+        help="Index job descriptions from a CSV into the vector store.",
+    )
+    index.add_argument(
+        "--input-csv",
+        type=Path,
+        required=True,
+        help="CSV file to index.",
+    )
+    index.add_argument(
+        "--id-col",
+        type=str,
+        default="job_url_id",
+        help="Column to use as unique ID (default: 'job_url_id').",
+    )
+    index.add_argument(
+        "--text-col",
+        type=str,
+        default="job_desc_text",
+        help="Column containing text to embed (default: 'job_desc_text').",
+    )
+    index.set_defaults(func=_handle_index)
+
     return parser
 
 
@@ -268,6 +383,218 @@ def _handle_evaluate(args: argparse.Namespace) -> int:
     for out in outputs_generated:
         print(f"  {out}")
 
+    return 0
+
+
+def _handle_search(args: argparse.Namespace) -> int:
+    from .vector_store import VectorStoreManager
+
+    manager = VectorStoreManager()
+    if manager.count() == 0:
+        print("Vector store is empty. Please run 'analyze' first to populate it.")
+        return 1
+
+    print(f"Searching for: '{args.query}'...")
+    results = manager.query_similar_jobs(args.query, n_results=args.limit)
+
+    if not results or not results["ids"] or not results["ids"][0]:
+        print("No matches found.")
+        return 0
+
+    ids = results["ids"][0]
+    distances = results["distances"][0] if "distances" in results else [0.0] * len(ids)
+    metadatas = results["metadatas"][0] if "metadatas" in results else [{}] * len(ids)
+    documents = results["documents"][0] if "documents" in results else [""] * len(ids)
+
+    for i, job_id in enumerate(ids):
+        dist = distances[i]
+        meta = metadatas[i] or {}
+        doc = documents[i]
+        
+        # Try to get a title or something recognizable
+        title = meta.get("job_title", "Unknown Title")
+        
+        print("-" * 60)
+        print(f"Rank {i+1} | Score: {1 - dist:.4f} | ID: {job_id}")
+        print(f"Title: {title}")
+        print(f"Snippet: {doc[:200]}..." if len(doc) > 200 else f"Snippet: {doc}")
+    
+    print("-" * 60)
+    return 0
+
+
+def _handle_cluster(args: argparse.Namespace) -> int:
+    import pandas as pd
+    from ast import literal_eval
+    from .clustering import SkillClusterer
+
+    print(f"Reading {args.input_csv}...")
+    try:
+        df = pd.read_csv(args.input_csv, sep=None, engine='python')
+    except Exception as e:
+        print(f"Error reading CSV: {e}")
+        return 1
+
+    if args.column not in df.columns:
+        print(f"Column '{args.column}' not found. Available columns: {', '.join(df.columns)}")
+        return 1
+    
+    print(f"Extracting skills from column '{args.column}'...")
+    all_skills = []
+    for val in df[args.column].dropna():
+        if isinstance(val, str):
+            val = val.strip()
+            # Check if it looks like a list
+            if val.startswith("[") and val.endswith("]"):
+                try:
+                    parsed = literal_eval(val)
+                    if isinstance(parsed, list):
+                        all_skills.extend([str(p) for p in parsed])
+                    else:
+                        all_skills.append(val)
+                except:
+                    all_skills.append(val)
+            else:
+                # Assume comma separated if multiple items or just one item
+                if "," in val:
+                    parts = [p.strip() for p in val.split(",")]
+                    all_skills.extend(parts)
+                else:
+                    all_skills.append(val)
+        else:
+             all_skills.append(str(val))
+
+    # Clean up
+    unique_skills = sorted(list(set(s for s in all_skills if s and s.lower() != "nan")))
+    
+    if not unique_skills:
+        print("No skills found.")
+        return 0
+
+    print(f"Found {len(unique_skills)} unique skills. Clustering into {args.clusters} clusters...")
+    
+    clusterer = SkillClusterer()
+    clusters = clusterer.cluster_skills(unique_skills, n_clusters=args.clusters)
+    
+    print("\n" + "="*60)
+    print(f"CLUSTERING RESULTS ({len(clusters)} clusters)")
+    print("="*60)
+    
+    for cid in sorted(clusters.keys()):
+        skills = clusters[cid]
+        print(f"\nCluster {cid} ({len(skills)} items):")
+        print(", ".join(skills))
+        
+    return 0
+
+
+def _handle_visualize_skills(args: argparse.Namespace) -> int:
+    import pandas as pd
+    from ast import literal_eval
+    from .chart_generator import plot_skill_embeddings
+
+    print(f"Reading {args.input_csv}...")
+    try:
+        df = pd.read_csv(args.input_csv, sep=None, engine='python')
+    except Exception as e:
+        print(f"Error reading CSV: {e}")
+        return 1
+
+    if args.column not in df.columns:
+        print(f"Column '{args.column}' not found. Available columns: {', '.join(df.columns)}")
+        return 1
+    
+    print(f"Extracting skills from column '{args.column}'...")
+    all_skills = []
+    for val in df[args.column].dropna():
+        if isinstance(val, str):
+            val = val.strip()
+            # Check if it looks like a list
+            if val.startswith("[") and val.endswith("]"):
+                try:
+                    parsed = literal_eval(val)
+                    if isinstance(parsed, list):
+                        all_skills.extend([str(p) for p in parsed])
+                    else:
+                        all_skills.append(val)
+                except:
+                    all_skills.append(val)
+            else:
+                # Assume comma separated
+                if "," in val:
+                    parts = [p.strip() for p in val.split(",")]
+                    all_skills.extend(parts)
+                else:
+                    all_skills.append(val)
+        else:
+             all_skills.append(str(val))
+
+    unique_skills = sorted(list(set(s for s in all_skills if s and s.lower() != "nan")))
+    
+    if not unique_skills:
+        print("No skills found.")
+        return 0
+
+    print(f"Found {len(unique_skills)} unique skills. Generating visualization...")
+    output_path = plot_skill_embeddings(unique_skills, args.output_image)
+    
+    print(f"Visualization saved to: {output_path}")
+    return 0
+
+
+def _handle_classify(args: argparse.Namespace) -> int:
+    from .embeddings import EmbeddingService
+    
+    print(f"Text: '{args.text}'")
+    print(f"Candidate Labels: {args.labels}")
+    
+    service = EmbeddingService()
+    result = service.classify_text(args.text, args.labels)
+    
+    print("-" * 40)
+    print(f"Predicted Class: {result}")
+    print("-" * 40)
+    
+    print("-" * 40)
+    
+    return 0
+
+
+def _handle_index(args: argparse.Namespace) -> int:
+    import pandas as pd
+    from .vector_store import VectorStoreManager
+    
+    print(f"Reading {args.input_csv}...")
+    try:
+        df = pd.read_csv(args.input_csv, sep=None, engine='python')
+        # Clean column names (remove BOM and whitespace)
+        df.columns = df.columns.str.replace('^\ufeff', '', regex=True).str.strip()
+    except Exception as e:
+        print(f"Error reading CSV: {e}")
+        return 1
+        
+    if args.id_col not in df.columns or args.text_col not in df.columns:
+        print(f"Missing required columns: {args.id_col}, {args.text_col}")
+        print(f"Available: {', '.join(df.columns)}")
+        return 1
+        
+    print(f"Indexing {len(df)} records...")
+    
+    ids = df[args.id_col].astype(str).tolist()
+    documents = df[args.text_col].fillna("").astype(str).tolist()
+    
+    metadatas = []
+    # Include title if available
+    if "job_title" in df.columns:
+        titles = df["job_title"].fillna("Unknown").astype(str).tolist()
+        metadatas = [{"job_title": t} for t in titles]
+    else:
+        metadatas = [{"job_title": "Unknown"} for _ in ids]
+        
+    manager = VectorStoreManager()
+    manager.add_jobs(ids, documents, metadatas)
+    
+    print(f"Successfully indexed {manager.count()} jobs.")
     return 0
 
 
