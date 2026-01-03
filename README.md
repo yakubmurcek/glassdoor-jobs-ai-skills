@@ -74,17 +74,38 @@ python -m ai_skills.cli evaluate --baseline data/baseline.csv --candidate data/n
 - `--no-chart`: Skip generating the comparison PNG.
 - `--min-match-rate <float>`: Alert threshold for matching jobs (Default: 0.85).
 
-## 3. Setup
+## 4. Setup
 
-1. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Create `.env` file:
-   ```bash
-   OPENAI_API_KEY=sk-...
-   ```
-3. Configure `config/settings.toml` for default paths and taxonomy overrides.
+This project uses `uv` for blazing fast dependency management.
+
+1.  **Install `uv`** (if you haven't already):
+
+    ```bash
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    ```
+
+2.  **Install Dependencies**:
+
+    ```bash
+    uv sync
+    # Or classic pip: pip install -r requirements.txt
+    ```
+
+3.  **Create `.env` file**:
+
+    ```bash
+    OPENAI_API_KEY=sk-...
+    ```
+
+4.  **Run Commands**:
+    Prefix commands with `uv run` to ensure they run in the correct environment.
+
+    ```bash
+    uv run python -m ai_skills.cli analyze ...
+    ```
+
+5.  **Configuration**:
+    Adjust `config/settings.toml` to change default paths or model parameters. Creates `config/settings.local.toml` for local overrides.
 
 ## 4. Utilities & Advanced Commands
 
