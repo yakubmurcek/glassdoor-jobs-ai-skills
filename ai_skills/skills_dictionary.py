@@ -24,6 +24,7 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     "ecmascript": "javascript",
     "es6": "javascript",
     "es6+": "javascript",
+    "javascript (es6+)": "javascript",
     
     # TypeScript variants
     "typescript": "typescript",
@@ -44,9 +45,12 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     # .NET variants
     ".net": "dotnet",
     ".net core": "dotnet",
+    ".net (core)": "dotnet",
+    ".net (c#)": "dotnet",
     ".net framework": "dotnet",
     "dotnet": "dotnet",
     "dot net": "dotnet",
+    "microsoft .net": "dotnet",
     "asp.net": "asp.net",
     "asp .net": "asp.net",
     "ado.net": "ado.net",
@@ -76,6 +80,7 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     "node.js": "node.js",
     "nodejs": "node.js",
     "node js": "node.js",
+    "node": "node.js",
     
     # Express variants
     "express": "express",
@@ -170,6 +175,7 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     "travis ci": "travis ci",
     "travisci": "travis ci",
     "azure devops": "azure devops",
+    "microsoft azure dev ops": "azure devops",
     "azure pipelines": "azure pipelines",
     "bamboo": "bamboo",
     "teamcity": "teamcity",
@@ -215,10 +221,11 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     "recoil": "recoil",
     
     # APIs
-    "rest": "rest",
-    "restful": "rest",
+    "rest": "restful api",
+    "restful": "restful api",
     "restful api": "restful api",
     "restful apis": "restful api",
+    "rest apis": "restful api",
     "rest api": "restful api",
     "graphql": "graphql",
     "graph ql": "graphql",
@@ -263,7 +270,7 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     
     # CSS/Styling
     "css": "css",
-    "css3": "css3",
+    "css3": "css",
     "sass": "sass",
     "scss": "scss",
     "less": "less",
@@ -279,7 +286,7 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     
     # HTML
     "html": "html",
-    "html5": "html5",
+    "html5": "html",
     
     # Build tools
     "webpack": "webpack",
@@ -531,10 +538,10 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     "cqrs": "cqrs",
     "event sourcing": "event sourcing",
     "debugging": "debugging",
-    "troubleshooting": "troubleshooting",
+
     "performance tuning": "performance tuning",
     "optimization": "optimization",
-    "scalability": "scalability",
+
     "high availability": "high availability",
     "load balancing": "load balancing",
     "caching": "caching",
@@ -874,7 +881,7 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     "ollama": "ollama",
     
     # --- Family E: Software Engineering Domains & Tools ---
-    "software development": "software development",
+    "software development": "software engineering",
     "software engineering": "software engineering",
     "system integration": "system integration",
     "systems integration": "system integration",
@@ -888,9 +895,9 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     # Testing & QA
     "qa": "qa",
     "quality assurance": "qa",
-    "qa automation": "qa automation",
+    "qa automation": "test automation",
     "test automation": "test automation",
-    "automated testing": "automated testing",
+    "automated testing": "test automation",
     "manual testing": "manual testing",
     "regression testing": "regression testing",
     "functional testing": "functional testing",
@@ -1554,6 +1561,7 @@ SOFTSKILL_VARIANTS: dict[str, str] = {
     "proactive": "proactive",
     "initiative": "initiative",
     "takes initiative": "initiative",
+    "independence": "independent",
     "independent": "independent",
     "self-starter": "self-starter",
     "self starter": "self-starter",

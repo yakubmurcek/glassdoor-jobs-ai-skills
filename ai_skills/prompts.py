@@ -156,6 +156,7 @@ def job_analysis_batch_prompt(batch_items: list[tuple[str, str, str]]) -> str:
         Analyze each of the following job descriptions independently.
         Return a JSON object with a top-level `results` array.
         Each entry must include: id, ai_tier (one of: core_ai, applied_ai, ai_integration, none), ai_skills_mentioned, confidence, rationale, hardskills_raw, softskills_raw, education_required (0 or 1).
+        IMPORTANT: If confidence >= 0.8, rationale MUST be an empty string "". Only provide rationale if confidence < 0.8.
         """
     ).strip()
 
@@ -214,6 +215,7 @@ CRITICAL RULES:
 3. Using TensorFlow/PyTorch for inference-only = ai_integration, NOT applied_ai
 4. Fine-tuning = applied_ai; Prompt engineering only = ai_integration
 5. When uncertain, ALWAYS choose the LOWER tier
+6. IF CONFIDENCE is 0.8 or higher, set `rationale` to an empty string ("") to save tokens. Only provide rationale if you are unsure (confidence < 0.8).
 
 EXAMPLES:
 - "ML Engineer training LLMs from scratch" → core_ai
@@ -233,6 +235,7 @@ def ai_tier_batch_prompt(batch_items: list[tuple[str, str, str]]) -> str:
     header = dedent(
         """
         For each job, return: id, ai_tier (core_ai/applied_ai/ai_integration/none), confidence (0.0-1.0), rationale (brief).
+        IMPORTANT: If confidence >= 0.8, rationale MUST be an empty string "". Only provide rationale if confidence < 0.8.
         """
     ).strip()
 

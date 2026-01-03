@@ -207,6 +207,7 @@ DEFAULT_COLUMN_ORDER: Tuple[str, ...] = (
     # From job description (LLM)
     "desc_tier_llm",
     "desc_conf_llm",
+    "ai_confidence",
     "desc_ai_llm",
     "desc_rationale_llm",
     # Key derived column
@@ -250,6 +251,7 @@ DISPLAY_COLUMNS: Dict[str, ColumnDisplay] = {
     "job_title": ColumnDisplay("JOB TITLE", 40, "text"),
     "desc_tier_llm": ColumnDisplay("TIER", 14, "tier"),
     "desc_conf_llm": ColumnDisplay("CONF", 5, "confidence"),
+    "ai_confidence": ColumnDisplay("AI_CONF", 5, "confidence"),
     "is_real_ai": ColumnDisplay("AI?", 4, "boolean"),
     "skills_hasai_det": ColumnDisplay("HAS_AI", 6, "boolean"),
     "ai_det_llm_match": ColumnDisplay("AGREE", 5, "boolean"),

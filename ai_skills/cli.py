@@ -75,6 +75,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Write results to a custom path (default: derived from config or --input-csv).",
     )
+    analyze.add_argument(
+        "--skip-llm",
+        action="store_true",
+        help="Skip OpenAI calls and hydrate results from input CSV columns (requires input to be previous output).",
+    )
     analyze.set_defaults(func=_handle_analyze)
 
     # Evaluate command
@@ -315,6 +320,7 @@ def _handle_analyze(args: argparse.Namespace) -> int:
             progress_callback=callback,
             input_csv=args.input_csv,
             output_csv=output_path,
+            skip_llm=args.skip_llm,
         )
     finally:
         if progress:

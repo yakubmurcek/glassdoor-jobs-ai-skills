@@ -9,7 +9,7 @@ using word-boundary-aware regex matching against a comprehensive dictionary.
 from __future__ import annotations
 
 import re
-from typing import List
+from typing import List, Tuple
 
 from .skills_dictionary import (
     HARDSKILL_VARIANTS,
@@ -64,8 +64,57 @@ def _get_softskill_patterns() -> list[tuple[re.Pattern, str]]:
     return _softskill_patterns
 
 
+def _extract_skills_with_spans(text: str, patterns: List[tuple[re.Pattern, str]]) -> List[str]:
+    """Extract skills using span-based matching to resolve overlaps.
+    
+    Algorithm:
+    1. Find all matches for all skills in the dictionary.
+    2. Collect (start, end, lengths, canonical_name).
+    3. Sort matches by length (descending) to prioritize specific terms (e.g. "SQL Server" > "SQL").
+    4. Fill a boolean mask for the text length. If a match fits in free space, valid. Else, ignore.
+    """
+    if not text or not isinstance(text, str):
+        return []
+    
+    # Track all candidate matches: (start, end, length, canonical)
+    candidates = []
+    
+    # We scan for ALL patterns. 
+    # n.b. efficient enough for typical job descriptions (<10k chars).
+    for pattern, canonical in patterns:
+        for match in pattern.finditer(text):
+            candidates.append((match.start(), match.end(), match.end() - match.start(), canonical))
+            
+    # Sort by length DESC, then by start position
+    candidates.sort(key=lambda x: (x[2], x[0]), reverse=True)
+    
+    found_skills = set()
+    occupied = set() # Track occupied indices
+    
+    # Resolution Strategy: Longest Match Wins (Greedy)
+    # Because we sorted by length, we process "SQL Server" before "SQL".
+    for start, end, length, canonical in candidates:
+        # Check if any character position is already occupied
+        is_overlap = False
+        for i in range(start, end):
+            if i in occupied:
+                is_overlap = True
+                break
+        
+        if not is_overlap:
+            # Valid match - take it
+            found_skills.add(canonical)
+            # Mark positions as occupied
+            for i in range(start, end):
+                occupied.add(i)
+                
+    return sorted(found_skills)
+
+
 def extract_hardskills_deterministic(text: str) -> List[str]:
-    """Extract hardskills from text using dictionary matching.
+    """Extract hardskills from text using dictionary matching with overlap resolution.
+    
+    Ensures "SQL Server" doesn't also trigger "SQL", "React Native" doesn't trigger "React".
     
     Args:
         text: The job description text to extract skills from.
@@ -73,21 +122,12 @@ def extract_hardskills_deterministic(text: str) -> List[str]:
     Returns:
         Sorted list of unique canonical hardskill names found in the text.
     """
-    if not text or not isinstance(text, str):
-        return []
-    
-    found_skills: set[str] = set()
     patterns = _get_hardskill_patterns()
-    
-    for pattern, canonical in patterns:
-        if pattern.search(text):
-            found_skills.add(canonical)
-    
-    return sorted(found_skills)
+    return _extract_skills_with_spans(text, patterns)
 
 
 def extract_softskills_deterministic(text: str) -> List[str]:
-    """Extract softskills from text using dictionary matching.
+    """Extract softskills from text using dictionary matching with overlap resolution.
     
     Args:
         text: The job description text to extract skills from.
@@ -95,17 +135,8 @@ def extract_softskills_deterministic(text: str) -> List[str]:
     Returns:
         Sorted list of unique canonical softskill names found in the text.
     """
-    if not text or not isinstance(text, str):
-        return []
-    
-    found_skills: set[str] = set()
     patterns = _get_softskill_patterns()
-    
-    for pattern, canonical in patterns:
-        if pattern.search(text):
-            found_skills.add(canonical)
-    
-    return sorted(found_skills)
+    return _extract_skills_with_spans(text, patterns)
 
 
 def merge_skills(dict_skills: List[str], llm_skills: List[str]) -> List[str]:

@@ -45,7 +45,8 @@ class JobAnalysisResult(BaseModel):
             "desc_tier_llm": self.ai_tier.value,
             "desc_ai_llm": ", ".join(self.ai_skills_mentioned),
             "desc_conf_llm": self.confidence,
-            "desc_rationale_llm": self.rationale,
+            "ai_confidence": self.confidence,
+            "desc_rationale_llm": self.rationale if self.confidence < 0.8 else "",
             # "-" indicates task was intentionally skipped (not an error)
             "edureq_llm": self.education_required if self.education_required is not None else "-",
         }

@@ -162,13 +162,30 @@ class SemanticSkillNormalizer:
         Returns:
             Dict mapping skill -> family name
         """
-        if not skills or self.family_centroids.size == 0:
-            return {s: "Uncategorized" for s in skills}
-            
-        # 1. Embed skills
-        embs = self.embedding_service.embed_batch(skills)
+        from .skills_dictionary import get_skill_family
+
+        results = {}
+        # Pre-filter skills that are already in our dictionary
+        unknown_skills = []
+        unknown_indices = []
+
+        for i, skill in enumerate(skills):
+            family = get_skill_family(skill)
+            if family:
+                results[skill] = family
+            else:
+                unknown_skills.append(skill)
+                unknown_indices.append(i)
+        
+        if not unknown_skills:
+            return results
+
+        # 1. Embed unknown skills
+        embs = self.embedding_service.embed_batch(unknown_skills)
         if not embs:
-            return {s: "Uncategorized" for s in skills}
+            for skill in unknown_skills:
+                results[skill] = "Uncategorized"
+            return results
             
         mat = np.array(embs)
         norms = np.linalg.norm(mat, axis=1, keepdims=True)
@@ -176,14 +193,13 @@ class SemanticSkillNormalizer:
         mat_norm = mat / norms
         
         # 2. Compare to Family Centroids
-        # Shape: (n_skills, n_families)
+        # Shape: (n_unknown, n_families)
         scores = np.dot(mat_norm, self.family_centroids.T)
         
         best_indices = np.argmax(scores, axis=1)
         best_scores = np.max(scores, axis=1)
         
-        results = {}
-        for i, skill in enumerate(skills):
+        for i, skill in enumerate(unknown_skills):
             # Only categorize if reasonable similarity, else 'Uncategorized'
             if best_scores[i] > 0.4: # Low threshold for broad categorization
                 results[skill] = self.family_names[best_indices[i]]

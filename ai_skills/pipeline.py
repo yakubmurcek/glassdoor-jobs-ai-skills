@@ -40,6 +40,7 @@ class JobAnalysisPipeline:
         progress_callback: Callable[[int, int], None] | None = None,
         input_csv: Path | str | None = None,
         output_csv: Path | str | None = None,
+        skip_llm: bool = False,
     ) -> pd.DataFrame:
         """Execute the full pipeline and return the final DataFrame."""
         logger.info("Starting job analysis pipeline...")
@@ -54,8 +55,8 @@ class JobAnalysisPipeline:
         df = annotate_declared_skills(df)
         logger.info("Annotated declared skills.")
 
-        df = self._annotate_job_descriptions(df, progress_callback)
-        logger.info("Finished OpenAI analysis.")
+        df = self._annotate_job_descriptions(df, progress_callback, skip_llm=skip_llm)
+        logger.info("Finished OpenAI analysis (or skipped with hydration).")
 
         df = reorder_columns(df)
         
@@ -75,10 +76,74 @@ class JobAnalysisPipeline:
         return df
 
     def _annotate_job_descriptions(
-        self, df: pd.DataFrame, progress_callback: Callable[[int, int], None] | None = None
+        self, 
+        df: pd.DataFrame, 
+        progress_callback: Callable[[int, int], None] | None = None,
+        skip_llm: bool = False,
     ) -> pd.DataFrame:
         """Apply the OpenAI analyzer to every job description."""
         annotated_df = df.copy()
+        
+        # --- HYDRATION MODE ---
+        if skip_llm:
+            logger.info("Skipping LLM calls. Hydrating from input CSV columns...")
+            results = []
+            
+            # Required columns for hydration
+            required_cols = [
+                "desc_tier_llm", "desc_ai_llm", "desc_conf_llm", 
+                "desc_rationale_llm", "edureq_llm", "desc_hard_llm", "desc_soft_llm"
+            ]
+            
+            # Check availability
+            missing = [c for c in required_cols if c not in annotated_df.columns]
+            if missing:
+                logger.warning(
+                    f"Cannot hydrate LLM results: missing columns {missing}. "
+                    "Returning empty default results for these rows."
+                )
+                from .models import JobAnalysisResult
+                # Return empty results equal to row count
+                results = [JobAnalysisResult() for _ in range(len(annotated_df))]
+            else:
+                from .models import JobAnalysisResult, AITier
+                
+                for _, row in annotated_df.iterrows():
+                    # Parse education (- means None)
+                    edu_val = row["edureq_llm"]
+                    edu_req = None
+                    if pd.notna(edu_val) and str(edu_val).strip() != "-":
+                        try:
+                            edu_req = int(float(edu_val))
+                        except ValueError:
+                            pass
+                            
+                    # Parse lists
+                    hard = str(row.get("desc_hard_llm", "")).split(", ") if pd.notna(row.get("desc_hard_llm")) and row.get("desc_hard_llm") else []
+                    soft = str(row.get("desc_soft_llm", "")).split(", ") if pd.notna(row.get("desc_soft_llm")) and row.get("desc_soft_llm") else []
+                    ai_skills = str(row.get("desc_ai_llm", "")).split(", ") if pd.notna(row.get("desc_ai_llm")) and row.get("desc_ai_llm") else []
+
+                    # Parse Tier
+                    tier_str = str(row.get("desc_tier_llm", "none"))
+                    try:
+                        tier = AITier(tier_str)
+                    except ValueError:
+                        tier = AITier.NONE
+
+                    res = JobAnalysisResult(
+                        ai_tier=tier,
+                        ai_skills_mentioned=[s for s in ai_skills if s],
+                        confidence=float(row.get("desc_conf_llm", 0.0)),
+                        rationale=str(row.get("desc_rationale_llm", "")),
+                        hardskills_raw=[s for s in hard if s],
+                        softskills_raw=[s for s in soft if s],
+                        education_required=edu_req
+                    )
+                    results.append(res)
+            
+            return self._merge_results_into_df(annotated_df, results)
+
+        # --- NORMAL LLM COMPUTE MODE ---
         job_texts = [
             None if pd.isna(text) else str(text)
             for text in annotated_df["job_desc_text"].tolist()
