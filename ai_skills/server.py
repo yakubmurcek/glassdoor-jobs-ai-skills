@@ -26,9 +26,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Global services
 embedding_service = None
 skill_embeddings_cache = {}
+skill_matrix = None
+skill_index = []  # List of dicts matching matrix rows
 SEARCH_MODE = "semantic"  # "semantic" or "simple"
 
 class SearchRequest(BaseModel):
@@ -52,7 +55,7 @@ import numpy as np
 @app.on_event("startup")
 async def startup_event():
     """Initialize embedding service and cache skill embeddings on startup."""
-    global embedding_service, skill_embeddings_cache, SEARCH_MODE
+    global embedding_service, skill_embeddings_cache, SEARCH_MODE, skill_matrix, skill_index
     
     # Check for pre-computed embeddings
     embeddings_file = "data/skills_embeddings.json"
@@ -62,6 +65,28 @@ async def startup_event():
         with open(embeddings_file, "r") as f:
             skill_embeddings_cache = json.load(f)
         logger.info(f"Loaded {len(skill_embeddings_cache)} skills from cache.")
+        
+        # Build Matrix for Vectorized Search (even in Lite Mode if embeddings exist)
+        try:
+            skill_index = []
+            vectors = []
+            for skill_name, data in skill_embeddings_cache.items():
+                if "embedding" in data and data["embedding"]:
+                    skill_index.append({"skill": skill_name, "data": data})
+                    vectors.append(data["embedding"])
+            
+            if vectors:
+                logger.info(f"Building vectorized index for {len(vectors)} skills...")
+                mat = np.array(vectors)
+                # Normalize matrix
+                norms = np.linalg.norm(mat, axis=1, keepdims=True)
+                norms[norms == 0] = 1.0
+                skill_matrix = mat / norms
+                SEARCH_MODE = "semantic_vectorized"
+                logger.info("Vectorized search index ready.")
+        except Exception as e:
+            logger.error(f"Failed to build vector index: {e}")
+            
         return
 
     # Fallback to full semantic mode
@@ -89,10 +114,8 @@ async def startup_event():
     embeddings = embedding_service.embed_batch(unique_skills_list)
     
     # Compute 2D projection using t-SNE
-    # t-SNE preserves local structure better than PCA
     if len(embeddings) > 5:
         logger.info("Projecting embeddings to 2D using t-SNE...")
-        # Perplexity must be less than n_samples
         n_samples = len(embeddings)
         perplexity = min(30, max(5, int(n_samples/4))) 
         
@@ -106,15 +129,33 @@ async def startup_event():
     else:
         coords = np.zeros((len(embeddings), 2))
     
+    skill_index = []
+    vectors = []
     for i, skill in enumerate(unique_skills_list):
         data = unique_skills_data[skill]
-        skill_embeddings_cache[skill] = {
+        emb = embeddings[i]
+        
+        # Cache entry
+        entry = {
             "type": data["type"],
             "frequency": data["count"],
-            "embedding": embeddings[i],
+            "embedding": emb,
             "x": float(coords[i, 0]),
             "y": float(coords[i, 1])
         }
+        skill_embeddings_cache[skill] = entry
+        
+        # Matrix entry
+        skill_index.append({"skill": skill, "data": entry})
+        vectors.append(emb)
+        
+    if vectors:
+        mat = np.array(vectors)
+        norms = np.linalg.norm(mat, axis=1, keepdims=True)
+        norms[norms == 0] = 1.0
+        skill_matrix = mat / norms
+        SEARCH_MODE = "semantic_vectorized"
+        
     logger.info("Startup complete.")
 
 @app.get("/api/health")
@@ -126,11 +167,16 @@ async def get_skills():
     """Return all cached skills with embeddings and coordinates."""
     results = []
     for skill_name, data in skill_embeddings_cache.items():
+        # Ensure embedding is a list
+        emb = data.get("embedding", [])
+        if hasattr(emb, 'tolist'):
+            emb = emb.tolist()
+            
         results.append(SkillPoint(
             id=skill_name,
             label=skill_name.title(),
             type=data["type"],
-            embedding=data["embedding"],
+            embedding=emb,
             x=data["x"],
             y=data["y"],
             frequency=data.get("frequency", 1)
@@ -139,43 +185,54 @@ async def get_skills():
 
 @app.post("/api/search")
 async def search_skills(request: SearchRequest):
-    """Search for skills. Uses semantic search if available, otherwise simple substring matching."""
+    """Search for skills. Uses vectorized semantic search."""
+    global embedding_service
     
     results = []
     
-    if SEARCH_MODE == "semantic" and embedding_service:
-        # Semantic search
+    # Ensure embedding service is loaded for query embedding
+    if embedding_service is None:
+        from ai_skills.embeddings import EmbeddingService
+        embedding_service = EmbeddingService()
+    
+    if "semantic" in SEARCH_MODE or SEARCH_MODE == "semantic_vectorized":
+        # Embed query
         query_emb = embedding_service.embed_text(request.query)
         if query_emb is None or len(query_emb) == 0:
             return {"results": [], "mode": SEARCH_MODE}
             
-        import numpy as np
         q_vec = np.array(query_emb)
         q_norm = np.linalg.norm(q_vec)
-        
-        for skill_name, data in skill_embeddings_cache.items():
-            s_vec = np.array(data["embedding"])
-            s_norm = np.linalg.norm(s_vec)
+        if q_norm > 0:
+            q_vec = q_vec / q_norm
             
-            if q_norm == 0 or s_norm == 0:
-                score = 0
-            else:
-                score = np.dot(q_vec, s_vec) / (q_norm * s_norm)
+        # Vectorized Search
+        if skill_matrix is not None:
+            # Dot product (Cosine Similarity since both normalized)
+            scores = np.dot(skill_matrix, q_vec)
+            
+            # Top K
+            top_k_indices = np.argsort(scores)[::-1][:request.limit]
+            
+            for idx in top_k_indices:
+                score = scores[idx]
+                if score < 0.1: break # filtering
                 
-            results.append({
-                "skill": skill_name,
-                "type": data["type"],
-                "score": float(score)
-            })
+                item = skill_index[idx]
+                results.append({
+                    "skill": item["skill"],
+                    "type": item["data"]["type"],
+                    "score": float(score)
+                })
+        else:
+            # Fallback (should not happen if initialized correctly)
+            logger.warning("Skill matrix not initialized, returning empty.")
             
-        results.sort(key=lambda x: x["score"], reverse=True)
-        
     else:
-        # Simple search (Lite Mode)
+        # Simple string matching
         query = request.query.lower()
         for skill_name, data in skill_embeddings_cache.items():
             if query in skill_name.lower():
-                # Score can be simple: 1.0 for exact, 0.8 for starts with, 0.5 for contains
                 if query == skill_name.lower():
                     score = 1.0
                 elif skill_name.lower().startswith(query):
@@ -188,10 +245,10 @@ async def search_skills(request: SearchRequest):
                     "type": data["type"],
                     "score": score
                 })
-        # Sort by score then by length (shorter match is likely better)
         results.sort(key=lambda x: (x["score"], -len(x["skill"])), reverse=True)
+        results = results[:request.limit]
 
-    return {"results": results[:request.limit], "mode": SEARCH_MODE}
+    return {"results": results, "mode": SEARCH_MODE}
 
 def start():
     """Entry point for helping to run the app directly if needed"""

@@ -167,7 +167,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     cluster.set_defaults(func=_handle_cluster)
 
-    cluster.set_defaults(func=_handle_cluster)
+
 
     # Visualize command
     viz = sub.add_parser(
@@ -212,7 +212,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     classify.set_defaults(func=_handle_classify)
 
-    classify.set_defaults(func=_handle_classify)
+
 
     # Index command
     index = sub.add_parser(
@@ -238,6 +238,25 @@ def build_parser() -> argparse.ArgumentParser:
         help="Column containing text to embed (default: 'job_desc_text').",
     )
     index.set_defaults(func=_handle_index)
+
+    # Index Skills command (New)
+    index_skills = sub.add_parser(
+        "index-skills",
+        help="Scanning CSV for skills to build the embedding cache (No OpenAI cost).",
+    )
+    index_skills.add_argument(
+        "--input-csv",
+        type=Path,
+        required=True,
+        help="CSV file to scan.",
+    )
+    index_skills.add_argument(
+        "--limit",
+        type=int,
+        default=0,
+        help="Limit number of rows to process (0 for all).",
+    )
+    index_skills.set_defaults(func=_handle_index_skills)
 
     return parser
 
@@ -595,6 +614,159 @@ def _handle_index(args: argparse.Namespace) -> int:
     manager.add_jobs(ids, documents, metadatas)
     
     print(f"Successfully indexed {manager.count()} jobs.")
+    return 0
+
+
+
+def _process_chunk_for_skills(chunk_df: pd.DataFrame) -> Set[str]:
+    """Helper for parallel processing: extracts skills from a dataframe chunk."""
+    from .deterministic_extractor import extract_hardskills_deterministic
+    unique_skills = set()
+    
+    # Locate text col
+    text_col = "job_desc_text"
+    if text_col not in chunk_df.columns:
+        for potential in ["description", "job_description", "text"]:
+            if potential in chunk_df.columns:
+                text_col = potential
+                break
+                
+    if text_col not in chunk_df.columns:
+        return unique_skills
+
+    # Prepare text data
+    texts = chunk_df[text_col].fillna("").astype(str).tolist()
+    
+    # If explicit 'skills' column exists, append it to the text to ensure we capture those too
+    if "skills" in chunk_df.columns:
+        skill_texts = chunk_df["skills"].fillna("").astype(str).tolist()
+        texts = [f"{t} {s}" for t, s in zip(texts, skill_texts)]
+
+    for text in texts:
+        if not text: continue
+        skills = extract_hardskills_deterministic(text)
+        unique_skills.update(skills)
+        
+    return unique_skills
+
+def _handle_index_skills(args: argparse.Namespace) -> int:
+    import pandas as pd
+    from .skill_normalizer import get_semantic_normalizer
+    import json
+    import numpy as np
+    from sklearn.manifold import TSNE
+    from concurrent.futures import ProcessPoolExecutor, as_completed
+    import multiprocessing
+    
+    print(f"Scanning {args.input_csv} for skills...")
+    
+    unique_skills_found = set()
+    rows_processed = 0
+    
+    chunk_size = 2000
+    try:
+        # Just read the whole thing if it fits in memory (18k rows is tiny for RAM)
+        # Reading 1.5M rows might be different, but 18k is fine to read at once then split.
+        # But to be safe and consistent with "streaming", we'll read chunks.
+        # However, for ProcessPoolExecutor, we need to pass data. Passing DataFrames is fine.
+        total_rows = 0 # unknown
+        reader = pd.read_csv(args.input_csv, sep=None, engine='python', chunksize=chunk_size)
+    except Exception as e:
+        print(f"Error reading CSV: {e}")
+        return 1
+        
+    start_time = time.perf_counter()
+    futures = []
+    
+    # Determine workers
+    max_workers = args.limit_workers if hasattr(args, 'limit_workers') else max(1, multiprocessing.cpu_count() - 1)
+    
+    print(f"Starting parallel extraction with {max_workers} workers...")
+    
+    with ProcessPoolExecutor(max_workers=max_workers) as executor:
+        for i, chunk in enumerate(reader):
+            # Standardize columns
+            chunk.columns = chunk.columns.str.replace('^\ufeff', '', regex=True).str.strip()
+            
+            # Submit job
+            futures.append(executor.submit(_process_chunk_for_skills, chunk))
+            
+            rows_processed += len(chunk)
+            if args.limit > 0 and rows_processed >= args.limit:
+                break
+        
+        print(f"Dispatched {len(futures)} tasks (approx {rows_processed} rows). Waiting for results...")
+        
+        # Collect results
+        for future in as_completed(futures):
+            try:
+                chunk_skills = future.result()
+                unique_skills_found.update(chunk_skills)
+                sys.stdout.write(f"\rCollected {len(unique_skills_found)} unique skills so far...")
+                sys.stdout.flush()
+            except Exception as e:
+                print(f"\nTask failed: {e}")
+
+    print("\nExtraction complete.")
+    
+    # Now build embeddings
+    unique_list = sorted(list(unique_skills_found))
+    if not unique_list:
+        print("No skills found.")
+        return 0
+        
+    print(f"Computing embeddings for {len(unique_list)} skills...")
+    # ... (rest is same)
+    normalizer = get_semantic_normalizer()
+    
+    # Categorize first (this ensures we have family mapping)
+    print("Auto-categorizing skills...")
+    semantic_mapping = normalizer.categorize_skills(unique_list)
+    
+    # Get embeddings again (cached inside service usually, but good to ensure)
+    embeddings = normalizer.embedding_service.embed_batch(unique_list)
+    
+    # t-SNE
+    print("Running t-SNE projection...")
+    if len(embeddings) > 5:
+        n_samples = len(embeddings)
+        perplexity = min(30, max(5, int(n_samples/4))) 
+        tsne = TSNE(n_components=2, perplexity=perplexity, random_state=42, init='pca', learning_rate='auto')
+        coords = tsne.fit_transform(np.array(embeddings))
+        max_val = np.max(np.abs(coords))
+        if max_val > 0:
+            coords = (coords / max_val) * 400
+    else:
+        coords = np.zeros((len(embeddings), 2))
+        
+    # Build output
+    output_data = {}
+    for i, skill in enumerate(unique_list):
+        family = semantic_mapping.get(skill, "Other")
+        emb_list = embeddings[i]
+        if hasattr(emb_list, 'tolist'):
+            emb_list = emb_list.tolist()
+            
+        output_data[skill] = {
+            "type": "item", 
+            "family": family,
+            "count": 1, 
+            "embedding": emb_list,
+            "x": float(coords[i, 0]),
+            "y": float(coords[i, 1])
+        }
+        
+    # Write
+    data_dir = Path("data")
+    data_dir.mkdir(exist_ok=True)
+    out_file = data_dir / "skills_embeddings.json"
+    with open(out_file, "w") as f:
+        json.dump(output_data, f)
+        
+    elapsed = time.perf_counter() - start_time
+    print(f"\nSuccess! Saved {len(output_data)} skills to {out_file}.")
+    print(f"Total time: {elapsed:.1f}s")
+    
     return 0
 
 

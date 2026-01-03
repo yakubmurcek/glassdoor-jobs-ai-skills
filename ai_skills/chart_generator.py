@@ -268,11 +268,35 @@ def plot_skill_embeddings(skills: list[str], output_path: Path) -> Path:
         title_suffix = "(t-SNE)"
 
     # Plot
-    plt.figure(figsize=(12, 8))
-    plt.scatter(coords[:, 0], coords[:, 1], c='#4ECDC4', alpha=0.6, edgecolors='k')
+    # Plot
+    plt.figure(figsize=(12, 10))
     
+    # Try to assign families for coloring
+    from .skills_dictionary import get_skill_family
+    
+    # Get distinct families
+    families = [get_skill_family(s) or "Uncategorized" for s in skills]
+    unique_families = sorted(list(set(families)))
+    
+    # Generate colors
+    import matplotlib.cm as cm
+    colors = cm.rainbow(np.linspace(0, 1, len(unique_families)))
+    color_map = dict(zip(unique_families, colors))
+    
+    point_colors = [color_map[f] for f in families]
+    
+    plt.scatter(coords[:, 0], coords[:, 1], c=point_colors, alpha=0.7, edgecolors='k', s=80)
+    
+    # Create legend
+    from matplotlib.lines import Line2D
+    legend_elements = [
+        Line2D([0], [0], marker='o', color='w', label=fam,
+               markerfacecolor=color_map[fam], markersize=10, markeredgecolor='k')
+        for fam in unique_families
+    ]
+    plt.legend(handles=legend_elements, title="Skill Families", bbox_to_anchor=(1.05, 1), loc='upper left')
+
     # Label distinct points
-    # Naive labeling for now
     for i, skill in enumerate(skills):
         plt.annotate(
             skill, 

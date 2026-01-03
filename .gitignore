@@ -1,6 +1,8 @@
 us_relevant.csv
 data/inputs/
+data/inputs/
 data/outputs/
+data/processed/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

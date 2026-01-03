@@ -2,98 +2,139 @@
 
 > **Thesis Context**: This project is part of a master's thesis in Economics. The main goal is to analyze current skills wanted in US vs EU job postings to compare the respective job markets.
 
-Evaluate job descriptions for AI-related skills using a reproducible CLI
-workflow. The project ships with a small orchestration layer so you and your
-advisor can prepare sample data and run the full OpenAI-powered analysis
-without guessing which script to execute.
+Evaluate job descriptions for AI-related skills using a reproducible CLI workflow. The system uses a **Hybrid Extraction Strategy** combining deterministic dictionary matching (for speed and consistency) with OpenAI-powered extraction (for context and nuance).
 
-## 1. Environment setup
+## 1. Skill Taxonomy
+
+The system sorts extracted skills into 9 semantic families to ensure cleaner data analysis:
+
+- **Generative AI & LLMs** (`LangChain`, `OpenAI`, `RAG`, `Pinecone`...) _[NEW]_
+- **Programming** (`Python`, `Java`, `Go`...)
+- **Data & Cloud** (`AWS`, `SQL`, `Snowflake`...)
+- **Analytics** (`Data Science`, `PowerBI`, `Machine Learning`...)
+- **Software Engineering** (`CI/CD`, `Agile`, `Git`...)
+- **Security** (`CISSP`, `Network Security`...)
+- **Integration** (`REST API`, `GraphQL`...)
+- **Certifications** (`AWS Certified`, `PMP`...)
+- **UI & Tools** (`React`, `Figma`...)
+
+## 2. Core Workflow
+
+### 1. Update Data (The "Analyst" Flow)
+
+Run `analyze` to process text, extract skills, and **automatically update the Embedding Cache** for the web dashboard. This single command handles the entire data lifecycle.
+
+```bash
+python -m ai_skills.cli analyze --input-csv data/inputs/us_relevant_30.csv
+```
+
+**Parameters:**
+
+- `--input-csv <path>`: (Required) Raw CSV file to process.
+- `--output-csv <path>`: (Optional) Custom output path. Defaults to `data/outputs/<stem>_ai.csv`.
+- `--no-progress`: Disable the progress bar (useful for CI/CD logs).
+
+### 2. View Interactive Dashboard (The "Explorer" Flow)
+
+Launch the web server to explore the Skill Universe (2D Semantic Map) and search for jobs semantically.
+
+```bash
+python -m ai_skills.server
+```
+
+_Open http://localhost:8000/ to view the API, or your frontend client to see the graph._
+
+### 3. Generate Reports (The "Validator" Flow)
+
+To create static assets or compare versions.
+
+**Visualize Skills**
+Generate a static t-SNE scatter plot of extracted skills.
+
+```bash
+python -m ai_skills.cli visualize-skills --input-csv data/outputs/us_relevant_30_ai.csv
+```
+
+**Parameters:**
+
+- `--input-csv <path>`: CSV containing a `skills` column.
+- `--output-image <path>`: Path for the PNG (Default: `skill_map.png`).
+
+**Evaluate Improvements**
+Compare new extraction against a baseline to benchmark changes (e.g., did we find more skills?).
+
+```bash
+python -m ai_skills.cli evaluate --baseline data/baseline.csv --candidate data/new_output.csv
+```
+
+**Parameters:**
+
+- `--baseline <path>`: Previous version of the data (Ground Truth or "Last Good").
+- `--candidate <path>`: New version to evaluate.
+- `--no-chart`: Skip generating the comparison PNG.
+- `--min-match-rate <float>`: Alert threshold for matching jobs (Default: 0.85).
+
+## 3. Setup
 
 1. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-2. Create a `.env` file with a valid `OPENAI_API_KEY` (do not store the key in
-   source files).
-3. Place the raw CSV file under `data/inputs/us_relevant.csv` or adjust the
-   paths inside `config/settings.toml` (copy it to
-   `config/settings.local.toml` if you want developer-specific overrides).
+2. Create `.env` file:
+   ```bash
+   OPENAI_API_KEY=sk-...
+   ```
+3. Configure `config/settings.toml` for default paths and taxonomy overrides.
 
-## 2. Command-line usage
+## 4. Utilities & Advanced Commands
 
-The project exposes a single CLI with two subcommands. You can invoke it via
-`python -m ai_skills.cli …` or call `python main.py …` if you prefer the
-historical entry point.
+### `show_csv.py`
 
-### Prepare a graded sample
+A colorized terminal viewer for your CSV data.
 
-Create a smaller CSV that downstream steps will consume:
+```bash
+./show_csv.py data/outputs/us_relevant_30_ai.csv -c title tier hardskills
+```
+
+### Data Preparation
+
+**`prepare-inputs`**
+Create a smaller sample CSV for testing/grading.
 
 ```bash
 python -m ai_skills.cli prepare-inputs --rows 100
-# or, equivalently:
-python extract_csv.py --rows 100
 ```
 
-Options:
+- `--rows <int>`: Number of rows to sample (Default: 100).
+- `--source <path>`: Source master CSV (Default: `data/inputs/us_relevant.csv`).
+- `--destination <path>`: Output path.
 
-- `--source`: raw CSV to sample (default `data/inputs/us_relevant.csv`)
-- `--destination`: output CSV that the pipeline will read
-  (default: same folder as `--source` with `_<rows>` appended to the stem)
-- `--rows`: number of rows to copy
+### Vector Operations
 
-### Run the OpenAI analysis
+**`search`**
+Perform a semantic search query against the local vector store.
 
 ```bash
-python -m ai_skills.cli analyze --input-csv data/inputs/us_relevant_100.csv
+python -m ai_skills.cli search "remote developer with python" --limit 10
 ```
 
-By default this shows a progress bar and writes the enriched file specified by
-`OUTPUT_CSV` in `config/settings.toml`. Pass the dataset you want to process
-via `--input-csv` (required) and add `--no-progress` if you are piping logs to a
-file. Provide `--output-csv path/to/result.csv` to pick a custom destination. When
-you only set `--input-csv`, the CLI automatically writes to
-`data/outputs/<input_stem>_ai<suffix>`.
-
-### Legacy shorthand
-
-`python main.py` now delegates to the same CLI and still defaults to the `analyze`
-command, but you must pass the same required flags. For example:
+**`cluster`**
+Group raw skills into synonyms using K-Means/Vectors (useful for ad-hoc analysis).
 
 ```bash
-python main.py analyze --input-csv data/inputs/us_relevant_100.csv --no-progress
+python -m ai_skills.cli cluster --input-csv data/outputs/file.csv
 ```
 
-Run `python -m ai_skills.cli --help` for the full command reference.
-
-## 3. View results
-
-Use the included CSV viewer to inspect output files with colored formatting:
+**`classify`**
+Test the Zero-Shot Classifier on a text string.
 
 ```bash
-./show_csv.py data/outputs/us_relevant_30-new-3.csv
+python -m ai_skills.cli classify "Senior Python Developer" --labels "Junior" "Senior" "Manager"
 ```
 
-Or without the executable flag:
+**`index-skills`**
+Scan a massive CSV to build embeddings without running the full OpenAI pipeline (Offline mode).
 
 ```bash
-.venv/bin/python show_csv.py data/outputs/us_relevant_30-new-3.csv
+python -m ai_skills.cli index-skills --input-csv data/inputs/huge_file.csv
 ```
-
-Select specific columns with `-c`:
-
-```bash
-./show_csv.py data/outputs/file.csv -c title tier conf
-```
-
-Available columns: `title`, `tier`, `conf`, `hard`, `agree`, `skills_hard`, `skills_openai`
-
-## 4. Configuration model
-
-- Shared defaults live in `config/settings.toml`.
-- Create `config/settings.local.toml` (ignored by git) for machine-specific overrides.
-- Secrets such as `OPENAI_API_KEY` must remain in `.env` or environment variables.
-
-Both TOML files support the `paths`, `openai`, and `processing` sections. Any value
-in the local file overrides the shared defaults, while environment variables remain
-the final source of truth for sensitive credentials.

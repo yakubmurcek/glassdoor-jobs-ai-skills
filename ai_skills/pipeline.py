@@ -66,6 +66,12 @@ class JobAnalysisPipeline:
             save_results(df)
             logger.info("Saved results to default output path.")
             
+        # Update server cache with new embeddings found
+        try:
+            self.save_embeddings_cache()
+        except Exception as e:
+            logger.error(f"Failed to save embeddings cache: {e}")
+            
         return df
 
     def _annotate_job_descriptions(
@@ -159,6 +165,7 @@ class JobAnalysisPipeline:
             norm_s = normalize_softskills(r.softskills_raw, use_semantic=True)
             softskills_llm.append(norm_s.split(", ") if norm_s else [])
         
+
         # --- MERGE: Union of deterministic + LLM ---
         hardskills_merged = [
             merge_skills(dict_skills, llm_skills)
@@ -169,11 +176,53 @@ class JobAnalysisPipeline:
             for dict_skills, llm_skills in zip(softskills_dict, softskills_llm)
         ]
         
+        # --- AUTO-CATEGORIZATION (Semantic Families) ---
+        from .skill_normalizer import get_semantic_normalizer
+        
+        # Collect all unique hard skills to categorize
+        all_hardskills = set()
+        for skills in hardskills_merged:
+            all_hardskills.update(skills)
+            
+        # Categorize them
+        try:
+            normalizer = get_semantic_normalizer()
+            # This returns {skill: "Family Name"}
+            semantic_mapping = normalizer.categorize_skills(list(all_hardskills))
+        except Exception as e:
+            logger.warning(f"Auto-categorization failed: {e}")
+            semantic_mapping = {}
+
+        def format_with_semantic_clusters(skills: List[str]) -> str:
+            if not skills: return ""
+            # Group by family
+            families = {}
+            for skill in skills:
+                # Use semantic mapping, fallback to unknown
+                family = semantic_mapping.get(skill, "Uncategorized")
+                # Or fallback to dictionary lookup if semantic failed/was skipped
+                if family == "Uncategorized":
+                    from .skills_dictionary import get_skill_family
+                    family = get_skill_family(skill) or "Other"
+                    
+                if family not in families:
+                    families[family] = []
+                families[family].append(skill)
+                
+            # Format string
+            parts = []
+            for fam in sorted(families.keys()):
+                fam_skills = sorted(families[fam])
+                parts.append(f"{fam}: {', '.join(fam_skills)}")
+            return "; ".join(parts)
+
         # Add all columns to DataFrame
         df["desc_hard_det"] = [format_skills_string(s) for s in hardskills_dict]
         df["desc_hard_llm"] = [format_skills_string(s) for s in hardskills_llm]
         df["hardskills"] = [format_skills_string(s) for s in hardskills_merged]
-        df["skill_cluster"] = [format_skills_by_family(s) for s in hardskills_merged]
+        
+        # Use new semantic formatter
+        df["skill_cluster"] = [format_with_semantic_clusters(s) for s in hardskills_merged]
         
         df["desc_soft_det"] = [format_skills_string(s) for s in softskills_dict]
         df["desc_soft_llm"] = [format_skills_string(s) for s in softskills_llm]
@@ -216,5 +265,68 @@ class JobAnalysisPipeline:
         
         # edureq_llm: Already added from LLM results via as_columns()
         
+        self.last_semantic_mapping = semantic_mapping  # Store for saving later
+        self.last_unique_skills = list(all_hardskills)
+        
         return df
+
+    def save_embeddings_cache(self):
+        """Save computed embeddings to JSON for server usage."""
+        if not hasattr(self, 'last_unique_skills') or not self.last_unique_skills:
+            return
+            
+        import json
+        import numpy as np
+        from sklearn.manifold import TSNE
+        from .skill_normalizer import get_semantic_normalizer, get_unique_skills
+        
+        logger.info("Updating skills_embeddings.json with new skills...")
+        
+        # Get embeddings
+        normalizer = get_semantic_normalizer()
+        embeddings = normalizer.embedding_service.embed_batch(self.last_unique_skills)
+        
+        # Compute TSNE (Re-compute for the whole set? Or just new ones? 
+        # For simplicity and consistence, we re-compute the whole set of UNIQUE skills found)
+        # But wait, self.last_unique_skills only has current CSV skills. 
+        # We should merge with global unique skills if we want a comprehensive map.
+        # For now, let's just save the ones we found, as they are the "Active" ones.
+        
+        if len(embeddings) > 5:
+            n_samples = len(embeddings)
+            perplexity = min(30, max(5, int(n_samples/4))) 
+            tsne = TSNE(n_components=2, perplexity=perplexity, random_state=42, init='pca', learning_rate='auto')
+            coords = tsne.fit_transform(np.array(embeddings))
+            # Normalize (-400, 400)
+            max_val = np.max(np.abs(coords))
+            if max_val > 0:
+                coords = (coords / max_val) * 400
+        else:
+            coords = np.zeros((len(embeddings), 2))
+            
+        # Build Output
+        output_data = {}
+        for i, skill in enumerate(self.last_unique_skills):
+            family = self.last_semantic_mapping.get(skill, "Other")
+            
+            # Formatting embedding for list
+            emb_list = embeddings[i]
+            if hasattr(emb_list, 'tolist'):
+                emb_list = emb_list.tolist()
+                
+            output_data[skill] = {
+                "type": "item", # General type
+                "family": family,
+                "count": 1, # We don't have global counts here easily, passing 1
+                "embedding": emb_list,
+                "x": float(coords[i, 0]),
+                "y": float(coords[i, 1])
+            }
+            
+        # Write
+        data_dir = Path("data")
+        data_dir.mkdir(exist_ok=True)
+        with open(data_dir / "skills_embeddings.json", "w") as f:
+            json.dump(output_data, f)
+        logger.info(f"Saved {len(output_data)} skills to cache.")
 

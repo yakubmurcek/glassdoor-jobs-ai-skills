@@ -823,6 +823,55 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     "ccna": "ccna",
     "ccnp": "ccnp",
     "ccie": "ccie",
+    "ccna": "ccna",
+    "ccnp": "ccnp",
+    "ccie": "ccie",
+    
+    # --- Family I: Generative AI & LLMs ---
+    "generative ai": "generative ai",
+    "genai": "generative ai",
+    "llm": "llm",
+    "large language model": "llm",
+    "gpt": "gpt",
+    "chatgpt": "chatgpt",
+    "openai": "openai",
+    "anthropic": "anthropic",
+    "claude": "claude",
+    "gemini": "gemini",
+    "bard": "gemini",
+    "google bard": "gemini",
+    "vertex ai": "vertex ai",
+    "langchain": "langchain",
+    "llamaindex": "llamaindex",
+    "llama index": "llamaindex",
+    "huggingface": "huggingface",
+    "hugging face": "huggingface",
+    "transformers": "transformers",
+    "bert": "bert",
+    "pinecone": "pinecone",
+    "weaviate": "weaviate",
+    "chromadb": "chromadb",
+    "milvus": "milvus",
+    "faiss": "faiss",
+    "vector database": "vector database",
+    "vector db": "vector database",
+    "rag": "rag",
+    "retrieval augmented generation": "rag",
+    "retrieval-augmented generation": "rag",
+    "prompt engineering": "prompt engineering",
+    "fine-tuning": "fine-tuning",
+    "fine tuning": "fine-tuning",
+    "lora": "lora",
+    "qlora": "qlora",
+    "stable diffusion": "stable diffusion",
+    "midjourney": "midjourney",
+    "dalle": "dalle",
+    "dall-e": "dalle",
+    "whisper": "whisper",
+    "cohere": "cohere",
+    "mistral": "mistral",
+    "llama": "llama",
+    "ollama": "ollama",
     
     # --- Family E: Software Engineering Domains & Tools ---
     "software development": "software development",
@@ -1302,10 +1351,24 @@ FAMILY_ANALYTICS: set[str] = {
     "d3.js", "chart.js", "highcharts", "plotly", "echarts", "recharts", "nivo",
     # ML/AI (analytics aspect)
     "machine learning", "deep learning", "neural networks", "nlp", 
-    "computer vision", "llm", "gpt", "chatgpt", "openai", "langchain",
-    "huggingface", "transformers",
+    "computer vision", 
     # ML frameworks
     "pandas", "numpy", "scipy", "scikit-learn", "tensorflow", "pytorch", "keras",
+}
+
+# Family I: Generative AI & LLMs
+FAMILY_AI: set[str] = {
+    # Concepts
+    "generative ai", "llm", "gpt", "rag", "prompt engineering", "fine-tuning",
+    "lora", "qlora", "vector database",
+    # Models & Providers
+    "openai", "chatgpt", "anthropic", "claude", "gemini", "cohere", "mistral",
+    "llama", "bert", "stable diffusion", "midjourney", "dalle", "whisper",
+    # Tools & Frameworks
+    "langchain", "llamaindex", "huggingface", "transformers", "ollama",
+    "vertex ai",
+    # Vector DBs
+    "pinecone", "weaviate", "chromadb", "milvus", "faiss",
 }
 
 # Family G: Certifications & Standards
@@ -1382,6 +1445,8 @@ for skill in FAMILY_CERTIFICATIONS:
     SKILL_TO_FAMILY[skill] = "Certifications"
 for skill in FAMILY_UI_TOOLS:
     SKILL_TO_FAMILY[skill] = "UI & Tools"
+for skill in FAMILY_AI:
+    SKILL_TO_FAMILY[skill] = "Generative AI"
 
 
 def get_skill_family(skill: str) -> str | None:
