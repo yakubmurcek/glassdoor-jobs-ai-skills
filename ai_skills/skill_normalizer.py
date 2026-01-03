@@ -8,6 +8,7 @@ This module handles the post-processing of LLM-extracted skills using a hybrid a
 The LLM extracts raw skill mentions; this module normalizes them for consistent output.
 """
 
+from __future__ import annotations
 import re
 import logging
 from typing import List, Dict, Tuple, Optional
