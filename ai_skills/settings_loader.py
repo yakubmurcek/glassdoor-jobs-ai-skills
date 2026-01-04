@@ -51,6 +51,9 @@ _SECTION_KEY_MAPPING: dict[str, dict[str, str]] = {
         "rate_limit_delay": "RATE_LIMIT_DELAY",
         "batch_size": "OPENAI_BATCH_SIZE",
         "max_parallel_requests": "OPENAI_MAX_PARALLEL_REQUESTS",
+        "service_tier": "SERVICE_TIER",
+        "timeout": "OPENAI_TIMEOUT",
+        "max_retries": "OPENAI_MAX_RETRIES",
     },
     "processing": {"max_job_desc_length": "MAX_JOB_DESC_LENGTH"},
 }

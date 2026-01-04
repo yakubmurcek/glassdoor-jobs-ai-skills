@@ -44,7 +44,7 @@ class TestOpenAIJobAnalyzer(unittest.TestCase):
                 rationale="Reason 1",
                 hardskills_raw=["python"],
                 softskills_raw=["teamwork"],
-                education_required=0
+                min_education_level=None
             ),
             JobAnalysisResultWithId(
                 id="job_1", 
@@ -54,7 +54,7 @@ class TestOpenAIJobAnalyzer(unittest.TestCase):
                 rationale="Reason 2",
                 hardskills_raw=["tensorflow", "python"],
                 softskills_raw=[],
-                education_required=1
+                min_education_level="Bachelor's"
             )
         ])
         
@@ -68,7 +68,7 @@ class TestOpenAIJobAnalyzer(unittest.TestCase):
                 rationale="Reason 3",
                 hardskills_raw=["pytorch"],
                 softskills_raw=["communication"],
-                education_required=0
+                min_education_level=None
             )
         ])
         
@@ -80,9 +80,9 @@ class TestOpenAIJobAnalyzer(unittest.TestCase):
 
         # Verification
         self.assertEqual(len(results), 3)
-        self.assertEqual(results[0].ai_tier, "none")
-        self.assertEqual(results[1].ai_tier, "core_ai")
-        self.assertEqual(results[2].ai_tier, "applied_ai")
+        self.assertEqual(results[0].ai_tier.value, "none")
+        self.assertEqual(results[1].ai_tier.value, "core_ai")
+        self.assertEqual(results[2].ai_tier.value, "applied_ai")
         
         # Verify the client was called twice (batch size 2, total 3 items)
         self.assertEqual(self.analyzer.client.responses.parse.call_count, 2)
@@ -117,11 +117,11 @@ class TestDecomposedAnalyzer(unittest.TestCase):
             SkillsResultWithId(id="job_1", ai_skills_mentioned=[], hardskills_raw=["javascript", "react"], softskills_raw=["communication"]),
         ])
         
-        # Task 3: Education
+        # Task 3: Education (using correct field names)
         edu_response = MagicMock()
         edu_response.output = EducationBatchResponse(results=[
-            EducationResultWithId(id="job_0", education_required=1),
-            EducationResultWithId(id="job_1", education_required=0),
+            EducationResultWithId(id="job_0", min_education_level="Master's", min_years_experience=3.0),
+            EducationResultWithId(id="job_1", min_education_level=None, min_years_experience=None),
         ])
         
         # Return different responses for each task call
@@ -137,17 +137,18 @@ class TestDecomposedAnalyzer(unittest.TestCase):
         self.assertEqual(len(results), 2)
         
         # Job 0: ML Engineer
-        self.assertEqual(results[0].ai_tier, "applied_ai")
+        self.assertEqual(results[0].ai_tier.value, "applied_ai")
         self.assertEqual(results[0].confidence, 0.9)
         self.assertEqual(results[0].ai_skills_mentioned, ["tensorflow"])
         self.assertEqual(results[0].hardskills_raw, ["python", "tensorflow"])
-        self.assertEqual(results[0].education_required, 1)
+        self.assertEqual(results[0].min_education_level, "Master's")
+        self.assertEqual(results[0].min_years_experience, 3.0)
         
         # Job 1: Web Developer
-        self.assertEqual(results[1].ai_tier, "none")
+        self.assertEqual(results[1].ai_tier.value, "none")
         self.assertEqual(results[1].ai_skills_mentioned, [])
         self.assertEqual(results[1].hardskills_raw, ["javascript", "react"])
-        self.assertEqual(results[1].education_required, 0)
+        self.assertEqual(results[1].min_education_level, None)
         
         # Verify 3 API calls (one per task)
         self.assertEqual(self.analyzer.client.responses.parse.call_count, 3)

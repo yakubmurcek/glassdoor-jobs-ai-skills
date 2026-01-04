@@ -128,8 +128,8 @@ LLM_TASK_AI_TIER = "ai_tier"
 LLM_TASK_SKILLS = "skills"
 LLM_TASK_EDUCATION = "education"
 
-# Default: education disabled (can be done deterministically)
-DEFAULT_ENABLED_LLM_TASKS: frozenset[str] = frozenset({LLM_TASK_AI_TIER, LLM_TASK_SKILLS})
+# Default: education and experience now enabled
+DEFAULT_ENABLED_LLM_TASKS: frozenset[str] = frozenset({LLM_TASK_AI_TIER, LLM_TASK_SKILLS, LLM_TASK_EDUCATION})
 
 
 def _get_set_setting(env_var: str, default: frozenset[str]) -> frozenset[str]:
@@ -157,6 +157,11 @@ class LLMSettings:
     batch_size: int
     max_parallel_requests: int
     enabled_tasks: frozenset[str]  # Which decomposed tasks use LLM
+    use_decomposed: bool = False   # Whether to use decomposed tasks (slower) or monolithic (faster)
+    # Flex tier configuration
+    service_tier: str = "auto"  # "flex" for batch pricing, "auto" for standard
+    timeout: float = 600.0  # Request timeout in seconds
+    max_retries: int = 3  # Maximum retry attempts for resource unavailable errors
 
     @classmethod
     def build(cls) -> "LLMSettings":
@@ -190,6 +195,10 @@ class LLMSettings:
                 1, _get_int_setting("OPENAI_MAX_PARALLEL_REQUESTS", 3)
             ),
             enabled_tasks=_get_set_setting("ENABLED_LLM_TASKS", DEFAULT_ENABLED_LLM_TASKS),
+            use_decomposed=_get_raw_setting("USE_DECOMPOSED_PROMPTS") == "true",
+            service_tier=_get_raw_setting("SERVICE_TIER") or "auto",
+            timeout=_get_float_setting("OPENAI_TIMEOUT", 600.0),
+            max_retries=max(0, _get_int_setting("OPENAI_MAX_RETRIES", 3)),
         )
 
 
@@ -219,7 +228,9 @@ DEFAULT_COLUMN_ORDER: Tuple[str, ...] = (
     # From educations column (deterministic)
     "edu_level_det",
     # Education requirement (LLM uses educations column + job description)
-    "edureq_llm",
+    # Education requirement (LLM uses educations column + job description)
+    "edulevel_llm",
+    "experience_min_llm",
     # Metrics
     "ai_det_llm_match",
     # Intermediate: from job description (deterministic)
@@ -256,7 +267,8 @@ DISPLAY_COLUMNS: Dict[str, ColumnDisplay] = {
     "skills_hasai_det": ColumnDisplay("HAS_AI", 6, "boolean"),
     "ai_det_llm_match": ColumnDisplay("AGREE", 5, "boolean"),
     "edu_level_det": ColumnDisplay("EDU", 10, "text"),
-    "edureq_llm": ColumnDisplay("EDU_REQ", 7, "boolean"),
+    "edulevel_llm": ColumnDisplay("EDU_LLM", 10, "text"),
+    "experience_min_llm": ColumnDisplay("EXP(YRS)", 8, "text"),
     "hardskills": ColumnDisplay("HARDSKILLS", 50, "skills"),
     "softskills": ColumnDisplay("SOFTSKILLS", 30, "skills"),
     "skill_cluster": ColumnDisplay("SKILL FAMILIES", 80, "skills"),
@@ -267,7 +279,7 @@ DISPLAY_COLUMNS: Dict[str, ColumnDisplay] = {
 # Default columns to show (use actual column names)
 DEFAULT_DISPLAY_COLS: Tuple[str, ...] = (
     "job_title", "is_real_ai", "desc_tier_llm", "desc_conf_llm", 
-    "skills_hasai_det", "ai_det_llm_match", "edu_level_det", "edureq_llm",
+    "skills_hasai_det", "ai_det_llm_match", "edu_level_det", "edulevel_llm", "experience_min_llm",
     "skill_cluster", "softskills", "skills_ai_det", "desc_ai_llm",
 )
 
@@ -323,6 +335,10 @@ RATE_LIMIT_DELAY = LLM.rate_limit_delay
 OPENAI_BATCH_SIZE = LLM.batch_size
 OPENAI_MAX_PARALLEL_REQUESTS = LLM.max_parallel_requests
 ENABLED_LLM_TASKS = LLM.enabled_tasks
+USE_DECOMPOSED_PROMPTS = LLM.use_decomposed
+OPENAI_SERVICE_TIER = LLM.service_tier
+OPENAI_TIMEOUT = LLM.timeout
+OPENAI_MAX_RETRIES = LLM.max_retries
 MAX_JOB_DESC_LENGTH = PROCESSING.max_job_desc_length
 PREFERRED_COLUMN_ORDER = list(PROCESSING.preferred_column_order)
 

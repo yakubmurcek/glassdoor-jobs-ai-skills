@@ -92,7 +92,7 @@ class JobAnalysisPipeline:
             # Required columns for hydration
             required_cols = [
                 "desc_tier_llm", "desc_ai_llm", "desc_conf_llm", 
-                "desc_rationale_llm", "edureq_llm", "desc_hard_llm", "desc_soft_llm"
+                "desc_rationale_llm", "edulevel_llm", "desc_hard_llm", "desc_soft_llm"
             ]
             
             # Check availability
@@ -110,13 +110,10 @@ class JobAnalysisPipeline:
                 
                 for _, row in annotated_df.iterrows():
                     # Parse education (- means None)
-                    edu_val = row["edureq_llm"]
-                    edu_req = None
+                    edu_val = row.get("edulevel_llm")
+                    edu_level = None
                     if pd.notna(edu_val) and str(edu_val).strip() != "-":
-                        try:
-                            edu_req = int(float(edu_val))
-                        except ValueError:
-                            pass
+                        edu_level = str(edu_val).strip()
                             
                     # Parse lists
                     hard = str(row.get("desc_hard_llm", "")).split(", ") if pd.notna(row.get("desc_hard_llm")) and row.get("desc_hard_llm") else []
@@ -137,7 +134,7 @@ class JobAnalysisPipeline:
                         rationale=str(row.get("desc_rationale_llm", "")),
                         hardskills_raw=[s for s in hard if s],
                         softskills_raw=[s for s in soft if s],
-                        education_required=edu_req
+                        min_education_level=edu_level
                     )
                     results.append(res)
             
@@ -328,7 +325,7 @@ class JobAnalysisPipeline:
             df["edu_level_det"] = ""
             logger.warning("'educations' column not found, edu_level_det will be empty.")
         
-        # edureq_llm: Already added from LLM results via as_columns()
+        # edulevel_llm: Already added from LLM results via as_columns()
         
         self.last_semantic_mapping = semantic_mapping  # Store for saving later
         self.last_unique_skills = list(all_hardskills)

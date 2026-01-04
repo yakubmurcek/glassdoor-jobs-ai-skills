@@ -28,9 +28,13 @@ from .config import (
     OPENAI_BASE_URL,
     OPENAI_BATCH_SIZE,
     OPENAI_MAX_PARALLEL_REQUESTS,
+    OPENAI_MAX_RETRIES,
     OPENAI_MODEL,
+    OPENAI_SERVICE_TIER,
     OPENAI_TEMPERATURE,
+    OPENAI_TIMEOUT,
     RATE_LIMIT_DELAY,
+    USE_DECOMPOSED_PROMPTS,
 )
 from .models import (
     AITierBatchResponse,
@@ -59,10 +63,10 @@ logger = logging.getLogger(__name__)
 # Type variable for generic batch response handling
 T = TypeVar("T", bound=BaseModel)
 
-# Task-specific batch sizes (optimized for 4o-mini / Gemma 12B)
-AI_TIER_BATCH_SIZE = 20      # Classification needs reasoning
-SKILLS_BATCH_SIZE = 20       # Extraction is moderately complex
-EDUCATION_BATCH_SIZE = 25    # Simple binary, larger batches OK
+# Task-specific batch sizes (optimized for gpt-5-mini / flex tier)
+AI_TIER_BATCH_SIZE = 35      # Classification needs reasoning
+SKILLS_BATCH_SIZE = 35       # Extraction is moderately complex
+EDUCATION_BATCH_SIZE = 40    # Simple extraction, larger batches OK
 
 
 class OpenAIJobAnalyzer:
@@ -83,10 +87,13 @@ class OpenAIJobAnalyzer:
         delay_seconds: float = RATE_LIMIT_DELAY,
         batch_size: int = OPENAI_BATCH_SIZE,
         max_concurrent_requests: int = OPENAI_MAX_PARALLEL_REQUESTS,
-        use_decomposed: bool = True,  # New: enable decomposed mode by default
+        use_decomposed: bool = USE_DECOMPOSED_PROMPTS,
+        service_tier: str = OPENAI_SERVICE_TIER,
+        timeout: float = OPENAI_TIMEOUT,
+        max_retries: int = OPENAI_MAX_RETRIES,
     ) -> None:
-        # Build client with optional base_url for Ollama support
-        client_kwargs = {"api_key": api_key or "ollama"}
+        # Build client with optional base_url for Ollama support and timeout
+        client_kwargs = {"api_key": api_key or "ollama", "timeout": timeout}
         if base_url:
             client_kwargs["base_url"] = base_url
         self.client = OpenAI(**client_kwargs)
@@ -98,14 +105,31 @@ class OpenAIJobAnalyzer:
         self.batch_size = max(1, batch_size)
         self.max_concurrent_requests = max(1, max_concurrent_requests)
         self.use_decomposed = use_decomposed
+        self.service_tier = service_tier
+        self.timeout = timeout
+        self.max_retries = max(0, max_retries)
         
         if self.provider == "ollama":
             logger.info(f"Using Ollama provider with model '{model}' at {base_url}")
         else:
-            logger.info(f"Using OpenAI provider with model '{model}'")
+            logger.info(
+                f"Using OpenAI provider with model '{model}' "
+                f"(service_tier: {service_tier}, timeout: {timeout}s)"
+            )
         
         if self.use_decomposed:
             logger.info("Decomposed task-based batching ENABLED")
+
+    def _model_excludes_temperature(self) -> bool:
+        """Check if temperature parameter should be excluded.
+        
+        GPT-5 models and flex tier processing don't support temperature.
+        """
+        if self.service_tier == "flex":
+            return True
+        # GPT-5 models don't support temperature
+        model_lower = self.model.lower()
+        return "gpt-5" in model_lower or "gpt5" in model_lower
 
     def analyze_text(
         self,
@@ -420,23 +444,66 @@ class OpenAIJobAnalyzer:
         response_model: Type[T],
         batch_count: int,
     ) -> T:
-        """Call OpenAI API with structured output for a specific task."""
-        response = self.client.responses.parse(
-            model=self.model,
-            input=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt},
-            ],
-            text_format=response_model,
-            temperature=self.temperature,
-        )
+        """Call OpenAI API with structured output for a specific task.
         
-        parsed = self._extract_parsed_response_generic(response, response_model)
-        if not parsed:
-            raise ValueError("Failed to parse OpenAI response")
+        Implements retry logic with exponential backoff for 429 Resource Unavailable errors.
+        """
+        last_error = None
         
-        self._log_token_usage(response, batch_count)
-        return parsed
+        for attempt in range(self.max_retries + 1):
+            try:
+                # Build API kwargs - some models (e.g., gpt-5-nano) don't support temperature
+                api_kwargs = {
+                    "model": self.model,
+                    "input": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "text_format": response_model,
+                    "service_tier": self.service_tier,
+                }
+                # Only include temperature if model supports it
+                if not self._model_excludes_temperature():
+                    api_kwargs["temperature"] = self.temperature
+                    
+                response = self.client.responses.parse(**api_kwargs)
+                
+                parsed = self._extract_parsed_response_generic(response, response_model)
+                if not parsed:
+                    raise ValueError("Failed to parse OpenAI response")
+                
+                self._log_token_usage(response, batch_count)
+                return parsed
+                
+            except Exception as e:
+                last_error = e
+                error_str = str(e).lower()
+                
+                # Check if this is a 429 Resource Unavailable error
+                is_resource_unavailable = (
+                    "429" in error_str and 
+                    ("resource" in error_str or "unavailable" in error_str)
+                )
+                
+                if is_resource_unavailable and attempt < self.max_retries:
+                    # Exponential backoff: 2^attempt seconds
+                    delay = 2 ** attempt
+                    logger.warning(
+                        f"Resource unavailable (attempt {attempt + 1}/{self.max_retries + 1}). "
+                        f"Retrying in {delay}s... Error: {e}"
+                    )
+                    time.sleep(delay)
+                else:
+                    # Not a resource unavailable error, or max retries exceeded
+                    if is_resource_unavailable:
+                        logger.error(
+                            f"Resource unavailable after {self.max_retries + 1} attempts. "
+                            f"Consider using service_tier='auto' or trying again later."
+                        )
+                    raise
+        
+        # Should never reach here, but for type safety
+        raise last_error or ValueError("Retry loop exhausted without success")
 
     def _call_ollama_task(
         self,
@@ -518,11 +585,12 @@ class OpenAIJobAnalyzer:
                 ai_tier=tier.ai_tier if tier else results[idx].ai_tier,
                 confidence=tier.confidence if tier else 0.0,
                 rationale=tier.rationale if tier else "",
-                ai_skills_mentioned=skills.ai_skills_mentioned if skills else [],
+                ai_skills_mentioned=tier.ai_skills_mentioned if tier else [],
                 hardskills_raw=skills.hardskills_raw if skills else [],
                 softskills_raw=skills.softskills_raw if skills else [],
                 # Keep None if education task was skipped (shows as blank in CSV)
-                education_required=edu.education_required if edu else None,
+                min_education_level=edu.min_education_level if edu else None,
+                min_years_experience=edu.min_years_experience if edu else None,
             )
         
         return results
@@ -726,23 +794,65 @@ class OpenAIJobAnalyzer:
     def _call_openai_structured(
         self, system_prompt: str, prompt: str, batch_count: int
     ) -> list[JobAnalysisResultWithId]:
-        """Call OpenAI API with structured output parsing (legacy)."""
-        response = self.client.responses.parse(
-            model=self.model,
-            input=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt},
-            ],
-            text_format=BatchAnalysisResponse,
-            temperature=self.temperature,
-        )
+        """Call OpenAI API with structured output parsing (legacy).
         
-        batch_response = self._extract_parsed_response(response)
-        if not batch_response:
-            return []
+        Implements retry logic with exponential backoff for 429 Resource Unavailable errors.
+        """
+        last_error = None
+        
+        for attempt in range(self.max_retries + 1):
+            try:
+                # Build API kwargs - reasoning models don't support temperature
+                api_kwargs = {
+                    "model": self.model,
+                    "input": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": prompt},
+                    ],
+                    "text_format": BatchAnalysisResponse,
+                    "service_tier": self.service_tier,
+                }
+                if not self._model_excludes_temperature():
+                    api_kwargs["temperature"] = self.temperature
+                    
+                response = self.client.responses.parse(**api_kwargs)
+                
+                batch_response = self._extract_parsed_response(response)
+                if not batch_response:
+                    return []
 
-        self._log_token_usage(response, batch_count)
-        return batch_response.results
+                self._log_token_usage(response, batch_count)
+                return batch_response.results
+                
+            except Exception as e:
+                last_error = e
+                error_str = str(e).lower()
+                
+                # Check if this is a 429 Resource Unavailable error
+                is_resource_unavailable = (
+                    "429" in error_str and 
+                    ("resource" in error_str or "unavailable" in error_str)
+                )
+                
+                if is_resource_unavailable and attempt < self.max_retries:
+                    # Exponential backoff: 2^attempt seconds
+                    delay = 2 ** attempt
+                    logger.warning(
+                        f"Resource unavailable (attempt {attempt + 1}/{self.max_retries + 1}). "
+                        f"Retrying in {delay}s... Error: {e}"
+                    )
+                    time.sleep(delay)
+                else:
+                    # Not a resource unavailable error, or max retries exceeded
+                    if is_resource_unavailable:
+                        logger.error(
+                            f"Resource unavailable after {self.max_retries + 1} attempts. "
+                            f"Consider using service_tier='auto' or trying again later."
+                        )
+                    raise
+        
+        # Should never reach here, but for type safety
+        raise last_error or ValueError("Retry loop exhausted without success")
 
     def _call_ollama_batch(
         self, system_prompt: str, prompt: str, batch_count: int
@@ -761,7 +871,8 @@ You MUST respond with valid JSON matching this exact schema:
       "rationale": "brief explanation",
       "hardskills_raw": ["skill1", "skill2"],
       "softskills_raw": ["skill1", "skill2"],
-      "education_required": 0 or 1
+      "min_years_experience": 3.0 or null,
+      "min_education_level": "Bachelor's" or null
     }
   ]
 }
