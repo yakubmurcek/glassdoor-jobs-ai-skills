@@ -80,6 +80,18 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip OpenAI calls and hydrate results from input CSV columns (requires input to be previous output).",
     )
+    analyze.add_argument(
+        "--resume", "-r",
+        action="store_true",
+        help="Resume from previous run by skipping already-processed rows (detected via output CSV).",
+    )
+    analyze.add_argument(
+        "--checkpoint-interval",
+        type=int,
+        default=500,
+        metavar="N",
+        help="When using --resume, save checkpoint every N rows (default: 500).",
+    )
     analyze.set_defaults(func=_handle_analyze)
 
     # Evaluate command
@@ -312,16 +324,33 @@ def _handle_analyze(args: argparse.Namespace) -> int:
     output_path: Path | None = args.output_csv
     if output_path is None and args.input_csv is not None:
         input_path = Path(args.input_csv)
-        output_path = _get_versioned_output_path(PATHS.outputs_dir, input_path.stem, input_path.suffix)
+        if args.resume:
+            # Resume mode: use stable filename without versioning
+            output_path = PATHS.outputs_dir / f"{input_path.stem}_ai{input_path.suffix}"
+        else:
+            output_path = _get_versioned_output_path(PATHS.outputs_dir, input_path.stem, input_path.suffix)
 
     start_time = time.perf_counter()
     try:
-        df = pipeline.run(
-            progress_callback=callback,
-            input_csv=args.input_csv,
-            output_csv=output_path,
-            skip_llm=args.skip_llm,
-        )
+        if args.resume:
+            # Use checkpoint-based processing for resume
+            print(f"Running with checkpoints (interval: {args.checkpoint_interval} rows)")
+            print(f"Output: {output_path}")
+            df = pipeline.run_with_checkpoints(
+                progress_callback=callback,
+                input_csv=args.input_csv,
+                output_csv=output_path,
+                skip_llm=args.skip_llm,
+                resume=True,
+                checkpoint_interval=args.checkpoint_interval,
+            )
+        else:
+            df = pipeline.run(
+                progress_callback=callback,
+                input_csv=args.input_csv,
+                output_csv=output_path,
+                skip_llm=args.skip_llm,
+            )
     finally:
         if progress:
             progress.finish()

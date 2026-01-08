@@ -11,6 +11,7 @@ from typing import Callable, List
 import pandas as pd
 
 from .config import REAL_AI_SKILLS
+from .checkpoint_manager import CheckpointManager
 from .data_io import load_input_data, reorder_columns, save_results
 from .deterministic_extractor import (
     extract_hardskills_deterministic,
@@ -74,6 +75,128 @@ class JobAnalysisPipeline:
             logger.error(f"Failed to save embeddings cache: {e}")
             
         return df
+
+    def run_with_checkpoints(
+        self,
+        *,
+        progress_callback: Callable[[int, int], None] | None = None,
+        input_csv: Path | str | None = None,
+        output_csv: Path | str | None = None,
+        skip_llm: bool = False,
+        resume: bool = True,
+        checkpoint_interval: int = 500,
+    ) -> pd.DataFrame:
+        """Execute pipeline with checkpoints for large datasets.
+        
+        Processes rows in batches, saving progress after each batch.
+        Supports resume from previous runs by detecting already-processed IDs.
+        
+        Args:
+            progress_callback: Optional progress reporting callback
+            input_csv: Path to input CSV file
+            output_csv: Path to output CSV file (required for checkpoints)
+            skip_llm: Skip LLM calls and hydrate from existing columns
+            resume: If True, skip already-processed rows from output file
+            checkpoint_interval: Rows to process between saves (default 500)
+            
+        Returns:
+            Final processed DataFrame
+        """
+        from .config import OUTPUT_CSV
+        
+        logger.info("Starting job analysis pipeline with checkpoints...")
+        
+        # Resolve output path
+        out_path = Path(output_csv) if output_csv else Path(OUTPUT_CSV)
+        
+        # Initialize checkpoint manager
+        checkpoint_mgr = CheckpointManager(
+            out_path,
+            id_column="id",
+            checkpoint_interval=checkpoint_interval,
+        )
+        
+        # Load input data
+        df = (
+            load_input_data(path=input_csv)
+            if input_csv is not None
+            else load_input_data()
+        )
+        total_input = len(df)
+        logger.info(f"Loaded {total_input} records from input.")
+        
+        # Filter to unprocessed rows if resuming
+        if resume:
+            df = checkpoint_mgr.filter_unprocessed(df)
+            
+        if df.empty:
+            logger.info("All rows already processed. Nothing to do.")
+            # Return existing output if available
+            if out_path.exists():
+                return load_input_data(path=out_path)
+            return df
+            
+        remaining = len(df)
+        logger.info(f"Processing {remaining} rows in batches of {checkpoint_interval}...")
+        
+        # Create backup before we start modifying
+        checkpoint_mgr.create_backup()
+        
+        # Create a wrapper callback that tracks overall progress across batches
+        processed_count = 0
+        batch_num = 0
+        
+        def overall_progress_callback(batch_completed: int, batch_total: int) -> None:
+            """Wrapper to report overall progress, not per-batch progress."""
+            if progress_callback:
+                # Calculate overall progress
+                overall_completed = processed_count + batch_completed
+                progress_callback(overall_completed, remaining)
+        
+        for batch_start in range(0, remaining, checkpoint_interval):
+            batch_end = min(batch_start + checkpoint_interval, remaining)
+            batch_df = df.iloc[batch_start:batch_end].copy()
+            batch_num += 1
+            
+            logger.info(
+                f"Batch {batch_num}: Processing rows {batch_start+1}-{batch_end} "
+                f"({batch_end}/{remaining})"
+            )
+            
+            # Run the pipeline on this batch with wrapped progress callback
+            batch_df = annotate_declared_skills(batch_df)
+            batch_df = self._annotate_job_descriptions(
+                batch_df, 
+                progress_callback=overall_progress_callback,
+                skip_llm=skip_llm
+            )
+            batch_df = reorder_columns(batch_df)
+            
+            # Save checkpoint (force=True to save every batch)
+            checkpoint_mgr.save_checkpoint(batch_df, force=True)
+            
+            processed_count += len(batch_df)
+            logger.info(
+                f"Batch {batch_num} complete. "
+                f"Progress: {processed_count}/{remaining} rows this session."
+            )
+            
+        # Final flush (should be no-op but just in case)
+        checkpoint_mgr.flush()
+        
+        logger.info(
+            f"Pipeline complete! Processed {processed_count} rows this session. "
+            f"Total in output: {total_input} rows."
+        )
+        
+        # Update embeddings cache
+        try:
+            self.save_embeddings_cache()
+        except Exception as e:
+            logger.error(f"Failed to save embeddings cache: {e}")
+            
+        # Return full output
+        return load_input_data(path=out_path)
 
     def _annotate_job_descriptions(
         self, 

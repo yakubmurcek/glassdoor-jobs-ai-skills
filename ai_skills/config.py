@@ -160,7 +160,7 @@ class LLMSettings:
     use_decomposed: bool = False   # Whether to use decomposed tasks (slower) or monolithic (faster)
     # Flex tier configuration
     service_tier: str = "auto"  # "flex" for batch pricing, "auto" for standard
-    timeout: float = 600.0  # Request timeout in seconds
+    timeout: float = 900.0  # Request timeout in seconds (15 min for flex processing)
     max_retries: int = 3  # Maximum retry attempts for resource unavailable errors
 
     @classmethod
@@ -197,7 +197,7 @@ class LLMSettings:
             enabled_tasks=_get_set_setting("ENABLED_LLM_TASKS", DEFAULT_ENABLED_LLM_TASKS),
             use_decomposed=_get_raw_setting("USE_DECOMPOSED_PROMPTS") == "true",
             service_tier=_get_raw_setting("SERVICE_TIER") or "auto",
-            timeout=_get_float_setting("OPENAI_TIMEOUT", 600.0),
+            timeout=_get_float_setting("OPENAI_TIMEOUT", 900.0),
             max_retries=max(0, _get_int_setting("OPENAI_MAX_RETRIES", 3)),
         )
 

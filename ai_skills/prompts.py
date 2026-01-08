@@ -244,30 +244,45 @@ def education_instructions() -> str:
 Extract education and experience requirements from each job description.
 
 **min_years_experience**: Extract the MINIMUM years of professional experience required.
+
+EXPLICIT MENTIONS (highest priority):
 - Return a float value (e.g., 3.0, 5.0, 0.5).
 - If a range is given (e.g., "3-5 years"), use the MINIMUM (3.0).
 - If "3+ years" is stated, use 3.0.
 - If experience is listed as "preferred" or "nice to have", still extract the number.
-- If no specific number of years is mentioned, return **null**.
-- "Entry level" or "Recent grad" with no years specified -> 0.0.
+- "Entry level", "Recent grad", "Junior", "New grad" with no years specified -> 0.0.
+
+IMPLICIT INFERENCE (if NO explicit years mentioned, infer from job title):
+- "Senior" in title with no years specified -> infer 5.0
+- "Staff", "Principal", "Lead", "Architect" in title with no years specified -> infer 7.0
+- "Junior", "Associate", "Entry" in title -> infer 0.0
+- Standard titles like "Software Engineer" or "Full Stack Developer" with no seniority indicator -> return **null**
+
+OTHER SIGNALS (use if no explicit years AND no title-based inference):
+- Phrases like "extensive experience", "significant experience", "proven track record" -> infer 5.0
+- "Some experience", "1-2 projects", "familiarity with" -> infer 1.0
+- If truly nothing indicates experience level -> return **null**
 
 **min_education_level**: Extract ONLY if EXPLICITLY STATED in the job posting.
 - Return one of: "High School", "Associate", "Bachelor's", "Master's", "PhD", or **null**.
 - If multiple levels listed (e.g., "Bachelor's or Master's"), choose the LOWEST.
 - Use standardized terms (e.g., "Bachelor's" instead of "BS", "B.Sc").
 
-⚠️ BE CONSERVATIVE - better to miss than to guess:
+⚠️ BE CONSERVATIVE FOR EDUCATION - better to miss than to guess:
 - If the job posting does NOT mention any degree/education requirement → return **null**
 - Many job postings do not specify education — that's OK, just return null
 - DO NOT assume "Bachelor's" just because it's a tech job
 - Only return a value if you see words like: "degree required", "Bachelor's", "BS/MS", "PhD", etc.
 
 EXAMPLES:
-- "Bachelor's degree required" → "Bachelor's"
-- "MS/PhD in CS" → "Master's" (minimum)
-- No education mentioned in posting → **null** (NOT "Bachelor's")
-- "3+ years experience" with no degree mentioned → **null**
-- "Bachelor's preferred" or "degree a plus" → **null** (not required)
+- "3+ years experience" with no degree mentioned → experience: 3.0, education: null
+- "Senior Software Engineer" with no years mentioned → experience: 5.0 (inferred from title)
+- "Staff Engineer" with no years mentioned → experience: 7.0 (inferred from title)
+- "Software Engineer" with no experience mentioned → experience: null
+- "Bachelor's degree required" → education: "Bachelor's"
+- "MS/PhD in CS" → education: "Master's" (minimum)
+- No education mentioned in posting → education: **null** (NOT "Bachelor's")
+- "Bachelor's preferred" or "degree a plus" → education: **null** (not required)
     """
     return dedent(template).strip()
 

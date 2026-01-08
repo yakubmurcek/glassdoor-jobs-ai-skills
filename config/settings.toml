@@ -10,7 +10,7 @@ input_csv = "data/inputs/us_relevant_50.csv"
 output_csv = "data/outputs/us_relevant_ai_50.csv"
 
 [openai]
-model = "gpt-5-nano"
+model = "gpt-5-mini"
 temperature = 0.1
 rate_limit_delay = 0.1
 batch_size = 20
