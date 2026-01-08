@@ -52,20 +52,20 @@ display "Počet pozorování (job postů): " _N
 * a vytváří nové analytické proměnné
 
 * --- 3.1 AI Tier klasifikace ---
-* desc_tier_llm obsahuje 3 kategorie: "none", "ai_integration", "ai_focused"
+* desc_tier_llm obsahuje kategorie: "none", "ai_integration", "applied_ai" (a teoreticky "core_ai")
 * Vytvoříme numerickou proměnnou pro statistické analýzy
 
 * Ošetříme prázdné hodnoty před encode
 replace desc_tier_llm = "missing" if desc_tier_llm == ""
 encode desc_tier_llm, generate(ai_tier_num)
 
-* Binární dummy: má pozice AI požadavky? (ai_integration nebo ai_focused)
+* Binární dummy: má pozice AI požadavky? (cokoliv kromě "none")
 gen has_ai = (desc_tier_llm != "none" & desc_tier_llm != "missing")
-label variable has_ai "Pozice vyžaduje AI dovednosti (1=ano)"
+label variable has_ai "Pozice vyzaduje AI dovednosti (1=ano)"
 
 * --- 3.2 Vzdělání ---
-* edulevel_llm obsahuje: "-", "High School", "Associate's", "Bachelor's", "Master's", "Ph.D."
-* Převedeme na ordinální škálu
+* edulevel_llm obsahuje: "-", "High School", "Associate", "Bachelor's", "Master's"
+* Prevod na ordinalni skalu pomoci strpos() pro flexibilitu
 
 gen edu_level = .
 replace edu_level = 0 if edulevel_llm == "-" | edulevel_llm == ""
@@ -80,8 +80,10 @@ label values edu_level edu_lbl
 label variable edu_level "Pozadovane vzdelani (ordinalni)"
 
 * --- 3.3 Zkušenosti ---
-* experience_min_llm je float - minimální požadované roky zkušeností
+* experience_min_llm obsahuje float hodnoty NEBO "-" pro neuvedeno
+* destring s force prevede "-" na missing (.) automaticky
 
+replace experience_min_llm = "" if experience_min_llm == "-"
 destring experience_min_llm, replace force
 label variable experience_min_llm "Min. pozadovane roky zkusenosti"
 
