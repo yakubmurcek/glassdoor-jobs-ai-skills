@@ -1168,292 +1168,315 @@ HARDSKILLS: set[str] = set(HARDSKILL_VARIANTS.values())
 # SKILL FAMILIES: Categorization of skills by domain
 # =============================================================================
 
-# Family A: Programming Languages & Frameworks
-FAMILY_PROGRAMMING: set[str] = {
-    # Languages
-    "javascript", "typescript", "python", "java", "java ee", "c++", "c#", 
-    "golang", "kotlin", "scala", "swift", "objective-c", "ruby", "php", 
-    "perl", "lua", "haskell", "erlang", "elixir", "clojure", "f#", "dart", 
-    "groovy", "cobol", "fortran", "assembly", "vba", "visual basic", "vb.net", 
-    "matlab", "sas", "stata", "spss", "r", "rust",
-    # Web frameworks
-    "react", "react native", "angular", "vue", "vuex", "node.js", "express", 
-    "next.js", "nuxt", "spring", "spring boot", "django", "flask", "fastapi",
-    "rails", "laravel", "symfony", "codeigniter", "cakephp", "nest.js", "koa", 
-    "hapi", "svelte", "ember", "backbone", "jquery", "gatsby", "remix", "astro",
-    # Mobile
-    "flutter", "xamarin", "ionic", "cordova", "phonegap", "swiftui", "jetpack compose",
-    # .NET
-    "dotnet", "asp.net", "ado.net",
-    # SQL/DB languages
-    "sql", "mysql", "postgresql", "sql server", "sqlite", "pl/sql", "t-sql",
-    # Scripting
-    "bash", "shell", "shell scripting", "powershell", "zsh",
-    # Markup/Styling
-    "html", "html5", "css", "css3", "sass", "scss", "less",
+# =============================================================================
+# SKILL FAMILIES: Categorization of skills by domain
+# =============================================================================
+
+# 1. Programming Languages (Core)
+CAT_LANGUAGES: set[str] = {
+    "javascript", "typescript", "python", "java", "c++", "c#", "golang", "rust",
+    "kotlin", "scala", "swift", "objective-c", "ruby", "php", "perl", "lua",
+    "haskell", "erlang", "elixir", "clojure", "f#", "dart", "groovy", "cobol",
+    "fortran", "assembly", "vba", "visual basic", "vb.net", "matlab", "sas",
+    "stata", "spss", "r", "bash", "shell", "powershell", "zsh",
 }
 
-# Family B: Data, Cloud, and Orchestration
-FAMILY_DATA_CLOUD: set[str] = {
-    # Cloud platforms
-    "aws", "azure", "gcp", "cloud computing", "cloud infrastructure", 
-    "cloud architecture", "cloud services", "cloud native", "multi-cloud", 
-    "hybrid cloud", "serverless",
-    # Cloud services
-    "ec2", "lambda", "s3", "rds", "aurora", "cloudfront", "route53", 
-    "vpc", "iam", "ecs", "eks", "aks", "gke", "fargate", "sqs", "sns",
-    "azure functions", "cloud functions", "step functions",
-    # Containers & orchestration
-    "docker", "kubernetes", "helm", "openshift", "container orchestration",
-    # IaC
-    "terraform", "ansible", "puppet", "chef", "cloudformation", 
-    "infrastructure as code",
-    # Data engineering
-    "data engineering", "data pipelines", "data warehouses", "data modeling",
-    "data governance", "data architecture", "data quality", "data management",
-    "data lake", "data lakehouse", "data mesh", "data catalog", "data lineage",
-    "master data management", "data integration", "data migration", 
-    "data transformation", "batch processing", "stream processing", "real-time data",
-    # ETL/Data platforms
-    "etl", "elt", "dbt", "talend", "informatica", "ssis", "fivetran", 
-    "airbyte", "stitch", "snowflake", "databricks", "redshift", "bigquery",
-    # Big data
-    "spark", "pyspark", "hadoop", "kafka",
-    # Orchestration
-    "airflow", "orchestration", "workflow orchestration", "data orchestration",
-    "prefect", "dagster", "luigi", "argo", "argo workflows", "mage",
-    # MLOps
-    "mlops", "aiops", "mlflow", "kubeflow", "feature store", "model serving",
-    "model deployment", "model monitoring", "experiment tracking", "sagemaker",
-    "vertex ai", "azure ml",
-    # Databases (NoSQL)
-    "nosql", "mongodb", "redis", "cassandra", "couchdb", "dynamodb", 
-    "elasticsearch", "neo4j",
-    # Message queues
-    "rabbitmq", "activemq", "redis pub/sub", "redis queue",
-    # Storage
-    "storage", "blob storage", "gcs",
-    # Virtualization
-    "virtualization", "vmware", "hyper-v", "virtual machines",
-}
-
-# Family C: Integration & Data Exchange
-FAMILY_INTEGRATION: set[str] = {
-    # API & protocols
-    "api", "rest", "restful api", "graphql", "grpc", "websocket", "soap",
-    "openapi", "swagger", "web services", "web api", "http", "https",
-    "api design", "api development", "api integration", "api management", 
-    "api security", "api gateway",
-    # Data formats
-    "json", "xml", "yaml", "csv", "protobuf", "avro", "parquet",
-    # Architecture
-    "microservices", "monolith", "event-driven", "soa", "service mesh",
-    "istio", "envoy", "linkerd",
-    # Auth
-    "oauth", "oauth2", "jwt", "saml", "ldap", "active directory", "sso",
-    "ssl", "tls",
-}
-
-# Family D: Security & Infrastructure
-FAMILY_SECURITY: set[str] = {
-    # Security domains
-    "cybersecurity", "information security", "network security", 
-    "application security", "cloud security", "endpoint security",
-    "security architecture", "security operations", "soc", "devsecops",
-    # Threat & vulnerability
-    "incident response", "forensics", "digital forensics", "malware analysis",
-    "threat detection", "threat hunting", "threat intelligence",
-    "vulnerability management", "vulnerability scanning", "vulnerability assessment",
-    "patch management", "risk assessment", "security assessment",
-    "penetration testing",
-    # Security technologies
-    "firewall", "firewall management", "vpn", "siem", "ids", "ips", 
-    "edr", "xdr", "soar", "dlp", "pam", "identity management", "zero trust",
-    # Encryption & network
-    "encryption", "networking", "tcp/ip", "dns", "dhcp", "routing", 
-    "switching", "load balancing", "cdn",
-    # Security frameworks & standards
-    "nist", "iso27001", "iso27002", "soc 2", "pci dss", "hipaa", "gdpr",
-    "fedramp", "cis benchmarks", "owasp", "mitre att&ck",
-    # Security certifications
-    "cissp", "cism", "cisa", "giac", "ceh", "oscp", 
-    "comptia security+", "comptia network+", "comptia a+",
-    "ccna", "ccnp", "ccie",
-}
-
-# Family E: Software Engineering Domains & Tools
-FAMILY_SOFTWARE_ENGINEERING: set[str] = {
-    # Development practices
-    "software development", "software engineering", "web development",
-    "frontend development", "backend development", "full stack", 
-    "mobile development", "cross-platform",
-    # Architecture & design
-    "system integration", "software architecture", "system design",
-    "solution architecture", "enterprise architecture", "technical architecture",
-    "oop", "object-oriented design", "ooad", "uml", "design patterns", 
-    "solid", "clean code", "clean architecture", "ddd", "cqrs", "event sourcing",
-    # Testing
-    "debugging", "troubleshooting", "qa", "qa automation", "test automation",
-    "automated testing", "manual testing", "unit testing", "integration testing",
-    "e2e testing", "regression testing", "functional testing", "performance testing",
-    "load testing", "stress testing", "security testing", "api testing", 
-    "mobile testing", "test planning", "test strategy", "test cases", "test management",
-    # Testing tools
-    "junit", "mockito", "jest", "jasmine", "karma", "mocha", "chai", 
-    "pytest", "unittest", "selenium", "cypress", "playwright", "puppeteer",
-    "testng", "nunit", "xunit", "rspec", "cucumber", "postman",
-    "jmeter", "gatling", "k6", "locust", "appium", "robot framework", "testcafe",
-    # Code quality
-    "sonarqube", "code quality", "static analysis", "code coverage", "code review",
-    # Version control
-    "git", "github", "gitlab", "bitbucket", "svn", "version control",
-    "branching strategies", "gitflow", "trunk-based development",
-    # CI/CD & DevOps
-    "ci/cd", "jenkins", "github actions", "gitlab ci", "circleci", 
-    "travis ci", "azure devops", "azure pipelines", "bamboo", "teamcity",
-    "devops", "continuous integration", "continuous deployment", "continuous delivery",
-    # Methodologies
-    "agile", "scrum", "kanban", "tdd", "bdd", "waterfall", "lean", "six sigma",
-    "pair programming",
-    # Build tools
-    "webpack", "vite", "rollup", "parcel", "babel", "gulp", "grunt",
-    "maven", "gradle", "npm", "yarn", "pnpm", "esbuild", "swc", 
-    "turbopack", "turborepo", "nx", "lerna", "monorepo",
-    # IDEs
-    "visual studio code", "visual studio", "intellij", "pycharm", "webstorm",
-    "eclipse", "xcode", "android studio", "rider", "sublime text", "vim", 
-    "neovim", "emacs",
-    # Collaboration tools
-    "jira", "confluence", "slack", "trello", "asana", "notion",
-    # Servers & infrastructure
-    "nginx", "apache", "tomcat", "iis", "haproxy", "kong",
-    # Linux/OS
-    "linux", "ubuntu", "centos", "redhat", "debian", "unix", 
-    "windows", "windows server", "macos", "ios", "android",
-    # Monitoring
-    "prometheus", "grafana", "datadog", "new relic", "splunk", 
-    "elk stack", "logstash", "kibana", "cloudwatch",
-    # Performance
-    "performance tuning", "optimization", "scalability", "high availability", 
-    "caching",
-}
-
-# Family F: Analytics & Visualization
-FAMILY_ANALYTICS: set[str] = {
-    # Analytics concepts
-    "data analysis", "data analytics", "business analytics", "data science",
-    "predictive analytics", "prescriptive analytics", "descriptive analytics",
-    "statistical analysis", "statistics", "statistical modeling",
-    "a/b testing", "experimentation", "hypothesis testing",
-    # Visualization
-    "data visualization", "dashboards", "reporting",
-    # BI tools
-    "power bi", "tableau", "looker", "metabase", "qlik", "qlikview", 
-    "qliksense", "sisense", "excel", "business intelligence",
-    "dax", "power query", "m language", "calculated columns", "measures",
-    "data studio", "looker studio", "superset", "redash", "mode analytics",
-    # Product analytics
-    "amplitude", "mixpanel", "google analytics", "ga4", "adobe analytics", "segment",
-    # Charting libraries
-    "d3.js", "chart.js", "highcharts", "plotly", "echarts", "recharts", "nivo",
-    # ML/AI (analytics aspect)
-    "machine learning", "deep learning", "neural networks", "nlp", 
-    "computer vision", 
-    # ML frameworks
-    "pandas", "numpy", "scipy", "scikit-learn", "tensorflow", "pytorch", "keras",
-}
-
-# Family I: Generative AI & LLMs
-FAMILY_AI: set[str] = {
-    # Concepts
-    "generative ai", "llm", "gpt", "rag", "prompt engineering", "fine-tuning",
-    "lora", "qlora", "vector database",
-    # Models & Providers
-    "openai", "chatgpt", "anthropic", "claude", "gemini", "cohere", "mistral",
-    "llama", "bert", "stable diffusion", "midjourney", "dalle", "whisper",
-    # Tools & Frameworks
-    "langchain", "llamaindex", "huggingface", "transformers", "ollama",
-    "vertex ai",
-    # Vector DBs
-    "pinecone", "weaviate", "chromadb", "milvus", "faiss",
-}
-
-# Family G: Certifications & Standards
-FAMILY_CERTIFICATIONS: set[str] = {
-    # Cloud certifications
-    "aws certified", "aws solutions architect", "aws developer", "aws sysops",
-    "aws devops engineer", "aws data engineer", "aws machine learning specialty",
-    "cloud practitioner",
-    "azure administrator", "azure developer", "azure solutions architect",
-    "azure devops engineer", "azure data engineer",
-    "az-900", "az-104", "az-204", "az-305", "az-400",
-    "gcp certified", "gcp professional", "gcp associate",
-    # Kubernetes certifications
-    "cka", "ckad", "cks",
-    # Other tech certifications
-    "terraform certified", "hashicorp certified",
-    # Management certifications
-    "pmp", "csm", "safe", "togaf", "itil",
-}
-
-# Family H: UI Frameworks & Tools
-FAMILY_UI_TOOLS: set[str] = {
-    # CSS frameworks
-    "tailwind", "bootstrap", "material ui", "styled-components", "bulma",
-    "foundation", "semantic ui",
-    # Component libraries
-    "ant design", "chakra ui", "radix", "radix ui", "headless ui", "shadcn",
-    "daisyui", "primereact", "primevue", "vuetify", "quasar",
-    # Testing libraries
-    "testing library", "react testing library", "vue testing library", 
-    "enzyme", "vitest", "storybook",
-    # State management
-    "redux", "ngrx", "rxjs", "mobx", "zustand", "recoil", 
-    "tanstack query", "swr", "jotai", "xstate", "pinia",
-    # Form handling
-    "react hook form", "formik", "yup", "zod",
-    # Design tools
-    "figma", "sketch", "adobe xd", "invision", "zeplin",
-    # UI/UX
-    "ui/ux", "ui", "ux", "responsive design", "accessibility", "wcag", 
-    "aria", "screen reader", "seo",
-    # Micro frontends
+# 2. Frontend Development
+CAT_FRONTEND: set[str] = {
+    # Frameworks & Libs
+    "react", "angular", "vue", "vuex", "svelte", "ember", "backbone", "jquery",
+    "gatsby", "remix", "astro", "next.js", "nuxt", "hugo", "jekyll",
+    # Styling
+    "html", "css", "sass", "scss", "less", "tailwind", "bootstrap", "material ui",
+    "styled-components", "bulma", "foundation", "semantic ui", "ant design",
+    "chakra ui", "radix", "radix ui", "headless ui", "shadcn", "daisyui",
+    "primereact", "primevue", "vuetify", "quasar",
+    # Tools
+    "webpack", "vite", "rollup", "parcel", "babel", "esbuild", "swc",
+    "frontend development", "responsive design", "accessibility", "wcag", "aria",
+    "ui", "ux", "ui/ux", "figma", "sketch", "adobe xd", "invision", "zeplin",
+    "canvas", "svg", "webgl", "three.js", "d3.js", "chart.js", "highcharts",
+    "plotly", "echarts", "recharts", "nivo", "gsap", "framer motion", "lottie",
     "micro frontends", "module federation", "single-spa",
-    # Animation & Graphics
-    "css animations", "web animations", "gsap", "framer motion", "lottie",
-    "three.js", "webgl", "canvas", "svg",
-    # Web scraping
-    "web scraping", "beautifulsoup", "scrapy", "requests", "httpx", "aiohttp",
-    # Async
-    "celery",
-    # Documentation
-    "swagger ui", "redoc", "readme", "jsdoc", "typedoc", "sphinx", "mkdocs",
-    # SDK
-    "sdk",
+    "state management", "redux", "ngrx", "rxjs", "mobx", "zustand", "recoil",
+    "tanstack query", "swr", "jotai", "xstate", "pinia",
+    "react hook form", "formik", "yup", "zod",
+    "storybook", "testing library", "react testing library", "vue testing library", "enzyme",
+    "jsp", "screen reader", "gulp", "grunt", "turbopack", "turborepo", "nx", "lerna", "monorepo", "mono repo", "pnpm", "yarn", "npm", "maven", "gradle",
+    "jsdoc", "typedoc", "swagger ui", "redoc", "readme", "sphinx", "mkdocs",
+    "sdk", "api", # Placeholders often used in frontend context or generic
+    "web animations", "css animations", "seo",
 }
+
+# 3. Backend Development
+CAT_BACKEND: set[str] = {
+    # Frameworks
+    "node.js", "express", "nest.js", "koa", "hapi",
+    "spring", "spring boot", "java ee", "jakarta ee",
+    "django", "flask", "fastapi", "rails", "laravel", "symfony", "codeigniter",
+    "cakephp", "asp.net", "ado.net", "entity framework",
+    # Concepts
+    "backend development", "full stack", "api development", "api design",
+    "api integration", "api management", "microservices", "serverless",
+    "event-driven", "soa", "monolith", "cqrs", "event sourcing", "ddd",
+    "clean architecture", "hexagonal architecture",
+    "graphql", "grpc", "websocket", "soap", "rest", "restful api",
+    "openapi", "swagger", "web api", "web services", "http", "https", "aiohttp", "httpx", "requests", "web scraping", "beautifulsoup", "scrapy",
+    "celery", "rabbitmq", "activemq", "kafka", "redis queue", "rq",
+    "nginx", "apache", "tomcat", "iis", "haproxy", "kong",
+    "rest apis", "restful apis", "rest api", "graph ql", "web socket", "websockets", "micro-services", "micro services", "server less",
+    "redis pub/sub",
+    # .NET
+    "dotnet", ".net", ".net core", ".net (core)", ".net (c#)", ".net framework", "dot net", "microsoft .net",
+}
+
+# 4. Mobile & Desktop Development
+CAT_MOBILE_DESKTOP: set[str] = {
+    "mobile development", "android", "ios", "react native", "flutter",
+    "xamarin", "ionic", "cordova", "phonegap", "swiftui", "jetpack compose",
+    "electron", "qt", "gtk", "wpf", "winforms", "macos", "windows",
+}
+
+# 5. Databases & Storage
+CAT_DATABASES: set[str] = {
+    # Relational
+    "sql", "mysql", "postgresql", "sql server", "sqlite", "oracle", "mariadb",
+    "pl/sql", "t-sql", "rds", "aurora", "microsoft sql server", "ms sql", "mssql", "postgres",
+    # NoSQL
+    "nosql", "mongodb", "cassandra", "couchdb", "dynamodb", "hbase",
+    "neo4j", "redis", "memcached", "firestore", "firebase", "mongo", "mongo db", "dynamo db",
+    # Vector
+    "vector database", "pinecone", "weaviate", "chromadb", "milvus", "faiss", "vector db",
+    # Search
+    "elasticsearch", "solr", "algolia", "elastic search",
+    # Storage
+    "storage", "s3", "blob storage", "gcs", "minio", "google cloud storage",
+}
+
+# 6. Data Engineering & Big Data
+CAT_DATA_ENGINEERING: set[str] = {
+    "data engineering", "etl", "elt", "data pipelines", "data warehousing",
+    "data modeling", "data governance", "data architecture", "data quality",
+    "data catalog", "data lineage", "master data management", "data integration",
+    "data migration", "batch processing", "stream processing", "real-time data",
+    "spark", "pyspark", "hadoop", "hive", "mapreduce", "flink", "storm",
+    "databricks", "snowflake", "redshift", "bigquery", "synapse",
+    "airflow", "prefect", "dagster", "luigi", "nifi", "dbt", "talend",
+    "informatica", "ssis", "fivetran", "airbyte", "stitch",
+    "kafka", "kinesis", "pubsub", "data lake", "data lakes", "data lakehouse", "data mesh", "mdm",
+    "avro", "parquet", "protobuf", "csv", "json", "xml", "yaml", "yml",
+    "data transformation", "data pipeline", "data warehouse", "big query", "apache spark", "apache kafka", "apache airflow",
+    "data modelling", "real time data", "data orchestration", "data build tool",
+    "orchestration", "workflow orchestration", "data warehouses",
+    "mage",
+}
+
+# 7. Data Science & Machine Learning
+CAT_DATA_SCIENCE: set[str] = {
+    "data science", "machine learning", "deep learning", "neural networks",
+    "nlp", "computer vision", "predictive modeling", "statistical modeling",
+    "pandas", "numpy", "scipy", "scikit-learn", "sklearn", "statsmodels",
+    "tensorflow", "keras", "pytorch", "xgboost", "lightgbm", "catboost",
+    "opencv", "nltk", "spacy",
+    "mlops", "aiops", "mlflow", "kubeflow", "feature store", "model serving",
+    "model deployment", "model monitoring", "experiment tracking", "sagemaker", "vertex ai", "azure ml",
+    "neural network", "natural language processing", "cv", "large language models", "py torch", "tensor flow", "aws sagemaker", "google vertex ai", "azure machine learning",
+}
+
+# 8. Generative AI & LLMs
+CAT_GEN_AI: set[str] = {
+    "generative ai", "llm", "large language model", "gpt", "chatgpt",
+    "openai", "anthropic", "claude", "gemini", "cohere", "mistral",
+    "llama", "ollama", "huggingface", "transformers", "bert",
+    "stable diffusion", "midjourney", "dalle", "whisper",
+    "rag", "retrieval augmented generation", "prompt engineering",
+    "fine-tuning", "lora", "qlora", "langchain", "llamaindex", "genai",
+    "retrieval-augmented generation", "fine tuning", "dall-e", "llama index", "hugging face",
+}
+
+# 9. Business Intelligence & Analytics
+CAT_ANALYTICS: set[str] = {
+    "data analytics", "business analytics", "business intelligence",
+    "data visualization", "dashboards", "reporting",
+    "power bi", "tableau", "looker", "looker studio", "qlik", "sisense",
+    "superset", "metabase", "redash", "mode analytics", "amplitude",
+    "mixpanel", "google analytics", "ga4", "adobe analytics", "segment",
+    "excel", "dax", "power query",
+    "statistics", "a/b testing", "experimentation", "statistical analysis",
+    "qliksense", "qlikview", "data studio", "google data studio",
+    "measures", "calculated columns", "m language",
+    "predictive analytics", "prescriptive analytics", "descriptive analytics",
+    "data viz", "bi tools", "bi development", "report development", "dashboard development", "ab testing", "hypothesis testing", "apache superset", "microsoft excel", "powerbi",
+    "data analysis", # Missing
+}
+
+# 10. Cloud Computing (Core)
+CAT_CLOUD: set[str] = {
+    "cloud computing", "cloud infrastructure", "cloud architecture",
+    "cloud native", "multi-cloud", "hybrid cloud",
+    "aws", "azure", "gcp", "openstack", "heroku", "netlify", "vercel",
+    "digitalocean", "linode",
+    "ec2", "lambda", "ecs", "eks", "fargate", "vpc", "iam", "cloudformation",
+    "azure functions", "cloud functions",
+    "amazon web services", "microsoft azure", "google cloud", "google cloud platform",
+    "step functions", "aws step functions", "multi cloud", "cloud-native", "aws lambda", "rhel",
+    "sqs", "sns", "route53", "cloudfront", "amazon sqs", "amazon sns", "route 53",
+    "gke", "aks", # Missing kubernetes services
+    "cloud services",
+}
+
+# 11. DevOps & Containers
+CAT_DEVOPS: set[str] = {
+    "devops", "devsecops", "sre", "platform engineering",
+    "ci/cd", "continuous integration", "continuous deployment",
+    "jenkins", "github actions", "gitlab ci", "circleci", "travis ci",
+    "azure devops", "bamboo", "teamcity", "argo", "flux",
+    "docker", "kubernetes", "k8s", "helm", "openshift", "podman",
+    "container orchestration", "service mesh", "istio", "linkerd",
+    "terraform", "ansible", "puppet", "chef", "infrastructure as code", "iac",
+    "pulumi", "vagrant",
+    "prometheus", "grafana", "datadog", "new relic", "splunk",
+    "elk stack", "logstash", "kibana", "cloudwatch", "envoy", "argo workflows",
+    "gitlab-ci", "circle ci", "travisci", "microsoft azure dev ops", "azure pipelines",
+    "newrelic", "elk", "continuous delivery",
+    "virtual machines", "vmware", "hyper-v", "hyperv", "vms", "virtualization", # Infrastructure
+}
+
+# 12. Operating Systems & Hardware (Embedded/IoT)
+CAT_OS_HARDWARE: set[str] = {
+    "linux", "ubuntu", "debian", "centos", "redhat", "fedora", "alpine",
+    "unix", "windows server",
+    "embedded systems", "iot", "firmware", "microcontrollers", "arduino",
+    "raspberry pi", "rtos", "embedded c", "system programming",
+    "networking", "tcp/ip", "dns", "dhcp", "ip", # Basic networking often with OS
+    "red hat", "mac os", "shell scripting", # Scripting
+}
+
+# 13. Networking & Protocols
+CAT_NETWORKING: set[str] = {
+    "networking", "network security", "tcp/ip", "dns", "http", "https",
+    "routing", "switching", "load balancing", "cdn", "vpn", "firewall",
+    "ssl", "tls", "wireshark",
+    "api gateway", "proxy", "reverse proxy",
+    "load balancer", "content delivery network", "http protocol", "https protocol",
+}
+
+# 14. Security, Identity & Compliance
+CAT_SECURITY: set[str] = {
+    "cybersecurity", "information security", "application security",
+    "cloud security", "endpoint security", "network security",
+    "identity management", "iam", "oauth", "oidc", "saml", "sso", "jwt",
+    "active directory", "ldap", "okta", "auth0",
+    "penetration testing", "vulnerability assessment", "threat modeling",
+    "security operations", "soc", "siem", "splunk",
+    "cryptography", "encryption", "pki",
+    "compliance", "gdpr", "hipaa", "pci dss", "soc 2", "iso27001", "nist",
+    "owasp",
+    "cissp", "ceh", "oscp", "comptia security+",
+    "security architecture", "threat detection", "soar", "patch management",
+    "incident response", "forensics", "digital forensics", "malware analysis",
+    "threat hunting", "threat intelligence", "vulnerability scanning", "vulnerability management",
+    "risk assessment", "security assessment", "firewall management",
+    "ids", "ips", "edr", "xdr", "dlp", "pam", "zero trust",
+    "iso27002", "fedramp", "cis benchmarks", "mitre att&ck",
+    "cism", "cisa", "giac", "comptia network+", "comptia a+",
+    "cyber security", "infosec", "pen testing", "security operations center", "soc operations", "identity and access management", "single sign-on", "json web token", "nist framework", "nist cybersecurity", "owasp top 10", "mitre attack", "certified ethical hacker", "comptia security plus", "security+", "network+",
+    "soc2", "pci-dss", "data loss prevention", "privileged access management", "zero trust architecture", "extended detection", "endpoint detection", "intrusion prevention", "intrusion detection",
+    "api security",
+}
+
+# 15. Testing & QA
+CAT_QA: set[str] = {
+    "qa", "quality assurance", "software testing", "test automation",
+    "automated testing", "manual testing", "performance testing", "load testing",
+    "unit testing", "integration testing", "e2e testing", "regression testing",
+    "selenium", "cypress", "playwright", "puppeteer", "appium",
+    "jest", "mocha", "jasmine", "vitest", "pytest", "junit", "testng",
+    "test planning", "test strategy", "cucumber", "gherkin", "postman",
+    "k6", "jmeter", "locust", "gatling", "sonarqube", "test management",
+    "code coverage", "static analysis", "code quality", "security testing", "api testing", "mobile testing",
+    "test cases", "robot framework", "testcafe",
+    "qa automation", "end-to-end testing", "chai", "py test", "j unit", "sonar", "stress testing", "functional testing",
+    "karma", "unittest", "mockito", "xunit",
+    "rspec", "nunit",
+}
+
+# 16. Software Architecture & Methodologies
+CAT_ARCHITECTURE: set[str] = {
+    "software architecture", "system design", "solution architecture",
+    "enterprise architecture", "technical architecture",
+    "design patterns", "oop", "functional programming", "solid", "dry",
+    "agile", "scrum", "kanban", "waterfall", "safe", "lean",
+    "tdd", "bdd", "pair programming", "code review",
+    "sdlc", "version control", "branching strategies", "gitflow", "trunk-based development",
+    "git", "github", "gitlab", "bitbucket", "svn",
+    "jira", "confluence", "trello", "asana", "notion",
+    "uml", "ooad", "object-oriented design", "domain-driven design",
+    "performance tuning", "optimization", "scalability", "high availability", "caching", "debugging", "troubleshooting",
+    "software development", "software engineering", "cross-platform", "six sigma", "clean code", "source control", "subversion", "object oriented programming", "object-oriented programming", "domain driven design", "domain-driven design", "solid principles", "test driven development", "behavior driven development", "trunk based development", "root cause analysis", "analytical skills", "analytical thinking", "critical thinking", "logical thinking", "problem solving", "problem-solving", "creative problem solving", "decision making", "decision-making", "strategic thinking", "business acumen", "object oriented design", "object oriented analysis and design", "object-oriented analysis and design", "unified modeling language", "systems design", "systems integration", "system integration",
+    "web development",
+}
+
+# 17. Enterprise Platforms (ERP/CRM)
+CAT_ENTERPRISE: set[str] = {
+    "salesforce", "sap", "oracle", "dynamics 365", "servicenow",
+    "workday", "netsuite", "peoplesoft", "siebel",
+    "crm", "erp", "cms", "wordpress", "drupal", "magento", "shopify",
+    "sharepoint", "data management", # Often enterprise context
+    "slack",
+}
+
+# 18. Certifications (General)
+CAT_CERTIFICATIONS: set[str] = {
+    "aws certified", "azure certified", "gcp certified",
+    "pmp", "csm", "itil", "togaf",
+    "cka", "ckad", "cks",
+    "cisco certified", "ccna", "ccnp", "ccie",
+    "hashicorp certified", "terraform certified", "aws solutions architect", "aws developer", "aws sysops", "aws devops engineer", "aws data engineer", "aws machine learning specialty",
+    "azure administrator", "azure developer", "azure solutions architect", "azure devops engineer", "azure data engineer",
+    "az-900", "az-104", "az-204", "az-305", "az-400",
+    "gcp professional", "gcp associate", "cloud practitioner",
+    "aws certification", "project management professional", "certified scrum master", "scaled agile", "certified kubernetes administrator", "certified kubernetes application developer", "certified kubernetes security specialist", "aws cloud practitioner",
+}
+
+# 19. Other/Tools (Catch-all for IDEs, Editors, Soft Skills disguised as hard skills if any)
+CAT_TOOLS_EDITORS: set[str] = {
+    "visual studio code", "vscode", "vs code", "visual studio", "intellij", "intellij idea", "pycharm", "webstorm", "eclipse", "xcode", "android studio", "rider", "sublime text", "vim", "neovim", "emacs",
+}
+# Map this to "OS & Embedded" or a generic "Development Tools"? Let's put in Software Engineering or just generic "Development Tools"
+
 
 # Combined mapping: canonical skill -> family name
 SKILL_TO_FAMILY: dict[str, str] = {}
 
-# Build the mapping
-for skill in FAMILY_PROGRAMMING:
-    SKILL_TO_FAMILY[skill] = "Programming"
-for skill in FAMILY_DATA_CLOUD:
-    SKILL_TO_FAMILY[skill] = "Data & Cloud"
-for skill in FAMILY_INTEGRATION:
-    SKILL_TO_FAMILY[skill] = "Integration"
-for skill in FAMILY_SECURITY:
-    SKILL_TO_FAMILY[skill] = "Security"
-for skill in FAMILY_SOFTWARE_ENGINEERING:
-    SKILL_TO_FAMILY[skill] = "Software Engineering"
-for skill in FAMILY_ANALYTICS:
-    SKILL_TO_FAMILY[skill] = "Analytics"
-for skill in FAMILY_CERTIFICATIONS:
-    SKILL_TO_FAMILY[skill] = "Certifications"
-for skill in FAMILY_UI_TOOLS:
-    SKILL_TO_FAMILY[skill] = "UI & Tools"
-for skill in FAMILY_AI:
-    SKILL_TO_FAMILY[skill] = "Generative AI"
+# Order matters slightly for overrides, but dictionary is singular key.
+# We apply them in order.
+
+_CATEGORIES = [
+    (CAT_LANGUAGES, "Programming Languages"),
+    (CAT_FRONTEND, "Frontend Development"),
+    (CAT_BACKEND, "Backend Development"),
+    (CAT_MOBILE_DESKTOP, "Mobile & Desktop"),
+    (CAT_DATABASES, "Databases & Storage"),
+    (CAT_DATA_ENGINEERING, "Data Engineering"),
+    (CAT_DATA_SCIENCE, "Data Science & ML"),
+    (CAT_GEN_AI, "Generative AI"),
+    (CAT_ANALYTICS, "BI & Analytics"),
+    (CAT_CLOUD, "Cloud Computing"),
+    (CAT_DEVOPS, "DevOps & Containers"),
+    (CAT_OS_HARDWARE, "OS & Embedded"),
+    (CAT_NETWORKING, "Networking"),
+    (CAT_SECURITY, "Security & Identity"),
+    (CAT_QA, "Testing & QA"),
+    (CAT_ARCHITECTURE, "Architecture & Methods"),
+    (CAT_ENTERPRISE, "Enterprise Platforms"),
+    (CAT_CERTIFICATIONS, "Certifications"),
+    (CAT_TOOLS_EDITORS, "Tools & Editors"),
+]
+
+for skill_set, family_name in _CATEGORIES:
+    for skill in skill_set:
+        SKILL_TO_FAMILY[skill] = family_name
 
 
 def get_skill_family(skill: str) -> str | None:
