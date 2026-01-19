@@ -1173,13 +1173,52 @@ HARDSKILLS: set[str] = set(HARDSKILL_VARIANTS.values())
 # =============================================================================
 
 # 1. Programming Languages (Core)
-CAT_LANGUAGES: set[str] = {
-    "javascript", "typescript", "python", "java", "c++", "c#", "golang", "rust",
-    "kotlin", "scala", "swift", "objective-c", "ruby", "php", "perl", "lua",
-    "haskell", "erlang", "elixir", "clojure", "f#", "dart", "groovy", "cobol",
-    "fortran", "assembly", "vba", "visual basic", "vb.net", "matlab", "sas",
-    "stata", "spss", "r", "bash", "shell", "powershell", "zsh",
+# 1. Programming Languages (Split)
+
+# 1a. Systems Programming
+CAT_LANG_SYSTEMS: set[str] = {
+    "c", "c++", "rust", "golang", "assembly", "zig", "cuda", "system programming",
+    "embedded c", # Was in OS/Hardware, moved here for language specificity or keep both? (Skills can be in one family only here). Let's keep embedded c in OS_HARDWARE as it implies domain.
+    # Actually, let's keep pure languages here.
+    "fortran", # Often high performance computing
 }
+
+# 1b. Enterprise & Managed
+CAT_LANG_ENTERPRISE: set[str] = {
+    "java", "c#", "kotlin", "swift", "scala", "dart", "f#", "clojure", "groovy", "vb.net",
+    "objective-c", "visual basic", "vba", 
+    "apex", "abap", "ada",
+}
+
+# 1c. Dynamic & Web
+CAT_LANG_DYNAMIC: set[str] = {
+    "python", "ruby", "php", "javascript", "typescript", "elixir", "erlang",
+    "haskell", "ocaml", "racket", "scheme", "lisp", "julialang", "julia",
+    "perl", "lua", "tcl", "coldfusion",
+}
+
+# 1d. Scripting & Shell
+CAT_LANG_SCRIPTING: set[str] = {
+    "bash", "shell", "powershell", "zsh", "awk", "sed",
+    "batch", "batch file", "batch script",
+    "shell scripting",
+}
+
+# 1e. Data Analysis & Stats (Lang focus)
+CAT_LANG_DATA: set[str] = {
+    "r", "matlab", "sas", "spss", "stata", "wolfram", "mathematica",
+}
+
+# 1f. Legacy
+CAT_LANG_LEGACY: set[str] = {
+    "cobol", "pascal", "delphi", "pl/i", "jcl",
+}
+
+# ... (rest of categories unchanged)
+
+# ...
+
+
 
 # 2. Frontend Development
 CAT_FRONTEND: set[str] = {
@@ -1386,19 +1425,28 @@ CAT_SECURITY: set[str] = {
 }
 
 # 15. Testing & QA
-CAT_QA: set[str] = {
+# 15. Testing, QA & Debugging
+CAT_QA_DEBUGGING: set[str] = {
+    # General QA
     "qa", "quality assurance", "software testing", "test automation",
-    "automated testing", "manual testing", "performance testing", "load testing",
+    "automated testing", "manual testing", "load testing", "performance testing",
     "unit testing", "integration testing", "e2e testing", "regression testing",
+    # Frameworks
     "selenium", "cypress", "playwright", "puppeteer", "appium",
     "jest", "mocha", "jasmine", "vitest", "pytest", "junit", "testng",
+    "rspec", "nunit", "test cases", "robot framework", "testcafe",
+    "chai", "py test", "j unit", "sonar", "stress testing", "functional testing",
+    "karma", "unittest", "mockito", "xunit",
+    # Strategy & Tools
     "test planning", "test strategy", "cucumber", "gherkin", "postman",
     "k6", "jmeter", "locust", "gatling", "sonarqube", "test management",
     "code coverage", "static analysis", "code quality", "security testing", "api testing", "mobile testing",
-    "test cases", "robot framework", "testcafe",
-    "qa automation", "end-to-end testing", "chai", "py test", "j unit", "sonar", "stress testing", "functional testing",
-    "karma", "unittest", "mockito", "xunit",
-    "rspec", "nunit",
+    "qa automation", "end-to-end testing",
+    # Debugging & Troubleshooting (Moved from Architecture)
+    "debugging", "troubleshooting", "performance tuning", "optimization", "root cause analysis",
+    # Debugging Tools
+    "gdb", "lldb", "valgrind", "chrome devtools", "fiddler", "charles proxy", "wireshark",
+    "sentry", "bugsnag", "crashlytics",
 }
 
 # 16. Software Architecture & Methodologies
@@ -1412,8 +1460,8 @@ CAT_ARCHITECTURE: set[str] = {
     "git", "github", "gitlab", "bitbucket", "svn",
     "jira", "confluence", "trello", "asana", "notion",
     "uml", "ooad", "object-oriented design", "domain-driven design",
-    "performance tuning", "optimization", "scalability", "high availability", "caching", "debugging", "troubleshooting",
-    "software development", "software engineering", "cross-platform", "six sigma", "clean code", "source control", "subversion", "object oriented programming", "object-oriented programming", "domain driven design", "domain-driven design", "solid principles", "test driven development", "behavior driven development", "trunk based development", "root cause analysis", "analytical skills", "analytical thinking", "critical thinking", "logical thinking", "problem solving", "problem-solving", "creative problem solving", "decision making", "decision-making", "strategic thinking", "business acumen", "object oriented design", "object oriented analysis and design", "object-oriented analysis and design", "unified modeling language", "systems design", "systems integration", "system integration",
+    "performance optimization", "scalability", "high availability", "caching",
+    "software development", "software engineering", "cross-platform", "six sigma", "clean code", "source control", "subversion", "object oriented programming", "object-oriented programming", "domain driven design", "domain-driven design", "solid principles", "test driven development", "behavior driven development", "trunk based development", "analytical skills", "analytical thinking", "critical thinking", "logical thinking", "problem solving", "problem-solving", "creative problem solving", "decision making", "decision-making", "strategic thinking", "business acumen", "object oriented design", "object oriented analysis and design", "object-oriented analysis and design", "unified modeling language", "systems design", "systems integration", "system integration",
     "web development",
 }
 
@@ -1453,7 +1501,12 @@ SKILL_TO_FAMILY: dict[str, str] = {}
 # We apply them in order.
 
 _CATEGORIES = [
-    (CAT_LANGUAGES, "Programming Languages"),
+    (CAT_LANG_SYSTEMS, "Systems Programming"),
+    (CAT_LANG_ENTERPRISE, "Enterprise & Managed"),
+    (CAT_LANG_DYNAMIC, "Dynamic & Web"),
+    (CAT_LANG_SCRIPTING, "Scripting & Shell"),
+    (CAT_LANG_DATA, "Data Analysis & Stats"),
+    (CAT_LANG_LEGACY, "Legacy & Mainframe"),
     (CAT_FRONTEND, "Frontend Development"),
     (CAT_BACKEND, "Backend Development"),
     (CAT_MOBILE_DESKTOP, "Mobile & Desktop"),
@@ -1467,7 +1520,7 @@ _CATEGORIES = [
     (CAT_OS_HARDWARE, "OS & Embedded"),
     (CAT_NETWORKING, "Networking"),
     (CAT_SECURITY, "Security & Identity"),
-    (CAT_QA, "Testing & QA"),
+    (CAT_QA_DEBUGGING, "Testing, QA & Debugging"),
     (CAT_ARCHITECTURE, "Architecture & Methods"),
     (CAT_ENTERPRISE, "Enterprise Platforms"),
     (CAT_CERTIFICATIONS, "Certifications"),
