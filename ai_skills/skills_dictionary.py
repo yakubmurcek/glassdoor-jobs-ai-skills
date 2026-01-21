@@ -221,12 +221,14 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     "recoil": "recoil",
     
     # APIs
-    "rest": "restful api",
-    "restful": "restful api",
-    "restful api": "restful api",
-    "restful apis": "restful api",
-    "rest apis": "restful api",
-    "rest api": "restful api",
+    "rest": "rest",
+    "restful": "rest",
+    "restful api": "rest",
+    "restful apis": "rest",
+    "rest apis": "rest",
+    "rest api": "rest",
+    "restlet": "rest",
+    "restlets": "rest",
     "graphql": "graphql",
     "graph ql": "graphql",
     "grpc": "grpc",
@@ -439,6 +441,9 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     "haproxy": "haproxy",
     "kong": "kong",
     "api gateway": "api gateway",
+    "apis": "api",
+    "web api": "api",
+    "web apis": "api",
 
     "json web token": "jwt",
     "saml": "saml",
@@ -727,7 +732,7 @@ HARDSKILL_VARIANTS: dict[str, str] = {
     
     # --- Family C: Integration & Data Exchange ---
     "web services": "web services",
-    "web api": "web api",
+
     "web apis": "web api",
     "http protocol": "http",
     "https protocol": "https",
@@ -1605,8 +1610,12 @@ SOFTSKILL_VARIANTS: dict[str, str] = {
     "teamwork": "teamwork",
     "team work": "teamwork",
     "team player": "teamwork",
+    "team-oriented": "teamwork",
+    "cross-functional": "cross-functional collaboration",
     "cross-functional": "cross-functional collaboration",
     "cross functional": "cross-functional collaboration",
+    "cross-functional teams": "cross-functional collaboration",
+    "cross functional teams": "cross-functional collaboration",
     
     # Leadership
     "leadership": "leadership",
