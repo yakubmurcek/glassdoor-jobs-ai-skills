@@ -6,17 +6,13 @@ Evaluate job descriptions for AI-related skills using a reproducible CLI workflo
 
 ## 1. Skill Taxonomy
 
-The system sorts extracted skills into 9 semantic families to ensure cleaner data analysis:
+The system sorts extracted skills into **24 granular semantic families** to ensure precise analysis:
 
-- **Generative AI & LLMs** (`LangChain`, `OpenAI`, `RAG`, `Pinecone`...) _[NEW]_
-- **Programming** (`Python`, `Java`, `Go`...)
-- **Data & Cloud** (`AWS`, `SQL`, `Snowflake`...)
-- **Analytics** (`Data Science`, `PowerBI`, `Machine Learning`...)
-- **Software Engineering** (`CI/CD`, `Agile`, `Git`...)
-- **Security** (`CISSP`, `Network Security`...)
-- **Integration** (`REST API`, `GraphQL`...)
-- **Certifications** (`AWS Certified`, `PMP`...)
-- **UI & Tools** (`React`, `Figma`...)
+- **Languages**: `Systems` (C++), `Enterprise` (Java), `Dynamic` (Python), `Scripting` (Bash), `Data` (R), `Legacy` (COBOL)
+- **Development**: `Frontend` (React), `Backend` (Node.js), `Mobile` (Flutter), `Tools` (Git)
+- **Data & AI**: `Data Science` (PyTorch), `Data Engineering` (Spark), `GenAI` (LLMs), `BI` (PowerBI), `Databases` (Postgres)
+- **Infrastructure**: `Cloud` (AWS), `DevOps` (K8s), `OS` (Linux), `Networking` (DNS), `Security` (IAM)
+- **Process & Quality**: `Testing & QA` (Selenium/GDB), `Architecture` (Microservices), `Enterprise Platforms` (Salesforce), `Certifications` (AWS Cert)
 
 ## 2. Core Workflow
 

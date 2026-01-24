@@ -1,0 +1,86 @@
+{
+  "baseline_path": "data/outputs/us_relevant_30_ai_baseline.csv",
+  "candidate_path": "data/outputs/us_relevant_30_ai.csv",
+  "evaluation_timestamp": "2025-12-26T09:28:00.227679",
+  "total_jobs": 30,
+  "match_count": 27,
+  "match_rate": 0.9,
+  "baseline_tier_distribution": {
+    "none": 24,
+    "applied_ai": 3,
+    "ai_integration": 2,
+    "core_ai": 1
+  },
+  "candidate_tier_distribution": {
+    "none": 25,
+    "ai_integration": 3,
+    "applied_ai": 1,
+    "core_ai": 1
+  },
+  "tier_changes": {
+    "none": 1,
+    "ai_integration": 1,
+    "applied_ai": -2,
+    "core_ai": 0
+  },
+  "baseline_confidence": {
+    "mean": 0.89,
+    "std": 0.042345052228989655,
+    "min": 0.75,
+    "max": 0.95
+  },
+  "candidate_confidence": {
+    "mean": 0.885,
+    "std": 0.04183300132670378,
+    "min": 0.75,
+    "max": 0.95
+  },
+  "confidence_change": -0.0050000000000000044,
+  "baseline_agreement_rate": 0.8333333333333334,
+  "candidate_agreement_rate": 0.8666666666666667,
+  "agreement_change": 0.033333333333333326,
+  "avg_hardskills_per_job": 4.666666666666667,
+  "avg_softskills_per_job": 2.1333333333333333,
+  "changes": [
+    {
+      "job_id": 4,
+      "job_title": "Software Eningeer II - Innovation",
+      "old_tier": "ai_integration",
+      "new_tier": "none",
+      "old_confidence": 0.8,
+      "new_confidence": 0.9,
+      "old_rationale": "The job mentions proficiency in AIML but does not indicate direct involvement in AI model development.",
+      "new_rationale": "The position involves full-stack development without any AI-related tasks.",
+      "job_description_excerpt": "WHO WE ARE LOOKING FOR\nWe\u2019re looking for a mid-level engineer who can independently deliver features, mentor junior engineers, and contribute to architectural decisions. You\u2019re a strong communicator, a cross-functional collaborator, and someone who thrives in a dynamic environment.\nWHAT YOU WILL WORK ON\nDesign and implement scalable services and user interfaces\nLead feature development using React, TypeScript, and AWS\nWork on prototypes using disruptive technologies to accelerate innovation\nColl",
+      "ai_skills_old": "AIML",
+      "ai_skills_new": "nan"
+    },
+    {
+      "job_id": 8,
+      "job_title": "Fullstack Engineer",
+      "old_tier": "applied_ai",
+      "new_tier": "ai_integration",
+      "old_confidence": 0.75,
+      "new_confidence": 0.8,
+      "old_rationale": "The role involves building features for an AI-powered platform, indicating some level of applied AI work.",
+      "new_rationale": "The role is in an AI-powered company but does not involve developing AI models; it focuses on full-stack development.",
+      "job_description_excerpt": "About Diffit\nDiffit is an AI-powered instructional materials platform designed to help teachers do their best work more sustainably. Teachers use Diffit to get \u201cjust right\u201d classroom activities, saving time and helping all students access grade-level content. Come join a growing remote-first and mission-focused AI edtech company to build quality, safe and affordable educational resources for teachers and students.\nThe Role\nAt Diffit, engineers work closely with Product and Design to build though",
+      "ai_skills_old": "AI",
+      "ai_skills_new": "nan"
+    },
+    {
+      "job_id": 25,
+      "job_title": "Full Stack Software Engineer",
+      "old_tier": "applied_ai",
+      "new_tier": "ai_integration",
+      "old_confidence": 0.85,
+      "new_confidence": 0.75,
+      "old_rationale": "The role involves building AI-powered marketing agents, indicating a hands-on application of AI technologies.",
+      "new_rationale": "The role involves building features for an AI-powered platform, but does not include direct AI model development.",
+      "job_description_excerpt": "About Us\nTildei is an AI-powered marketing platform that creates intelligent brand agents for commerce and marketing conversations. We build comprehensive, custom Brand Knowledge Graphs from product catalog, marketing materials, FAQs, and brand guidelines. We then deploy agents across social and digital channels to engage customers 24/7 in any language. Our agents drive marketing and commerce outcomes by having meaningful conversations that guide customers toward product recommendations and purc",
+      "ai_skills_old": "AI, NLP",
+      "ai_skills_new": "AI-powered marketing, NLP"
+    }
+  ],
+  "warnings": []
+}

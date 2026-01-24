@@ -22,8 +22,8 @@ clear all
 set more off                              
 
 * Nastav cestu k datům - UPRAV PODLE SVÉ STRUKTURY
-global datadir "/Users/yakub/Python/ai-skills/data/outputs"
-global outdir "/Users/yakub/Python/ai-skills/analysis/stata/output"
+global datadir "/Users/yakub/Projects/glassdoor-jobs-ai-skills/data/outputs"
+global outdir "/Users/yakub/Projects/glassdoor-jobs-ai-skills/analysis/stata/output"
 
 * Vytvoř output složku pokud neexistuje
 capture mkdir "$outdir"
@@ -36,9 +36,8 @@ log using "$outdir/ai_skills_analysis.log", replace text
 * ==============================================================================
 * 2. IMPORT DAT
 * ==============================================================================
-* CSV soubor používá středník jako oddělovač (typické pro evropské formáty)
-
-import delimited "$datadir/us_relevant_ai.csv", delimiter(";") clear varnames(1) encoding(utf8)
+* Používáme OPTIMALIZOVANÝ soubor z 'ai-skills clean-stata'
+import delimited "$datadir/us_relevant_ai_stata_optimized.csv", delimiter(";") clear varnames(1) encoding(utf8)
 
 * Základní kontrola úspěšného importu
 describe, short
@@ -48,46 +47,37 @@ display "Počet pozorování (job postů): " _N
 * ==============================================================================
 * 3. ČIŠTĚNÍ A PŘÍPRAVA DAT
 * ==============================================================================
-* Tato sekce převádí textové proměnné na numerické kde je to potřeba
-* a vytváří nové analytické proměnné
+
+* --- 3.0 Filtrování (podle požadavku uživatele) ---
+* Ponecháme pouze pozice s vysokou confidencí modelu
+keep if desc_conf_llm >= 0.7
+display "Počet pozorování po filtrování confidence >= 0.7: " _N
 
 * --- 3.1 AI Tier klasifikace ---
-* desc_tier_llm obsahuje kategorie: "none", "ai_integration", "applied_ai" (a teoreticky "core_ai")
-* Vytvoříme numerickou proměnnou pro statistické analýzy
-
-* Ošetříme prázdné hodnoty před encode
+* desc_tier_llm obsahuje kategorie: "none", "ai_integration", "applied_ai"
 replace desc_tier_llm = "missing" if desc_tier_llm == ""
 encode desc_tier_llm, generate(ai_tier_num)
 
-* Binární dummy: má pozice AI požadavky? (cokoliv kromě "none")
-gen has_ai = (desc_tier_llm != "none" & desc_tier_llm != "missing")
-label variable has_ai "Pozice vyzaduje AI dovednosti (1=ano)"
+* --- 3.2 AI Flag (Binární) ---
+* Vytvoříme z 'skills_det_ai' (pokud obsahuje text -> 1, jinak 0)
+gen has_ai_flag = !missing(skills_det_ai)
+label variable has_ai_flag "Obsahuje explicitni AI klicova slova"
 
-* --- 3.2 Vzdělání ---
-* edulevel_llm obsahuje: "-", "High School", "Associate", "Bachelor's", "Master's"
-* Prevod na ordinalni skalu pomoci strpos() pro flexibilitu
+* Kompatibilita pro starší skripty (volitelné)
+gen has_ai = has_ai_flag 
 
-gen edu_level = .
-replace edu_level = 0 if edulevel_llm == "-" | edulevel_llm == ""
-replace edu_level = 1 if strpos(lower(edulevel_llm), "high") > 0
-replace edu_level = 2 if strpos(lower(edulevel_llm), "associate") > 0
-replace edu_level = 3 if strpos(lower(edulevel_llm), "bachelor") > 0
-replace edu_level = 4 if strpos(lower(edulevel_llm), "master") > 0
-replace edu_level = 5 if strpos(lower(edulevel_llm), "ph") > 0 | strpos(lower(edulevel_llm), "doctor") > 0
+* --- 3.3 Vzdělání (Hybridní) ---
+* Používáme předpřipravenou 'education_hybrid' proměnnou
+* Normalizované hodnoty: "bachelor", "master", "highschool", "missing"
+encode education_hybrid, generate(edu_cat)
+label variable edu_cat "Pozadovane vzdelani (kategoricke)"
 
-label define edu_lbl 0 "Neuvedeno" 1 "Stredoskolske" 2 "Vyssi odborne" 3 "Bakalarske" 4 "Magisterske" 5 "Doktorske"
-label values edu_level edu_lbl
-label variable edu_level "Pozadovane vzdelani (ordinalni)"
-
-* --- 3.3 Zkušenosti ---
-* experience_min_llm obsahuje float hodnoty NEBO "-" pro neuvedeno
-* destring s force prevede "-" na missing (.) automaticky
-
-replace experience_min_llm = "" if experience_min_llm == "-"
+* --- 3.4 Zkušenosti ---
+* experience_min_llm by měl být již numerický, ale pro jistotu
 destring experience_min_llm, replace force
 label variable experience_min_llm "Min. pozadovane roky zkusenosti"
 
-* Kategorie zkušeností pro kontingenční tabulky
+* Kategorie zkušeností
 gen exp_category = .
 replace exp_category = 1 if experience_min_llm == 0 | experience_min_llm == .
 replace exp_category = 2 if experience_min_llm > 0 & experience_min_llm <= 2
@@ -99,37 +89,31 @@ label define exp_lbl 1 "Entry (0)" 2 "Junior (1-2)" 3 "Mid (3-5)" 4 "Senior (6-1
 label values exp_category exp_lbl
 label variable exp_category "Kategorie seniority"
 
-* --- 3.4 Plat ---
-* Destring salary proměnných
-
+* --- 3.5 Plat ---
 destring salary_min salary_mid salary_max, replace force
-
-* Filtrujeme nereálné hodnoty (příliš nízké nebo vysoké)
 replace salary_mid = . if salary_mid < 20000 | salary_mid > 500000
 label variable salary_mid "Rocni plat - stredni hodnota (USD)"
 
-* --- 3.5 Sektor a Industrie ---
-* Zjednodušené kategorie pro analýzu
-* Ošetříme prázdné hodnoty
-
+* --- 3.6 Sektor a Lokace ---
 replace sector = "Unknown" if sector == ""
 replace industry = "Unknown" if industry == ""
 encode sector, generate(sector_num)
-encode industry, generate(industry_num)
-
-* --- 3.6 Lokace ---
-* Extrahujeme stát z location nebo použijeme sloupec state
 
 replace state = "Unknown" if state == ""
 encode state, generate(state_num)
 
 * --- 3.7 Remote práce ---
-* remote_work_types obsahuje informaci o možnosti remote
-
 gen is_remote = 0
-replace is_remote = 1 if strpos(lower(remote_work_types), "home") > 0
-replace is_remote = 1 if strpos(lower(remote_work_types), "remote") > 0
+if _rc == 0 {
+    * Check if remote_work_types exists
+    capture confirm variable remote_work_types
+    if _rc == 0 {
+        replace is_remote = 1 if strpos(lower(remote_work_types), "home") > 0
+        replace is_remote = 1 if strpos(lower(remote_work_types), "remote") > 0
+    }
+}
 label variable is_remote "Moznost remote prace (1=ano)"
+
 
 
 * ==============================================================================

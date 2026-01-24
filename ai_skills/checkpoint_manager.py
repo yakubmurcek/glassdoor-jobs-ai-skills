@@ -88,6 +88,51 @@ class CheckpointManager:
         logger.info(f"Created backup: {backup_path}")
         return backup_path
         
+    def _read_ignoring_sep_header(self, usecols: list[str] | None = None) -> pd.DataFrame:
+        """Robustly read CSV, handling optional 'sep=' header line.
+        
+        Also handles the case where a BOM ends up on line 2 after sep= header,
+        which can corrupt column names (e.g., '\ufeffid' instead of 'id').
+        """
+        skiprows = 0
+        try:
+            with open(self.output_path, "r", encoding="utf-8-sig") as f:
+                first_line = f.readline()
+                if first_line and first_line.strip().startswith("sep="):
+                    skiprows = 1
+        except Exception as e:
+            logger.debug(f"Could not check file header: {e}")
+            # Fallback will rely on read_csv failing or working
+        
+        # Read without usecols first if we need to skip rows
+        # (BOM on line 2 can corrupt column names)
+        if skiprows > 0:
+            df = pd.read_csv(
+                self.output_path, 
+                sep=";", 
+                dtype=str, 
+                low_memory=False,
+                encoding="utf-8",  # NOT utf-8-sig - we handle BOM manually
+                skiprows=skiprows
+            )
+            # Strip BOM from column names (can happen if BOM was on line 2)
+            df.columns = [col.lstrip('\ufeff') for col in df.columns]
+            
+            # If usecols specified, filter to those columns
+            if usecols:
+                df = df[[col for col in usecols if col in df.columns]]
+            return df
+        else:
+            return pd.read_csv(
+                self.output_path, 
+                sep=";", 
+                usecols=usecols,
+                dtype=str, 
+                low_memory=False,
+                encoding="utf-8-sig",
+                skiprows=skiprows
+            )
+
     def get_processed_ids(self) -> Set[int | str]:
         """Read existing output file and return set of already-processed IDs.
         
@@ -102,14 +147,7 @@ class CheckpointManager:
             return set()
             
         try:
-            df = pd.read_csv(
-                self.output_path, 
-                sep=";", 
-                usecols=[self.id_column],
-                dtype=str,
-                low_memory=False,
-                encoding="utf-8-sig"
-            )
+            df = self._read_ignoring_sep_header(usecols=[self.id_column])
             self._processed_ids = set(df[self.id_column].dropna().unique())
             logger.info(f"Found {len(self._processed_ids)} already-processed IDs in {self.output_path}")
             return self._processed_ids
@@ -194,13 +232,7 @@ class CheckpointManager:
         try:
             if self.output_path.exists():
                 # Append mode: read existing, concat, write all
-                existing_df = pd.read_csv(
-                    self.output_path, 
-                    sep=";", 
-                    dtype=str, 
-                    low_memory=False,
-                    encoding="utf-8-sig"
-                )
+                existing_df = self._read_ignoring_sep_header()
                 combined_df = pd.concat([existing_df, self._pending_df], ignore_index=True)
             else:
                 combined_df = self._pending_df

@@ -1,0 +1,185 @@
+skills;job_desc_text;AI_skills_found;AI_skill_hard;AI_tier_openai;AI_skill_openai_confidence;AI_skills_openai_mentioned;AI_skill_openai_rationale;hardskills;softskills;AI_skill_agreement;id;job_title;location;company_id;company;age_in_days;pay_currency;pay_period;salary_min;salary_mid;salary_max;rating;discover_date;job_types;remote_work_types;educations;job_desc_html;city;state;country;latitude;longitude;ceo;headquarters;industry;sector;revenue;size;type;website;year_founded;baseline_tier;baseline_confidence
+Software deployment, AWS, Mentoring, Scalability, Software testing, TypeScript, Communication skills, Debugging;"WHO WE ARE LOOKING FOR
+We’re looking for a mid-level engineer who can independently deliver features, mentor junior engineers, and contribute to architectural decisions. You’re a strong communicator, a cross-functional collaborator, and someone who thrives in a dynamic environment.
+WHAT YOU WILL WORK ON
+Design and implement scalable services and user interfaces
+Lead feature development using React, TypeScript, and AWS
+Work on prototypes using disruptive technologies to accelerate innovation
+Collaborate across teams to integrate systems and ensure quality
+Drive improvements in code quality, testing, and deployment pipelines
+Contribute to team rituals and help shape engineering culture
+WHAT YOU BRING
+Positive attitude, growth mindset, being honest and having strong technical & non-technical communication skills is a must-have
+Bachelor’s degree in computer science or related field. Will accept any combination of education, experience, or training.
+3–6 years of professional software development experience as a full-stack engineer
+Proficiency in AIML, React, TypeScript, and AWS-based architectures
+Strong problem-solving and debugging skills
+Experience working in agile, cross-functional teams
+Demonstrated commitment to continuous learning and leadership principles
+We offer a number of accommodations to complete our interview process including screen readers, sign language interpreters, accessible and single location for in-person interviews, closed captioning, and other reasonable modifications as needed. If you discover, as you navigate our application process, that you need assistance or an accommodation due to a disability, please complete the Candidate Accommodation Request Form.";;0;none;0.9;;The position involves full-stack development without any AI-related tasks.;aws, react, typescript;collaboration, communication skills;1;4;Software Eningeer II - Innovation;Beaverton, OR;1699.0;NIKE;14;USD;ANNUAL;104658.0;126453.0;152787.0;4.0;2025-09-23T00:00:00;Full-time;;Bachelor's degree;"<div><p>WHO WE ARE LOOKING FOR</p><p>
+We&rsquo;re looking for a mid-level engineer who can independently deliver features, mentor junior engineers, and contribute to architectural decisions. You&rsquo;re a strong communicator, a cross-functional collaborator, and someone who thrives in a dynamic environment.</p><p></p><p>
+WHAT YOU WILL WORK ON</p><ul><li><p>
+Design and implement scalable services and user interfaces</p></li><li><p>
+Lead feature development using React, TypeScript, and AWS</p></li><li><p>
+Work on prototypes using disruptive technologies to accelerate innovation</p></li><li><p>
+Collaborate across teams to integrate systems and ensure quality</p></li><li><p>
+Drive improvements in code quality, testing, and deployment pipelines</p></li><li><p>
+Contribute to team rituals and help shape engineering culture</p></li></ul><p></p><p>
+WHAT YOU BRING</p><ul><li><p>
+Positive attitude, growth mindset, being honest and having strong technical &amp; non-technical communication skills is a must-have</p></li><li><p>
+Bachelor&rsquo;s degree in computer science or related field. Will accept any combination of education, experience, or training.</p></li><li><p>
+3&ndash;6 years of professional software development experience as a full-stack engineer</p></li><li><p>
+Proficiency in AIML, React, TypeScript, and AWS-based architectures</p></li><li><p>
+Strong problem-solving and debugging skills</p></li><li><p>
+Experience working in agile, cross-functional teams</p></li><li><p>
+Demonstrated commitment to continuous learning and leadership principles</p></li></ul><p>
+We offer a number of accommodations to complete our interview process including screen readers, sign language interpreters, accessible and single location for in-person interviews, closed captioning, and other reasonable modifications as needed. If you discover, as you navigate our application process, that you need assistance or an accommodation due to a disability, please complete the Candidate Accommodation Request Form.</p></div><p></p>";Beaverton, OR;Oregon;United States;45.48722;-122.8025;Elliott Hill;Beaverton, OR;Consumer Product Manufacturing;Manufacturing;$10+ billion (USD);10000+ Employees;Company - Public;https://nike.com/careers;1972.0;ai_integration;0.8
+Project management lifecycle, PostgreSQL, Mentoring, Software testing, Communication skills;"About Diffit
+Diffit is an AI-powered instructional materials platform designed to help teachers do their best work more sustainably. Teachers use Diffit to get “just right” classroom activities, saving time and helping all students access grade-level content. Come join a growing remote-first and mission-focused AI edtech company to build quality, safe and affordable educational resources for teachers and students.
+The Role
+At Diffit, engineers work closely with Product and Design to build thoughtful, high-impact features for teachers. We’re a small, full-stack team, so you'll work across the stack (React on the frontend, Python/Flask on the backend) to ship end-to-end functionality. Beyond feature work, you’ll help shape our architecture, improve internal tooling, and contribute to a platform that tens of thousands of teachers rely on every day. We move quickly, learn constantly, and stay focused on delivering real value to teachers.
+Responsibilities
+Drive Projects End-to-End
+Engineers at Diffit own their work from kickoff through launch and beyond. That means designing, implementing, testing, and monitoring your features. It means being thoughtful about how your work fits into the bigger picture. You'll regularly move high-impact initiatives forward, not just tickets. (Senior engineers are expected to take on larger projects with significantly more ambiguity.)
+Product-Oriented Thinking
+We all care deeply about the teachers we serve. Engineers are expected to think critically about user needs, provide input on product decisions, and ensure our technical solutions actually solve real problems. You’ll collaborate closely with product, design, and support to stay grounded in what matters most.
+Communicate with Clarity and Candor
+Communication is a core part of engineering. You’ll explain tradeoffs, share progress, give and receive feedback, and collaborate across disciplines. We value clarity, curiosity, and a willingness to ask the hard questions early.
+Contribute to a Supportive Team
+We believe great teams are built on trust and shared responsibility. That means helping unblock others, pitching in when workloads are uneven, and treating teammates with respect and kindness.
+Work Autonomously with Velocity
+We move fast: not by cutting corners, but by staying focused. Engineers at Diffit are self-directed and tenacious. Tasks typically have a single owner, and it’s up to you to drive them forward with speed, pragmatism, and attention to quality.
+Continuously Improve and Learn
+We expect engineers to grow and to help others grow. That might mean learning a new tool, reflecting on a mistake, mentoring a teammate, or revising how we work together. Curiosity and humility go a long way.
+Requirements
+building and shipping web applications
+2+ years of engineering experience
+ideally using Flask, React, Postgres, or other similar technologies
+Proficiency with modern full-stack web development
+including the ability to explain technical ideas clearly and collaborate cross-functionally
+Strong communication skills
+- you’ve taken responsibility for projects or major features and seen them through
+Track record of ownership
+- you know when to move fast, when to ask questions, and when to slow down
+Bias toward action and pragmatic problem-solving
+- you actively seek feedback, enjoy learning, and care about improving your craft
+Curiosity and a growth mindset
+What We Offer:
+Competitive salary and benefits package.
+Fully remote work environment with regular in-person offsites.
+The opportunity to work on a meaningful product that impacts the future of education.
+Collaborative and supportive team culture.
+Salary:
+$100,000-$150,000 per year plus stock options";;0;ai_integration;0.8;;"The role is in an AI-powered company but does not involve developing AI models; it focuses on full-stack development.";flask, postgresql, python, react;collaboration, communication skills;0;8;Fullstack Engineer;United States;;Diffit;48;USD;ANNUAL;100000.0;125000.0;150000.0;;2025-09-20T00:00:00;Full-time;WORK_FROM_HOME;;"<div><h1 class=""jobSectionHeader""><b>About Diffit</b></h1><p>
+Diffit is an AI-powered instructional materials platform designed to help teachers do their best work more sustainably. Teachers use Diffit to get &ldquo;just right&rdquo; classroom activities, saving time and helping all students access grade-level content. Come join a growing remote-first and mission-focused AI edtech company to build quality, safe and affordable educational resources for teachers and students.</p><p></p><h1 class=""jobSectionHeader""><b>
+The Role</b></h1><p>
+At Diffit, engineers work closely with Product and Design to build thoughtful, high-impact features for teachers. We&rsquo;re a small, full-stack team, so you'll work across the stack (React on the frontend, Python/Flask on the backend) to ship end-to-end functionality. Beyond feature work, you&rsquo;ll help shape our architecture, improve internal tooling, and contribute to a platform that tens of thousands of teachers rely on every day. We move quickly, learn constantly, and stay focused on delivering real value to teachers.</p><p></p><h1 class=""jobSectionHeader""><b>
+Responsibilities</b></h1><ul><li><p><b>
+Drive Projects End-to-End</b></p><p>
+Engineers at Diffit own their work from kickoff through launch and beyond. That means designing, implementing, testing, and monitoring your features. It means being thoughtful about how your work fits into the bigger picture. You'll regularly move high-impact initiatives forward, not just tickets. (Senior engineers are expected to take on larger projects with significantly more ambiguity.)</p></li><li><p><b>
+Product-Oriented Thinking</b></p><p>
+We all care deeply about the teachers we serve. Engineers are expected to think critically about user needs, provide input on product decisions, and ensure our technical solutions actually solve real problems. You&rsquo;ll collaborate closely with product, design, and support to stay grounded in what matters most.</p></li><li><p><b>
+Communicate with Clarity and Candor</b></p><p>
+Communication is a core part of engineering. You&rsquo;ll explain tradeoffs, share progress, give and receive feedback, and collaborate across disciplines. We value clarity, curiosity, and a willingness to ask the hard questions early.</p></li><li><p><b>
+Contribute to a Supportive Team</b></p><p>
+We believe great teams are built on trust and shared responsibility. That means helping unblock others, pitching in when workloads are uneven, and treating teammates with respect and kindness.</p></li><li><p><b>
+Work Autonomously with Velocity</b></p><p>
+We move fast: not by cutting corners, but by staying focused. Engineers at Diffit are self-directed and tenacious. Tasks typically have a single owner, and it&rsquo;s up to you to drive them forward with speed, pragmatism, and attention to quality.</p></li><li><p><b>
+Continuously Improve and Learn</b></p><p>
+We expect engineers to grow and to help others grow. That might mean learning a new tool, reflecting on a mistake, mentoring a teammate, or revising how we work together. Curiosity and humility go a long way.</p></li></ul><p></p><h1 class=""jobSectionHeader""><b>
+Requirements</b></h1><ul><li><p><b>
+2+ years of engineering experience</b> building and shipping web applications</p></li><li><p><b>
+Proficiency with modern full-stack web development</b> ideally using Flask, React, Postgres, or other similar technologies</p></li><li><p><b>
+Strong communication skills</b> including the ability to explain technical ideas clearly and collaborate cross-functionally</p></li><li><p><b>
+Track record of ownership</b> - you&rsquo;ve taken responsibility for projects or major features and seen them through</p></li><li><p><b>
+Bias toward action and pragmatic problem-solving</b> - you know when to move fast, when to ask questions, and when to slow down</p></li><li><p><b>
+Curiosity and a growth mindset</b> - you actively seek feedback, enjoy learning, and care about improving your craft</p></li></ul><h1 class=""jobSectionHeader""><b>
+What We Offer:</b></h1><ul><li><p>
+Competitive salary and benefits package.</p></li><li><p>
+Fully remote work environment with regular in-person offsites.</p></li><li><p>
+The opportunity to work on a meaningful product that impacts the future of education.</p></li><li><p>
+Collaborative and supportive team culture.</p></li></ul><h1 class=""jobSectionHeader""><b>
+Salary:
+</b></h1><p>$100,000-$150,000 per year plus stock options</p></div>";;;United States;38.0;-97.0;;;;;;;;;;applied_ai;0.75
+Node.js, AWS, PostgreSQL, Terraform, Natural language processing, Martech, AI, TypeScript;"About Us
+Tildei is an AI-powered marketing platform that creates intelligent brand agents for commerce and marketing conversations. We build comprehensive, custom Brand Knowledge Graphs from product catalog, marketing materials, FAQs, and brand guidelines. We then deploy agents across social and digital channels to engage customers 24/7 in any language. Our agents drive marketing and commerce outcomes by having meaningful conversations that guide customers toward product recommendations and purchases, essentially acting as a brand's most knowledgeable sales associate.
+Tildei, based in NY, was founded by serial entrepreneur Mark Ghermezian, the co-founder and founding CEO of Braze (BRZE), and led the company as its founding CEO, pioneering a new category from ideation to IPO (Braze IPO’d in November 2021).
+If you’re looking for an opportunity to disrupt an industry and leave your mark, apply to join us.
+The Opportunity
+As a member of our engineering team you will be directly involved in every aspect of our development lifecycle. From building new features and fixing impactful bugs, to helping design and plan the future of our platform. We have a backlog full of interesting and impactful work to pick up.
+You will be joining us at a crucial stage of our company's journey as we scale our product to meet market demand. This is a unique chance to have a direct and immediate impact, as you will own and build features based on real-time customer feedback. Additionally, not every problem you'll face will have a clear solution. You'll need to weigh potential approaches, work with your teammates to identify pitfalls, and deliver true value to our customers. As part of our small team, you'll also have the opportunity to wear many different hats.
+This is a full-time, permanent position. If you are in the NYC area, we follow with a ""4 days in, 1 day work-from-home"" hybrid work environment in NYC (Chelsea). If you are elsewhere in the US, this position can be fully remote. This role pays a competitive salary and equity and reports directly to our CTO.
+In this role you will...
+Be actively involved in the build, deployment, and continuous improvement of our software platform as it relates to both front-end and back-end web development (this role will likely skew a bit more towards the backend).
+Participate in code reviews and thoughtfully provide constructive feedback.
+Use your knowledge of current industry coding standards, tools, and best practices to write clean and efficient code.
+Collaborate effectively with other teams and architects to solve complex problems.
+Work with designers and PMs to create delightful products.
+Believe in a culture of experimentation while developing production-grade products and platforms.
+You have...
+5+ years professional experience working with Typescript (ideally Node.js as this role skews more towards the backend).
+Experience releasing apps in a cloud environment like AWS.
+Experience in designing and implementing backend services that efficiently handle complex business logic and data processing (experience with AI NLP is ideal).
+Bachelor’s degree or equivalent practical experience.
+Ideal: Experience working in the martech space
+Our tech stack includes...
+Node
+Svelte
+Typescript
+Temporal
+Postgres
+Clickhouse
+AWS (via Terraform)
+Cloudflare
+Vercel
+Langfuse
+We hope you’re comfortable with a few of these, but more importantly, we value the desire to learn.
+A few examples of our recent work include...
+Extensible integrations into platforms using modern patterns like MCPs
+Agentic handling of social media comments for brands
+Deep integrations in social platforms like Reddit and Instagram
+We offer...
+Endless career growth opportunities by joining our team at the ground floor.
+A tight-knit, collaborative team who are passionate about building startups.
+Competitive salary, equity, flexible PTO, and robust benefits (medical, dental, vision etc.).
+We’re focused on building and fostering a diverse, flexible, and inclusive space that allows our team members to thrive. We’re an Equal Opportunity Employer and consider applicants without regard to race, color, national origin, gender, sexual orientation, genetics, age, marital status, veteran status, disability status or any other basis forbidden under federal, state, or local law.";ai, natural language processing;1;ai_integration;0.75;AI-powered marketing, NLP;The role involves building features for an AI-powered platform, but does not include direct AI model development.;aws, node.js, postgresql, svelte, typescript;collaboration, problem-solving;1;25;Full Stack Software Engineer;New York, NY;10470893.0;Tildei;4;USD;ANNUAL;150000.0;175000.0;200000.0;4.1;2025-10-03T00:00:00;Full-time;;Bachelor's degree;"<div><div><b>About Us</b></div><div></div><div><br>
+Tildei is an AI-powered marketing platform that creates intelligent brand agents for commerce and marketing conversations. We build comprehensive, custom Brand Knowledge Graphs from product catalog, marketing materials, FAQs, and brand guidelines. We then deploy agents across social and digital channels to engage customers 24/7 in any language. Our agents drive marketing and commerce outcomes by having meaningful conversations that guide customers toward product recommendations and purchases, essentially acting as a brand's most knowledgeable sales associate.<br>
+</div><div></div><br>
+<div>Tildei, based in NY, was founded by serial entrepreneur Mark Ghermezian, the co-founder and founding CEO of Braze (BRZE), and led the company as its founding CEO, pioneering a new category from ideation to IPO (Braze IPO&rsquo;d in November 2021).</div><div></div><div><br>
+If you&rsquo;re looking for an opportunity to disrupt an industry and leave your mark, apply to join us.</div><div></div><div><b><br>
+The Opportunity</b></div><div></div><div><br>
+As a member of our engineering team you will be directly involved in every aspect of our development lifecycle. From building new features and fixing impactful bugs, to helping design and plan the future of our platform. We have a backlog full of interesting and impactful work to pick up.</div><div></div><div><br>
+You will be joining us at a crucial stage of our company's journey as we scale our product to meet market demand. This is a unique chance to have a direct and immediate impact, as you will own and build features based on real-time customer feedback. Additionally, not every problem you'll face will have a clear solution. You'll need to weigh potential approaches, work with your teammates to identify pitfalls, and deliver true value to our customers. As part of our small team, you'll also have the opportunity to wear many different hats.</div><div></div><div><br>
+This is a full-time, permanent position. If you are in the NYC area, we follow with a &quot;4 days in, 1 day work-from-home&quot; hybrid work environment in NYC (Chelsea). If you are elsewhere in the US, this position can be fully remote. This role pays a competitive salary and equity and reports directly to our CTO.</div>
+<h3 class=""jobSectionHeader""><b>In this role you will...</b></h3><ul><li>
+Be actively involved in the build, deployment, and continuous improvement of our software platform as it relates to both front-end and back-end web development (this role will likely skew a bit more towards the backend).</li><li>
+Participate in code reviews and thoughtfully provide constructive feedback.</li><li>
+Use your knowledge of current industry coding standards, tools, and best practices to write clean and efficient code.</li><li>
+Collaborate effectively with other teams and architects to solve complex problems.</li><li>
+Work with designers and PMs to create delightful products.</li><li>
+Believe in a culture of experimentation while developing production-grade products and platforms.</li></ul><h3 class=""jobSectionHeader""><b>
+You have...</b></h3><ul><li>
+5+ years professional experience working with Typescript (ideally Node.js as this role skews more towards the backend).</li><li>
+Experience releasing apps in a cloud environment like AWS.</li><li>
+Experience in designing and implementing backend services that efficiently handle complex business logic and data processing (experience with AI NLP is ideal).</li><li>
+Bachelor&rsquo;s degree or equivalent practical experience.</li><li>
+Ideal: Experience working in the martech space</li></ul><h3 class=""jobSectionHeader""><b>
+Our tech stack includes...</b></h3><ul><li>
+Node</li><li>
+Svelte</li><li>
+Typescript</li><li>
+Temporal</li><li>
+Postgres</li><li>
+Clickhouse</li><li>
+AWS (via Terraform)</li><li>
+Cloudflare</li><li>
+Vercel</li><li>
+Langfuse</li></ul><div></div><div><i><br>
+We hope you&rsquo;re comfortable with a few of these, but more importantly, we value the desire to learn.</i></div><h3 class=""jobSectionHeader""><b>
+A few examples of our recent work include...</b></h3><ul><li>
+Extensible integrations into platforms using modern patterns like MCPs</li><li>
+Agentic handling of social media comments for brands</li><li>
+Deep integrations in social platforms like Reddit and Instagram</li></ul><div><b>
+We offer...</b></div><div></div><ul><li><br>
+Endless career growth opportunities by joining our team at the ground floor.</li><li>A tight-knit, collaborative team who are passionate about building startups.</li><li>Competitive salary, equity, flexible PTO, and robust benefits (medical, dental, vision etc.).</li></ul><div></div><div><i><br>
+We&rsquo;re focused on building and fostering a diverse, flexible, and inclusive space that allows our team members to thrive. We&rsquo;re an Equal Opportunity Employer and consider applicants without regard to race, color, national origin, gender, sexual orientation, genetics, age, marital status, veteran status, disability status or any other basis forbidden under federal, state, or local law.</i></div></div>";New York, NY;New York State;United States;40.71417;-74.00639;Mark Ghermezian;New York, NY;Internet & Web Services;Information Technology;Unknown / Non-Applicable;1 to 50 Employees;Company - Private;http://www.tildei.com;;applied_ai;0.85

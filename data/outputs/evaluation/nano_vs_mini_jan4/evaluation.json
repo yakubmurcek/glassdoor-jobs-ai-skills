@@ -1,0 +1,89 @@
+{
+  "baseline_path": "data/outputs/us_relevant_50_gpt5nano_jan4.csv",
+  "candidate_path": "data/outputs/us_relevant_50_gpt5mini_jan4.csv",
+  "evaluation_timestamp": "2026-01-04T13:12:47.130790",
+  "total_jobs": 50,
+  "baseline_columns": 52,
+  "candidate_columns": 52,
+  "new_columns": [],
+  "match_count": 47,
+  "match_rate": 0.94,
+  "baseline_tier_distribution": {
+    "none": 34,
+    "ai_integration": 12,
+    "applied_ai": 4,
+    "core_ai": 0
+  },
+  "candidate_tier_distribution": {
+    "none": 34,
+    "ai_integration": 13,
+    "applied_ai": 3,
+    "core_ai": 0
+  },
+  "tier_changes": {
+    "none": 0,
+    "ai_integration": 1,
+    "applied_ai": -1,
+    "core_ai": 0
+  },
+  "baseline_confidence": {
+    "mean": 0.8946,
+    "std": 0.04891517021897217,
+    "min": 0.75,
+    "max": 0.95
+  },
+  "candidate_confidence": {
+    "mean": 0.892,
+    "std": 0.035513722556160164,
+    "min": 0.7,
+    "max": 0.9
+  },
+  "confidence_change": -0.0025999999999999357,
+  "baseline_agreement_rate": 0.86,
+  "candidate_agreement_rate": 0.86,
+  "agreement_change": 0.0,
+  "avg_hardskills_per_job": 20.84,
+  "avg_softskills_per_job": 5.88,
+  "changes": [
+    {
+      "job_id": 29,
+      "job_title": "Senior Software Engineer - Fullstack",
+      "old_tier": "ai_integration",
+      "new_tier": "applied_ai",
+      "old_confidence": 0.95,
+      "new_confidence": 0.9,
+      "old_rationale": "nan",
+      "new_rationale": "nan",
+      "job_description_excerpt": ":\nWho is SimSpace\nSimSpace launched in 2015 with a singular purpose \u2013\n. The organizations around the world that we depend on every day to keep our loved ones safe and secure. Our healthcare facilities, schools, financial institutions, transit centers, grocery stores, and workplaces just to name a few. To deliver global resiliency, we provide an elite cyber range platform to curate unassailable cyber defenses, data driven decisions, cutting edge training labs, live attack scenarios, and extensive",
+      "ai_skills_old": "GenAI, AgenticAI, ChatGPT, Vertex AI, AWS AI, Claude, Perplexity, CrewAI, Anthropic, Jasper, Cohere, Hugging Face, OpenAI, AI",
+      "ai_skills_new": "GenAI, AgenticAI, GPT-like models, ChatGPT, Vertex AI, AWS AI, Claude, Perplexity, CrewAI, Anthropic, Jasper, Cohere, Hugging Face, machine learning, model training, fine-tuning, model deployment"
+    },
+    {
+      "job_id": 33,
+      "job_title": "(Freelancer) AI Automation Engineer fullstack (Code & No-Code)",
+      "old_tier": "applied_ai",
+      "new_tier": "ai_integration",
+      "old_confidence": 0.82,
+      "new_confidence": 0.9,
+      "old_rationale": "nan",
+      "new_rationale": "nan",
+      "job_description_excerpt": "Summary\nWe are seeking a talented tech specialist who is proficient in both coding and no-code platforms. The ideal candidate should have a strong understanding of AI technologies and the ability to implement them effectively within business processes. A willingness to learn and adapt to new tools and trends is essential. This role is perfect for someone looking to enhance their skills in a dynamic environment while contributing to innovative solutions. If you are passionate about technology and",
+      "ai_skills_old": "HeyGen, AI",
+      "ai_skills_new": "AI tools, python, APIs, heygen, no-code, automation"
+    },
+    {
+      "job_id": 37,
+      "job_title": "Full-Stack Engineer",
+      "old_tier": "applied_ai",
+      "new_tier": "ai_integration",
+      "old_confidence": 0.82,
+      "new_confidence": 0.7,
+      "old_rationale": "nan",
+      "new_rationale": "The company/product is explicitly a GenAI platform, but the role's duties focus on backend Python development and only mentions integrating ML tools (not model training or ML pipeline ownership), so it appears to be integration work rather than applied ML engineering.",
+      "job_description_excerpt": "Overview:\nResponsibilities:\nQualifications:\nJoin our cutting-edge generative AI (GenAI) platform, LIGER\u2122, created by its technology studio, LMI Forge. LIGER\u2122 harnesses the power of advanced technology, data analytics, and the latest in machine learning and natural language processing to provide secure, private, and trustworthy GenAI solutions for government.\nLMI is a new breed of digital solutions provider dedicated to accelerating government impact with innovation and speed. Investing in techno",
+      "ai_skills_old": "GenAI, LLM, machine learning, natural language processing",
+      "ai_skills_new": "generative AI, GenAI, machine learning, natural language processing, ML, NLP, Python"
+    }
+  ],
+  "warnings": []
+}

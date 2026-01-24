@@ -92,7 +92,35 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="N",
         help="When using --resume, save checkpoint every N rows (default: 500).",
     )
+    analyze.add_argument(
+        "--max-rows",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Stop after processing N rows (useful for controlled batches).",
+    )
     analyze.set_defaults(func=_handle_analyze)
+
+    # Clean Stata command
+    clean_stata = sub.add_parser(
+        "clean-stata",
+        help="Create an optimized Stata CSV by dropping bulky text columns.",
+    )
+    clean_stata.add_argument(
+        "--input-csv",
+        type=Path,
+        required=True,
+        help="Input CSV from pipeline analyze.",
+    )
+    clean_stata.add_argument(
+        "--output-csv",
+        type=Path,
+        default=None,
+        help="Destination for optimized CSV (default: input_name_stata_optimized.csv).",
+    )
+    clean_stata.set_defaults(func=_handle_clean_stata)
+    
+
 
     # Evaluate command
     evaluate = sub.add_parser(
@@ -310,6 +338,67 @@ def _get_versioned_output_path(base_dir: Path, stem: str, suffix: str) -> Path:
         version += 1
 
 
+
+def _handle_clean_stata(args: argparse.Namespace) -> int:
+    import pandas as pd
+    
+    input_path = args.input_csv
+    if not input_path.exists():
+        print(f"Error: Input file not found: {input_path}")
+        return 1
+        
+    # Determine output path
+    if args.output_csv:
+        output_path = args.output_csv
+    else:
+        # e.g. "data.csv" -> "data_stata_optimized.csv"
+        # We assume file name structure from pipeline: name_ai.csv
+        stem = input_path.stem
+        output_path = input_path.parent / f"{stem}_stata_optimized{input_path.suffix}"
+        
+    print(f"Reading {input_path}...")
+    try:
+        # Try semicolon first as it is default output
+        df = pd.read_csv(input_path, sep=';', low_memory=False)
+    except Exception:
+        # Fallback
+        try:
+            df = pd.read_csv(input_path, sep=None, engine='python')
+        except Exception as e:
+            print(f"Error reading CSV: {e}")
+            return 1
+            
+    initial_rows = len(df)
+    print(f"Loaded {initial_rows} rows. Columns: {len(df.columns)}")
+    
+    # Columns to drop for Stata optimization
+    cols_to_drop = [
+        'job_desc_text', 
+        'job_desc_html', 
+        'desc_rationale_llm', 
+        'educations'
+    ]
+    
+    dropped = []
+    for col in cols_to_drop:
+        if col in df.columns:
+            df.drop(columns=[col], inplace=True)
+            dropped.append(col)
+            
+    print(f"Dropped bulky columns: {', '.join(dropped)}")
+    
+    # Ensure Stata formatting consistency (sep=';')
+    print(f"Saving optimized file to {output_path}...")
+    df.to_csv(output_path, sep=';', index=False)
+    
+    # Size comparison (rough)
+    orig_size = input_path.stat().st_size / (1024*1024)
+    new_size = output_path.stat().st_size / (1024*1024)
+    print(f"Size reduced from {orig_size:.1f} MB to {new_size:.1f} MB")
+    
+    return 0
+
+
 def _handle_analyze(args: argparse.Namespace) -> int:
     from .config import OUTPUT_CSV, PATHS  # Imported lazily to avoid requiring an API key early.
     from .pipeline import JobAnalysisPipeline
@@ -335,6 +424,8 @@ def _handle_analyze(args: argparse.Namespace) -> int:
         if args.resume:
             # Use checkpoint-based processing for resume
             print(f"Running with checkpoints (interval: {args.checkpoint_interval} rows)")
+            if args.max_rows:
+                print(f"Will stop after {args.max_rows} rows")
             print(f"Output: {output_path}")
             df = pipeline.run_with_checkpoints(
                 progress_callback=callback,
@@ -343,6 +434,7 @@ def _handle_analyze(args: argparse.Namespace) -> int:
                 skip_llm=args.skip_llm,
                 resume=True,
                 checkpoint_interval=args.checkpoint_interval,
+                max_rows=args.max_rows,
             )
         else:
             df = pipeline.run(

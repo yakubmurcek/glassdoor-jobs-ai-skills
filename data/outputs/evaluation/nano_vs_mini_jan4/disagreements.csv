@@ -1,0 +1,273 @@
+skills;job_desc_text;skills_ai_det;skills_hasai_det;desc_tier_llm;desc_conf_llm;ai_confidence;desc_ai_llm;desc_rationale_llm;is_real_ai;hardskills;softskills;skill_cluster;edu_level_det;edulevel_llm;experience_min_llm;ai_det_llm_match;desc_hard_det;desc_soft_det;desc_hard_llm;desc_soft_llm;id;job_title;location;company_id;company;age_in_days;pay_currency;pay_period;salary_min;salary_mid;salary_max;rating;discover_date;job_types;remote_work_types;educations;job_desc_html;city;state;country;latitude;longitude;ceo;headquarters;industry;sector;revenue;size;type;website;year_founded;baseline_tier;baseline_confidence
+C#, System design, AWS, Docker, Machine learning, Scalability, Software testing, AI, Requirements gathering, Communication skills, Python;":
+Who is SimSpace
+SimSpace launched in 2015 with a singular purpose –
+. The organizations around the world that we depend on every day to keep our loved ones safe and secure. Our healthcare facilities, schools, financial institutions, transit centers, grocery stores, and workplaces just to name a few. To deliver global resiliency, we provide an elite cyber range platform to curate unassailable cyber defenses, data driven decisions, cutting edge training labs, live attack scenarios, and extensive individual and dynamic team readiness training.
+addressing the most urgent and sophisticated cybersecurity challenges to reduce risk for our most vulnerable and valuable infrastructure
+SimSpace works as OneTeam to elevate humanity around the world. We are committed to continuously improving and delivering a cultivated member experience whether that is accomplished through focusing on supporting our client's teams or our own mission driven SimSpacers.
+We are an international company headquartered in Boston's Fort Point in the U.S. If you are interested in elevating the technology and creative solutions necessary to secure and safeguard our future while working alongside others who share your passion for purpose and development, we want to meet you!
+Why should you choose a career at SimSpace?
+We are an organization that is focused on building our culture and mindfully enhancing our atmosphere everyday which is why we have collaborated on an integral value system. Our governing philosophy of being
+is deeply embedded within our value system. We apply this philosophy to every one of our internal team members, external clients, and their customers.
+Human Centered
+Our core values:
+– We provide safe space, deliver on the mission, and elevate humanity
+Serve to Protect
+– We seek and provide clarity 10x, cultivate comprehension, and believe information goes both all ways
+Acquire Understanding
+– We stay curious, practice consistency over intensity, and continue to be the change we need in the world
+Operate as Innovators
+– We are never alone, we solve for all, and keep people at the heart of everything we do
+Teamwork Without Borders
+a Senior Software Engineer to join our team and drive the development of AI-powered services. This role requires a strong background in full-stack software engineering with an eagerness to dive into the world of AI tooling and APIs. While direct experience with GenAI or AgenticAI platforms is a plus, the ideal candidate is someone excited to explore and integrate AI technologies (e.g., GPT-like models, APIs, and machine learning systems) into real-world applications. You will play a key role in developing, fine-tuning, and deploying machine learning models while ensuring seamless integration across the full stack. A commitment to quick iterations and working within the full Software Development Lifecycle (SDLC) is essential for this position.
+SimSpace is looking for
+What will you be doing as a Senior Software Engineer at SimSpace?
+Design, develop, and integrate AI-powered services into real-world applications using GenAI and AgenticAI APIs (e.g., ChatGPT, Vertex AI, AWS AI, Claude,
+Perplexity, CrewAI, Anthropic's models, Jasper, Cohere, Hugging Face, OpenAI, and other relevant platforms)
+Leverage full-stack engineering skills to build scalable, reliable software, including both backend and frontend components
+Lead the implementation of systems used to continuously improve model performance based on real-world feedback
+Manage the full-stack development of AI services, working across the backend, frontend, and APIs to ensure seamless integration and performance
+Collaborate with cross-functional teams to define, develop, and deploy AI models that support business goals
+Iterate quickly and implement agile development practices to ensure continuous delivery of high-quality software
+Own the SDLC for AI service projects, from requirements gathering to design, testing, and deployment
+Continuously learn about new AI technologies, staying at the forefront of industry advancements and integrating them into development processes
+Troubleshoot, optimize, and maintain AI-powered systems, ensuring robustness and scalability
+Work iteratively in an agile environment, delivering high-quality software in quick cycles
+Contribute to the overall architecture of AI systems while ensuring good coding practices, testing, and documentation
+What are the qualifications to apply? To be successful as a Senior Software Engineer, you need to have:
+5+ years of experience in full-stack software engineering, with expertise in both frontend and backend technologies
+Comfortable with building and integrating APIs, particularly in complex, distributed systems
+Familiarity with machine learning concepts or AI tools and platforms (e.g., GenAI, AgenticAI, GPT-like models, APIs, etc.)
+A strong desire to work with AI and machine learning technologies and the ability to quickly adapt to new tools and platforms
+Proficiency in programming languages such as Kotlin, Java, C#, Python, or other relevant technologies
+Experience with cloud services, containerization (e.g., Docker), and deployment frameworks
+Familiarity with CI/CD pipelines and agile development practices
+Strong problem-solving skills, with an ability to quickly identify and resolve technical issues
+Excellent communication skills and the ability to collaborate effectively in a cross-functional team
+Preferred Qualifications
+Experience with large-scale AI applications and systems
+Familiarity with the latest trends in AI research and model training techniques
+Interest in staying up-to-date with the latest developments in AI research and models
+Experience with big data systems and scalable architectures for AI applications
+Experience working in an agile development environment
+We're proud to offer a competitive and comprehensive package designed to support your well-being, growth, and success:
+Base salary range: $150,000 - $210,000, reflecting our confidence in your expertise and impact, with the opportunity for annual bonuses tied to company performance and individual contributions.
+Compensation.
+Comprehensive medical, dental, and vision benefits, plus savings plans—coverage starts on day one!
+Health & Wellness.
+Access to company-paid counseling, coaching, and resources for you and your family through Spring Health.
+Mental Health Support.
+Plan for your future with a 401(k)-retirement savings plan featuring a company match.
+Financial Well-Being.
+Take the time you need with unlimited vacation and dedicated health & wellness days. SimSpace provides flexible solutions to meet the diverse work-life needs of team members.
+Flexible Time Off.
+Paid leave plans to support you and your loved ones during life's most important moments.
+Parental Leave.
+Equity stock options at hire, with annual performance-based grants—become an invested stakeholder in our shared success.
+Ownership Opportunities:
+Earn $1,500–$3,500 for every qualified hire through our employee referral program.
+Referral Rewards:
+Full- and partial- subsidized membership plans and equipment discounts to help you reach your personalized fitness goals.
+Peloton Interactive Wellness Program:
+Access a LinkedIn Learning membership to prioritize your personal and professional development.
+Continuous Learning:
+Monthly reimbursements for meaningful connections with teammates through our SocialSpace Community.
+Social Connections:
+Legal plan coverage, pet insurance, wellness reimbursements, and more to simplify life's details.
+Extra Perks:
+SimSpace is an Equal Opportunity Employer:
+In compliance with federal law, all persons hired will be required to verify identity and eligibility to work in the United States and to complete the required employment eligibility verification document form upon hire.
+SimSpace is an Equal Opportunity Employer. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, age, pregnancy, genetic information, disability, status as a protected veteran, or any other protected category under applicable federal, state, and local laws. We are committed to providing an inclusive and welcoming environment for all members of our staff, clients, volunteers, subcontractors, vendors, and clients.
+Research shows that women and people from underrepresented groups only apply to jobs if they meet all of the qualifications. However, no one ever meets 100% of the qualifications. SimSpace encourages you to break that statistic and to apply. We look forward to your application!
+We also consider qualified applicants regardless of criminal histories, in accordance with applicable law. We are committed to providing reasonable accommodations for qualified individuals with disabilities in our job application procedures. If you need assistance or accommodation due to a disability, please contact
+careers@simspace.com
+.
+SimSpace does not accept unsolicited resumes from employment agencies.
+Actual compensation for the position is based on a variety of factors, including, but not limited to affordability, skills, qualifications and experience, and may vary from the range.";ai, machine learning;1;applied_ai;0.9;0.9;GenAI, AgenticAI, GPT-like models, ChatGPT, Vertex AI, AWS AI, Claude, Perplexity, CrewAI, Anthropic, Jasper, Cohere, Hugging Face, machine learning, model training, fine-tuning, model deployment;;1;agile, anthropic, aws, c#, chatgpt, ci/cd, claude, cloud services, cohere, continuous delivery, cybersecurity, docker, fine-tuning, frontend development, full stack, generative ai, gpt, huggingface, java, kotlin, machine learning, openai, python, safe, software engineering, spring, system design, vertex ai;coaching, communication, continuous learning, creativity, cross-functional collaboration, flexibility, organization, ownership, passion, problem solving, teamwork;"Analytics: machine learning; Certifications: safe; Data & Cloud: aws, cloud services, docker; Generative AI: anthropic, chatgpt, claude, cohere, fine-tuning, generative ai, gpt, huggingface, openai, vertex ai; Programming: c#, java, kotlin, python, spring; Security: cybersecurity; Software Engineering: agile, ci/cd, continuous delivery, frontend development, full stack, software engineering, system design";;-;5.0;1;agile, anthropic, aws, c#, chatgpt, ci/cd, claude, cloud services, cohere, continuous delivery, cybersecurity, docker, fine-tuning, frontend development, full stack, generative ai, gpt, huggingface, java, kotlin, machine learning, openai, python, safe, software engineering, spring, system design, vertex ai;coaching, communication, continuous learning, creativity, cross-functional collaboration, flexibility, organization, ownership, passion, problem solving, teamwork;;;29;Senior Software Engineer - Fullstack;Remote;1824862.0;SimSpace;98;USD;ANNUAL;150000.0;180000.0;210000.0;4.2;2025-10-01T00:00:00;;WORK_FROM_HOME;;"<div><div><p><b>Who is SimSpace</b>:</p>
+<p>
+SimSpace launched in 2015 with a singular purpose &ndash; <b>addressing the most urgent and sophisticated cybersecurity challenges to reduce risk for our most vulnerable and valuable infrastructure</b>. The organizations around the world that we depend on every day to keep our loved ones safe and secure. Our healthcare facilities, schools, financial institutions, transit centers, grocery stores, and workplaces just to name a few. To deliver global resiliency, we provide an elite cyber range platform to curate unassailable cyber defenses, data driven decisions, cutting edge training labs, live attack scenarios, and extensive individual and dynamic team readiness training.</p>
+<p>
+SimSpace works as OneTeam to elevate humanity around the world. We are committed to continuously improving and delivering a cultivated member experience whether that is accomplished through focusing on supporting our client's teams or our own mission driven SimSpacers.</p>
+<p>
+We are an international company headquartered in Boston's Fort Point in the U.S. If you are interested in elevating the technology and creative solutions necessary to secure and safeguard our future while working alongside others who share your passion for purpose and development, we want to meet you!</p>
+<p><b>
+Why should you choose a career at SimSpace?</b></p>
+<p>
+We are an organization that is focused on building our culture and mindfully enhancing our atmosphere everyday which is why we have collaborated on an integral value system. Our governing philosophy of being <b>Human Centered </b>is deeply embedded within our value system. We apply this philosophy to every one of our internal team members, external clients, and their customers.</p>
+<p>
+Our core values:</p>
+<ul>
+<li><b>Serve to Protect</b> &ndash; We provide safe space, deliver on the mission, and elevate humanity</li>
+<li><b>Acquire Understanding</b> &ndash; We seek and provide clarity 10x, cultivate comprehension, and believe information goes both all ways</li>
+<li><b>Operate as Innovators</b> &ndash; We stay curious, practice consistency over intensity, and continue to be the change we need in the world</li>
+<li><b>Teamwork Without Borders</b> &ndash; We are never alone, we solve for all, and keep people at the heart of everything we do</li>
+</ul></div><p><b>
+SimSpace is looking for</b> a Senior Software Engineer to join our team and drive the development of AI-powered services. This role requires a strong background in full-stack software engineering with an eagerness to dive into the world of AI tooling and APIs. While direct experience with GenAI or AgenticAI platforms is a plus, the ideal candidate is someone excited to explore and integrate AI technologies (e.g., GPT-like models, APIs, and machine learning systems) into real-world applications. You will play a key role in developing, fine-tuning, and deploying machine learning models while ensuring seamless integration across the full stack. A commitment to quick iterations and working within the full Software Development Lifecycle (SDLC) is essential for this position.</p><br>
+<p></p>
+<p><b>
+What will you be doing as a Senior Software Engineer at SimSpace?</b></p><br>
+<ul>
+<li>Design, develop, and integrate AI-powered services into real-world applications using GenAI and AgenticAI APIs (e.g., ChatGPT, Vertex AI, AWS AI, Claude,
+</li><li>Perplexity, CrewAI, Anthropic's models, Jasper, Cohere, Hugging Face, OpenAI, and other relevant platforms)<br>
+</li>
+<li>Leverage full-stack engineering skills to build scalable, reliable software, including both backend and frontend components<br>
+</li>
+<li>Lead the implementation of systems used to continuously improve model performance based on real-world feedback<br>
+</li>
+<li>Manage the full-stack development of AI services, working across the backend, frontend, and APIs to ensure seamless integration and performance<br>
+</li>
+<li>Collaborate with cross-functional teams to define, develop, and deploy AI models that support business goals<br>
+</li>
+<li>Iterate quickly and implement agile development practices to ensure continuous delivery of high-quality software<br>
+</li>
+<li>Own the SDLC for AI service projects, from requirements gathering to design, testing, and deployment<br>
+</li>
+<li>Continuously learn about new AI technologies, staying at the forefront of industry advancements and integrating them into development processes<br>
+</li>
+<li>Troubleshoot, optimize, and maintain AI-powered systems, ensuring robustness and scalability<br>
+</li>
+<li>Work iteratively in an agile environment, delivering high-quality software in quick cycles<br>
+</li>
+<li>Contribute to the overall architecture of AI systems while ensuring good coding practices, testing, and documentation</li><br>
+</ul>
+<p><b>What are the qualifications to apply? To be successful as a Senior Software Engineer, you need to have:</b></p>
+<ul>
+<li>5+ years of experience in full-stack software engineering, with expertise in both frontend and backend technologies<br>
+</li>
+<li>Comfortable with building and integrating APIs, particularly in complex, distributed systems<br>
+</li>
+<li>Familiarity with machine learning concepts or AI tools and platforms (e.g., GenAI, AgenticAI, GPT-like models, APIs, etc.)<br>
+</li>
+<li>A strong desire to work with AI and machine learning technologies and the ability to quickly adapt to new tools and platforms<br>
+</li>
+<li>Proficiency in programming languages such as Kotlin, Java, C#, Python, or other relevant technologies<br>
+</li>
+<li>Experience with cloud services, containerization (e.g., Docker), and deployment frameworks<br>
+</li>
+<li>Familiarity with CI/CD pipelines and agile development practices<br>
+</li>
+<li>Strong problem-solving skills, with an ability to quickly identify and resolve technical issues<br>
+</li>
+<li>Excellent communication skills and the ability to collaborate effectively in a cross-functional team</li></ul><br>
+<p><br>
+<b>Preferred Qualifications</b></p><br>
+<ul>
+<li>Experience with large-scale AI applications and systems<br>
+</li>
+<li>Familiarity with the latest trends in AI research and model training techniques<br>
+</li>
+<li>Interest in staying up-to-date with the latest developments in AI research and models<br>
+</li>
+<li>Experience with big data systems and scalable architectures for AI applications<br>
+</li>
+<li>Experience working in an agile development environment</li></ul><br>
+<p></p>
+<div><b><i>
+We're proud to offer a competitive and comprehensive package designed to support your well-being, growth, and success:</i></b></div>
+<ul><li><b>Compensation. </b>Base salary range: $150,000 - $210,000, reflecting our confidence in your expertise and impact, with the opportunity for annual bonuses tied to company performance and individual contributions.</li>
+<li><b>Health &amp; Wellness. </b>Comprehensive medical, dental, and vision benefits, plus savings plans&mdash;coverage starts on day one!</li>
+<li><b>Mental Health Support. </b>Access to company-paid counseling, coaching, and resources for you and your family through Spring Health.</li>
+<li><b>Financial Well-Being. </b>Plan for your future with a 401(k)-retirement savings plan featuring a company match.</li>
+<li><b>Flexible Time Off. </b>Take the time you need with unlimited vacation and dedicated health &amp; wellness days. SimSpace provides flexible solutions to meet the diverse work-life needs of team members.</li>
+<li><b>Parental Leave. </b>Paid leave plans to support you and your loved ones during life's most important moments.</li>
+<li><b>Ownership Opportunities: </b>Equity stock options at hire, with annual performance-based grants&mdash;become an invested stakeholder in our shared success.</li>
+<li><b>Referral Rewards: </b>Earn $1,500&ndash;$3,500 for every qualified hire through our employee referral program.</li>
+<li><b>Peloton Interactive Wellness Program: </b>Full- and partial- subsidized membership plans and equipment discounts to help you reach your personalized fitness goals.</li>
+<li><b>Continuous Learning: </b>Access a LinkedIn Learning membership to prioritize your personal and professional development.</li>
+<li><b>Social Connections: </b>Monthly reimbursements for meaningful connections with teammates through our SocialSpace Community.</li>
+<li><b>Extra Perks: </b>Legal plan coverage, pet insurance, wellness reimbursements, and more to simplify life's details.</li></ul><p></p><div><p><b><br>
+SimSpace is an Equal Opportunity Employer:</b></p>
+<p><i>
+In compliance with federal law, all persons hired will be required to verify identity and eligibility to work in the United States and to complete the required employment eligibility verification document form upon hire.</i></p>
+<p><i>
+SimSpace is an Equal Opportunity Employer. All qualified applicants will receive consideration for employment without regard to race, color, religion, sex, sexual orientation, gender identity, national origin, age, pregnancy, genetic information, disability, status as a protected veteran, or any other protected category under applicable federal, state, and local laws. We are committed to providing an inclusive and welcoming environment for all members of our staff, clients, volunteers, subcontractors, vendors, and clients.</i></p>
+<p><i>
+Research shows that women and people from underrepresented groups only apply to jobs if they meet all of the qualifications. However, no one ever meets 100% of the qualifications. SimSpace encourages you to break that statistic and to apply. We look forward to your application!</i></p>
+<p><i>
+We also consider qualified applicants regardless of criminal histories, in accordance with applicable law. We are committed to providing reasonable accommodations for qualified individuals with disabilities in our job application procedures. If you need assistance or accommodation due to a disability, please contact </i><i>careers@simspace.com</i><i>.
+</i></p><p><i>SimSpace does not accept unsolicited resumes from employment agencies.</i></p>
+<p><i>
+Actual compensation for the position is based on a variety of factors, including, but not limited to affordability, skills, qualifications and experience, and may vary from the range.</i></p></div></div>";;;United States;38.0;-97.0;Peter Lee;Boston, MA;Enterprise Software & Network Solutions;Information Technology;Unknown / Non-Applicable;201 to 500 Employees;Company - Private;https://www.simspace.com;2015.0;ai_integration;0.95
+GitHub, AI, Python;"Summary
+We are seeking a talented tech specialist who is proficient in both coding and no-code platforms. The ideal candidate should have a strong understanding of AI technologies and the ability to implement them effectively within business processes. A willingness to learn and adapt to new tools and trends is essential. This role is perfect for someone looking to enhance their skills in a dynamic environment while contributing to innovative solutions. If you are passionate about technology and eager to grow, we want to hear from you!
+No ai responses, no agencies. Must be skilled in python and APIs, willing and able to learn apis of any system such as CRMs like salesforce, GHL, jobber, etc; ai tools like heygen.
+Need someone hungry who wants to work the long hours, get paid, and get stuff done. Let's go apply now
+Job Type: Full-time
+Pay: Up to $90,000.00 per year
+Application Question(s):
+do you work with ai tools daily? which ones?
+do you work with apis daily? which one
+do you have front end and back end experience?
+Describe your recent experience with similar projects
+Include a link to your GitHub profile and/or website
+Work Location: Remote";ai;1;ai_integration;0.9;0.9;AI tools, python, APIs, heygen, no-code, automation;;0;github, python;innovation;"Programming: python; Software Engineering: github";;-;-;1;github, python;innovation;;;33;(Freelancer) AI Automation Engineer fullstack (Code & No-Code);Remote;;Flow Genius;101;USD;ANNUAL;90000.0;90000.0;90000.0;;2025-09-28T00:00:00;Full-time;WORK_FROM_HOME;;"<p><b>Summary</b></p><p>We are seeking a talented tech specialist who is proficient in both coding and no-code platforms. The ideal candidate should have a strong understanding of AI technologies and the ability to implement them effectively within business processes. A willingness to learn and adapt to new tools and trends is essential. This role is perfect for someone looking to enhance their skills in a dynamic environment while contributing to innovative solutions. If you are passionate about technology and eager to grow, we want to hear from you!</p><p>No ai responses, no agencies. Must be skilled in python and APIs, willing and able to learn apis of any system such as CRMs like salesforce, GHL, jobber, etc; ai tools like heygen.</p><p>Need someone hungry who wants to work the long hours, get paid, and get stuff done. Let's go apply now</p><p>Job Type: Full-time</p><p>Pay: Up to $90,000.00 per year</p><p>Application Question(s):</p><ul><li>do you work with ai tools daily? which ones?</li><li>do you work with apis daily? which one</li><li>do you have front end and back end experience?</li><li>Describe your recent experience with similar projects</li><li>Include a link to your GitHub profile and/or website</li></ul><p>Work Location: Remote</p>";;;United States;38.0;-97.0;;;;;;;;;;applied_ai;0.82
+Computer science, Node.js, System design, PostgreSQL, Scalability, Unit testing, AI, GitLab, Communication skills, Python;"Overview:
+Responsibilities:
+Qualifications:
+Join our cutting-edge generative AI (GenAI) platform, LIGER™, created by its technology studio, LMI Forge. LIGER™ harnesses the power of advanced technology, data analytics, and the latest in machine learning and natural language processing to provide secure, private, and trustworthy GenAI solutions for government.
+LMI is a new breed of digital solutions provider dedicated to accelerating government impact with innovation and speed. Investing in technology and prototypes ahead of need, LMI brings commercial-grade platforms and mission-ready AI to federal agencies at commercial speed.
+Leveraging our mission-ready technology and solutions, proven expertise in federal deployment, and strategic relationships, we enhance outcomes for the government, efficiently and effectively. With a focus on agility and collaboration, LMI serves the defense, space, healthcare, and energy sectors—helping agencies navigate complexity and outpace change. Headquartered in Tysons, Virginia, LMI is committed to delivering impactful results that strengthen missions and drive lasting value.
+Take the lead in developing and updating the backend code for diverse Python-based applications, ensuring high performance and scalability.
+Architect and Refine Backend Systems:
+Write, design, and implement robust, clean Python code that drives our applications forward.
+Craft and Deploy Python Code:
+Develop and conduct unit tests for product components, maintaining a commitment to quality and reliability.
+Ensure Code Quality:
+Work closely with our software development team using GitLab to enhance collaboration and streamline workflows.
+Collaborative Development:
+Regularly meet with internal managers and external customers to discuss software challenges and collaboratively devise innovative solutions.
+Strategic Stakeholder Engagement:
+Write original code and refine existing codebases, ensuring all developments meet rigorous program requirements.
+Code Excellence:
+Apply a methodical approach to documenting and testing your code, ensuring flawless functionality.
+Detail-Oriented Practices:
+Thrive in a flexible work environment, whether you’re driving initiatives independently or as an integral part of our team.
+Adaptive Work Style:
+5-10 years of directly related experience
+Bachelor's degree in Computer Science or related field and/or equivalent work experience
+Minimum 2-years’ experience with Python development with web frameworks
+Minimum 2-years’ experience working with Object Oriented Programming (OOP) and Service Oriented Architecture
+Experience planning, analyzing, designing, implementing, testing, and maintaining software applications for an enterprise level system.
+Experience using industry guidelines and best practices for developing software including Git, Agile methodologies, CI/CD, and automated deployments.
+Excellent verbal and written communication skills
+Eligibility for a security clearance is required
+Preferred:
+Master’s degree in Computer Science, Software Engineering, Information Systems, or related field
+Knowledge of Node.js and javascript programming language
+Knowledge of Postgres
+Experience developing applications for classified data
+Experience integrating machine learning and analytical tools
+Target salary range: $109,986 - $189,154
+The salary range displayed represents the typical salary range for this position and is not a guarantee of compensation. Individual salaries are determined by various factors including, but not limited to location, internal equity, business considerations, client contract requirements, and candidate qualifications, such as education, experience, skills, and security clearances.
+#LIGER";ai;1;ai_integration;0.7;0.7;generative AI, GenAI, machine learning, natural language processing, ML, NLP, Python;The company/product is explicitly a GenAI platform, but the role's duties focus on backend Python development and only mentions integrating ML tools (not model training or ML pipeline ownership), so it appears to be integration work rather than applied ML engineering.;1;agile, ci/cd, code quality, data analytics, generative ai, git, gitlab, javascript, machine learning, nlp, node.js, oop, postgresql, python, software engineering, system design, unit testing;attention to detail, collaboration, communication, flexibility, innovation, reliability;"Analytics: data analytics, machine learning, nlp; Generative AI: generative ai; Programming: javascript, node.js, postgresql, python; Software Engineering: agile, ci/cd, code quality, git, gitlab, oop, software engineering, system design, unit testing";bachelor;Bachelor's;5.0;1;agile, ci/cd, code quality, data analytics, generative ai, git, gitlab, javascript, machine learning, nlp, node.js, oop, postgresql, python, software engineering, system design, unit testing;attention to detail, collaboration, communication, flexibility, innovation, reliability;;;37;Full-Stack Engineer;Tysons Corner, VA;21939.0;Logistics Management Institute;41;USD;ANNUAL;109986.0;149570.0;189154.0;3.9;2025-09-27T00:00:00;Full-time;WORK_FROM_HOME;Master's degree, Bachelor's degree;"<div>Overview:
+<p>
+Join our cutting-edge generative AI (GenAI) platform, LIGER&trade;, created by its technology studio, LMI Forge. LIGER&trade; harnesses the power of advanced technology, data analytics, and the latest in machine learning and natural language processing to provide secure, private, and trustworthy GenAI solutions for government.</p><div>
+LMI is a new breed of digital solutions provider dedicated to accelerating government impact with innovation and speed. Investing in technology and prototypes ahead of need, LMI brings commercial-grade platforms and mission-ready AI to federal agencies at commercial speed.</div><div></div><div><br>
+Leveraging our mission-ready technology and solutions, proven expertise in federal deployment, and strategic relationships, we enhance outcomes for the government, efficiently and effectively. With a focus on agility and collaboration, LMI serves the defense, space, healthcare, and energy sectors&mdash;helping agencies navigate complexity and outpace change. Headquartered in Tysons, Virginia, LMI is committed to delivering impactful results that strengthen missions and drive lasting value.</div>
+Responsibilities:
+<ul><li><b>Architect and Refine Backend Systems:</b> Take the lead in developing and updating the backend code for diverse Python-based applications, ensuring high performance and scalability.</li><li><b>
+Craft and Deploy Python Code:</b> Write, design, and implement robust, clean Python code that drives our applications forward.</li><li><b>
+Ensure Code Quality:</b> Develop and conduct unit tests for product components, maintaining a commitment to quality and reliability.</li><li><b>
+Collaborative Development:</b> Work closely with our software development team using GitLab to enhance collaboration and streamline workflows.</li><li><b>
+Strategic Stakeholder Engagement:</b> Regularly meet with internal managers and external customers to discuss software challenges and collaboratively devise innovative solutions.</li><li><b>
+Code Excellence:</b> Write original code and refine existing codebases, ensuring all developments meet rigorous program requirements.</li><li><b>
+Detail-Oriented Practices:</b> Apply a methodical approach to documenting and testing your code, ensuring flawless functionality.</li><li><b>
+Adaptive Work Style:</b> Thrive in a flexible work environment, whether you&rsquo;re driving initiatives independently or as an integral part of our team.</li></ul>
+Qualifications:
+<ul><li>5-10 years of directly related experience</li><li>
+Bachelor's degree in Computer Science or related field and/or equivalent work experience</li><li>
+Minimum 2-years&rsquo; experience with Python development with web frameworks</li><li>
+Minimum 2-years&rsquo; experience working with Object Oriented Programming (OOP) and Service Oriented Architecture</li><li>
+Experience planning, analyzing, designing, implementing, testing, and maintaining software applications for an enterprise level system.</li><li>
+Experience using industry guidelines and best practices for developing software including Git, Agile methodologies, CI/CD, and automated deployments.</li><li>
+Excellent verbal and written communication skills</li><li>
+Eligibility for a security clearance is required</li></ul><div></div><p><b><br>
+Preferred:</b></p><ul><li>
+Master&rsquo;s degree in Computer Science, Software Engineering, Information Systems, or related field</li><li>
+Knowledge of Node.js and javascript programming language</li><li>
+Knowledge of Postgres</li></ul><ul><li>
+Experience developing applications for classified data</li><li>
+Experience integrating machine learning and analytical tools</li></ul><div></div><div><br>
+Target salary range: $109,986 - $189,154</div><div></div><div><br>
+The salary range displayed represents the typical salary range for this position and is not a guarantee of compensation. Individual salaries are determined by various factors including, but not limited to location, internal equity, business considerations, client contract requirements, and candidate qualifications, such as education, experience, skills, and security clearances.</div><div></div><div><br>
+#LIGER</div></div>";Tysons Corner, VA;Virginia;United States;38.91861;-77.23139;Doug Wagoner;Tysons Corner, VA;Business Consulting;Management & Consulting;$100 to $500 million (USD);1001 to 5000 Employees;Company - Private;https://www.lmisolutions.com;1961.0;applied_ai;0.82

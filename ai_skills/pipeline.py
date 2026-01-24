@@ -25,6 +25,10 @@ from .models import JobAnalysisResult
 from .openai_analyzer import OpenAIJobAnalyzer
 from .skill_normalizer import normalize_hardskills, normalize_softskills
 from .skill_processing import annotate_declared_skills
+from .skills_dictionary import SKILL_TO_FAMILY
+
+import re # Added for Stata transformation regex replacement
+
 
 logger = logging.getLogger(__name__)
 
@@ -84,7 +88,8 @@ class JobAnalysisPipeline:
         output_csv: Path | str | None = None,
         skip_llm: bool = False,
         resume: bool = True,
-        checkpoint_interval: int = 500,
+        checkpoint_interval: int = 300,
+        max_rows: int | None = None,
     ) -> pd.DataFrame:
         """Execute pipeline with checkpoints for large datasets.
         
@@ -135,23 +140,31 @@ class JobAnalysisPipeline:
             if out_path.exists():
                 return load_input_data(path=out_path)
             return df
-            
-        remaining = len(df)
+        
+        unfiltered_remaining = len(df)  # Rows available before max_rows limit
+        already_done = total_input - unfiltered_remaining  # Already processed in previous runs
+        
+        # Limit to max_rows if specified
+        remaining = unfiltered_remaining
+        if max_rows is not None and max_rows > 0:
+            remaining = min(remaining, max_rows)
+            df = df.head(remaining)
+            logger.info(f"Limited to {remaining} rows (--max-rows)")
         logger.info(f"Processing {remaining} rows in batches of {checkpoint_interval}...")
         
         # Create backup before we start modifying
         checkpoint_mgr.create_backup()
         
-        # Create a wrapper callback that tracks overall progress across batches
+        # Create a wrapper callback that tracks progress for THIS session only
         processed_count = 0
         batch_num = 0
         
         def overall_progress_callback(batch_completed: int, batch_total: int) -> None:
-            """Wrapper to report overall progress, not per-batch progress."""
+            """Wrapper to report progress for this session."""
             if progress_callback:
-                # Calculate overall progress
-                overall_completed = processed_count + batch_completed
-                progress_callback(overall_completed, remaining)
+                # Show progress for this session: current / to_process_this_session
+                current = processed_count + batch_completed
+                progress_callback(current, remaining)
         
         for batch_start in range(0, remaining, checkpoint_interval):
             batch_end = min(batch_start + checkpoint_interval, remaining)
@@ -261,7 +274,9 @@ class JobAnalysisPipeline:
                     )
                     results.append(res)
             
-            return self._merge_results_into_df(annotated_df, results)
+            # Apply Stata transformations (clustering, hybrid education, cleanup)
+            df_hydrated = self._merge_results_into_df(annotated_df, results)
+            return self._apply_stata_transformations(df_hydrated)
 
         # --- NORMAL LLM COMPUTE MODE ---
         job_texts = [
@@ -289,7 +304,92 @@ class JobAnalysisPipeline:
             progress_callback=progress_callback
         )
 
-        return self._merge_results_into_df(annotated_df, results)
+        # Apply Stata transformations (clustering, hybrid education, cleanup)
+        df_transformed = self._apply_stata_transformations(self._merge_results_into_df(annotated_df, results))
+        return df_transformed
+
+    def _apply_stata_transformations(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Apply transformations to make the dataset Stata-ready.
+        
+        Includes:
+        1. Creating skill cluster dummy variables (cluster_X)
+        2. Creating hybrid education variable (education_hybrid)
+        3. Ensuring numeric types for experience
+        4. Dropping bulky/unused columns
+        """
+        logger.info("Applying Stata transformations (clustering, hybrid education)...")
+        
+        # --- 1. Skill Clustering (Updated Taxonomy) ---
+        # Get all unique families from dictionary
+        families = set(SKILL_TO_FAMILY.values())
+        family_list = sorted(list(families))
+        
+        # Initialize all dummy columns to 0
+        for family in family_list:
+            safe_name = re.sub(r'[^a-zA-Z0-9]', '_', family.lower())
+            col_name = f"cluster_{safe_name}"
+            df[col_name] = 0
+
+        # Helper to map a row's skills to families
+        def map_row_skills(skills_str):
+            if pd.isna(skills_str) or str(skills_str).strip() == "":
+                return set()
+            row_skills = [s.strip().lower() for s in str(skills_str).split(',')]
+            found = set()
+            for skill in row_skills:
+                fam = SKILL_TO_FAMILY.get(skill)
+                if fam:
+                    found.add(fam)
+            return found
+
+        # Use 'hardskills' column (merged) for best coverage, fallback to 'skills'
+        source_col = 'hardskills' if 'hardskills' in df.columns else 'skills'
+        
+        # Iterate and set dummies
+        # (Vectorization is harder with dictionary lookup on split strings, loop is fine for <50k rows)
+        for idx, row in df.iterrows():
+            skills_val = row.get(source_col)
+            row_families = map_row_skills(skills_val)
+            for family in row_families:
+                safe_name = re.sub(r'[^a-zA-Z0-9]', '_', family.lower())
+                col_name = f"cluster_{safe_name}"
+                df.at[idx, col_name] = 1
+                
+        # --- 2. Hybrid Education Variable ---
+        def get_education_hybrid(row):
+            val = "missing"
+            
+            # Primary: edu_level_det (structured from meta/educations column)
+            det = row.get('edu_level_det')
+            if pd.notna(det) and str(det).strip() != "":
+                val = str(det).strip().lower()
+            # Backfill: edulevel_llm (from text)
+            else:
+                llm = row.get('edulevel_llm')
+                if pd.notna(llm) and str(llm).strip() not in ["", "-"]:
+                    val = str(llm).strip().lower()
+            
+            # Normalize common variations
+            val = val.replace("'s", "").replace(" degree", "").replace(" diploma", "")
+            return val
+
+        df['education_hybrid'] = df.apply(get_education_hybrid, axis=1)
+
+        # --- 3. Type Conversion ---
+        if 'experience_min_llm' in df.columns:
+            df['experience_min_llm'] = pd.to_numeric(df['experience_min_llm'], errors='coerce')
+
+        # --- 4. Column Cleanup ---
+        # Drop columns that are outdated (bulky columns kept for clean-stata CLI step)
+        cols_to_drop = [
+            'skill_cluster',          # Outdated text-based cluster
+        ]
+        existing_drop = [c for c in cols_to_drop if c in df.columns]
+        if existing_drop:
+            df.drop(columns=existing_drop, inplace=True)
+            
+        logger.info(f"Stata transformations complete. Dropped cols: {existing_drop}")
+        return df
 
     def _merge_results_into_df(
         self, df: pd.DataFrame, results: List[JobAnalysisResult]
