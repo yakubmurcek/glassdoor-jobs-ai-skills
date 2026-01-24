@@ -58,10 +58,24 @@ display "Počet pozorování po filtrování confidence >= 0.7: " _N
 replace desc_tier_llm = "missing" if desc_tier_llm == ""
 encode desc_tier_llm, generate(ai_tier_num)
 
-* --- 3.2 AI Flag (Binární) ---
-* Vytvoříme z 'skills_det_ai' (pokud obsahuje text -> 1, jinak 0)
-gen has_ai_flag = !missing(skills_det_ai)
-label variable has_ai_flag "Obsahuje explicitni AI klicova slova"
+* --- 3.2 AI Flag (Strict Intersection + Buzzword Filter) ---
+* 1. Sloučime zdroje skills do jednoho retezce pro kontrolu
+gen skills_combined = lower(skills_det_ai + " " + desc_ai_llm)
+
+* 2. Odstranime obecne buzzwords (AI, ML, Artificial Intelligence atd.)
+* Pouzivame regex s word boundaries \b aby se smazalo jen "AI" a ne "OpenAI"
+gen skills_no_buzz = ustrregexra(skills_combined, "(?i)\b(ai|ml|artificial intelligence|machine learning|genai)\b", "")
+
+* 3. Odstranime interpunkci (carky, mezery), abychom zarucili ze zbyva neco realneho
+gen skills_cleaned = subinstr(skills_no_buzz, ",", "", .)
+replace skills_cleaned = subinstr(skills_cleaned, " ", "", .)
+replace skills_cleaned = subinstr(skills_cleaned, ";", "", .)
+
+* 4. Definice has_ai_flag
+* Tier != None A ZAROVEN zbyly nejake specificke skills (delka > 1 znaku)
+gen has_ai_flag = ((desc_tier_llm != "none" & desc_tier_llm != "missing") & length(skills_cleaned) > 1)
+
+label variable has_ai_flag "AI Job (Tier + Valid Skills, no buzzwords)"
 
 * Kompatibilita pro starší skripty (volitelné)
 gen has_ai = has_ai_flag 
