@@ -1,0 +1,687 @@
+Hard Skill,Frequency,Percentage
+software engineering,7651,41.44
+python,6472,35.05
+aws,5510,29.84
+agile,5428,29.4
+api,4914,26.61
+sql,4777,25.87
+ci/cd,4741,25.68
+system design,4666,25.27
+javascript,4654,25.21
+java,4289,23.23
+azure,4053,21.95
+rest,4049,21.93
+frontend development,3836,20.78
+devops,3524,19.09
+git,3457,18.72
+react,3257,17.64
+linux,3108,16.83
+kubernetes,3090,16.74
+docker,2955,16.0
+solid,2923,15.83
+debugging,2908,15.75
+html,2794,15.13
+optimization,2705,14.65
+c#,2617,14.17
+reporting,2511,13.6
+qa,2510,13.59
+css,2498,13.53
+version control,2472,13.39
+networking,2461,13.33
+c++,2407,13.04
+ui,2395,12.97
+microservices,2385,12.92
+full stack,2335,12.65
+gcp,2320,12.56
+cybersecurity,2284,12.37
+typescript,2244,12.15
+ux,2189,11.86
+test automation,2120,11.48
+performance tuning,2029,10.99
+node.js,1962,10.63
+terraform,1938,10.5
+postgresql,1899,10.28
+dotnet,1876,10.16
+scrum,1858,10.06
+angular,1856,10.05
+https,1813,9.82
+windows,1800,9.75
+sql server,1785,9.67
+jira,1755,9.5
+jenkins,1743,9.44
+unit testing,1686,9.13
+continuous integration,1664,9.01
+storage,1580,8.56
+cloud infrastructure,1502,8.13
+web development,1438,7.79
+machine learning,1426,7.72
+requests,1390,7.53
+foundation,1376,7.45
+incident response,1374,7.44
+github,1373,7.44
+mysql,1372,7.43
+infrastructure as code,1367,7.4
+safe,1357,7.35
+accessibility,1335,7.23
+high availability,1286,6.96
+data analytics,1263,6.84
+oop,1236,6.69
+bash,1231,6.67
+design patterns,1196,6.48
+information security,1185,6.42
+cloud native,1170,6.34
+mongodb,1158,6.27
+ui/ux,1127,6.1
+nosql,1119,6.06
+code quality,1094,5.93
+gitlab,1085,5.88
+test cases,1061,5.75
+ansible,1051,5.69
+powershell,1048,5.68
+orchestration,1044,5.65
+kafka,1022,5.54
+less,1011,5.48
+web services,1008,5.46
+integration testing,1005,5.44
+etl,976,5.29
+data pipelines,948,5.13
+dashboards,947,5.13
+json,928,5.03
+excel,922,4.99
+data analysis,906,4.91
+cloud services,884,4.79
+spring,866,4.69
+data modeling,851,4.61
+android,845,4.58
+graphql,841,4.55
+nist,840,4.55
+xml,836,4.53
+s3,836,4.53
+azure devops,819,4.44
+vue,816,4.42
+unix,807,4.37
+shell scripting,806,4.37
+github actions,804,4.35
+ios,802,4.34
+selenium,786,4.26
+iam,783,4.24
+spring boot,774,4.19
+cissp,730,3.95
+php,708,3.83
+lambda,708,3.83
+system integration,701,3.8
+devsecops,696,3.77
+soap,690,3.74
+measures,686,3.72
+data engineering,678,3.67
+backend development,668,3.62
+asp.net,648,3.51
+data warehouses,648,3.51
+software architecture,645,3.49
+jquery,644,3.49
+splunk,638,3.46
+confluence,636,3.44
+data visualization,632,3.42
+data management,629,3.41
+grafana,620,3.36
+comptia security+,613,3.32
+event-driven,611,3.31
+encryption,610,3.3
+redis,606,3.28
+http,597,3.23
+siem,597,3.23
+virtualization,595,3.22
+data science,592,3.21
+cloud security,589,3.19
+spark,577,3.12
+hipaa,572,3.1
+prometheus,572,3.1
+visual studio,554,3.0
+power bi,554,3.0
+cloudformation,552,2.99
+express,546,2.96
+network security,545,2.95
+tcp/ip,519,2.81
+serverless,513,2.78
+cloud computing,505,2.74
+performance testing,499,2.7
+data quality,495,2.68
+ruby,494,2.68
+snowflake,471,2.55
+generative ai,471,2.55
+dynamodb,471,2.55
+swift,469,2.54
+junit,468,2.53
+ids,466,2.52
+ec2,461,2.5
+business intelligence,459,2.49
+vulnerability management,458,2.48
+dns,452,2.45
+llm,451,2.44
+api development,449,2.43
+kotlin,448,2.43
+apache,448,2.43
+rds,447,2.42
+maven,443,2.4
+datadog,439,2.38
+soc,439,2.38
+vmware,436,2.36
+tdd,432,2.34
+routing,431,2.33
+penetration testing,428,2.32
+figma,426,2.31
+gitlab ci,421,2.28
+cypress,412,2.23
+pl/sql,411,2.23
+rust,406,2.2
+golang,406,2.2
+postman,405,2.19
+active directory,405,2.19
+application security,404,2.19
+react native,398,2.16
+bootstrap,398,2.16
+elasticsearch,397,2.15
+data integration,393,2.13
+continuous delivery,392,2.12
+container orchestration,392,2.12
+code review,385,2.09
+caching,380,2.06
+bitbucket,379,2.05
+api design,378,2.05
+cross-platform,378,2.05
+next.js,377,2.04
+responsive design,376,2.04
+statistics,376,2.04
+security operations,375,2.03
+ecs,374,2.03
+java ee,374,2.03
+eks,371,2.01
+shell,368,1.99
+django,365,1.98
+t-sql,364,1.97
+firewall,356,1.93
+data governance,351,1.9
+svn,347,1.88
+perl,346,1.87
+playwright,344,1.86
+regression testing,342,1.85
+oauth,341,1.85
+databricks,340,1.84
+computer vision,337,1.83
+sso,336,1.82
+ips,333,1.8
+object-oriented design,332,1.8
+cloudwatch,331,1.79
+redhat,325,1.76
+continuous deployment,323,1.75
+tableau,319,1.73
+iso27001,317,1.72
+puppet,316,1.71
+cloud architecture,316,1.71
+jest,314,1.7
+soa,312,1.69
+redux,312,1.69
+aws certified,312,1.69
+sdk,310,1.68
+kanban,307,1.66
+helm,307,1.66
+elk stack,304,1.65
+chef,303,1.64
+lean,303,1.64
+soc 2,300,1.62
+airflow,300,1.62
+seo,299,1.62
+gdpr,297,1.61
+windows server,296,1.6
+functional testing,285,1.54
+rails,282,1.53
+cism,279,1.51
+rabbitmq,275,1.49
+wcag,274,1.48
+api testing,273,1.48
+mobile development,271,1.47
+ceh,265,1.44
+sqs,264,1.43
+api gateway,263,1.42
+macos,262,1.42
+data lake,259,1.4
+ssis,259,1.4
+forensics,258,1.4
+assembly,256,1.39
+scala,254,1.38
+cucumber,251,1.36
+security testing,245,1.33
+edr,245,1.33
+fedramp,244,1.32
+threat intelligence,243,1.32
+data architecture,241,1.31
+owasp,240,1.3
+load balancing,239,1.29
+risk assessment,239,1.29
+enterprise architecture,238,1.29
+manual testing,236,1.28
+hadoop,235,1.27
+backbone,234,1.27
+redshift,234,1.27
+vpn,232,1.26
+slack,230,1.25
+openai,230,1.25
+webpack,230,1.25
+sonarqube,227,1.23
+elt,227,1.23
+experimentation,226,1.22
+openshift,224,1.21
+bdd,221,1.2
+security architecture,221,1.2
+vpc,220,1.19
+real-time data,219,1.19
+threat detection,217,1.18
+tailwind,215,1.16
+saml,215,1.16
+eclipse,212,1.15
+itil,212,1.15
+vulnerability scanning,210,1.14
+test management,208,1.13
+dlp,206,1.12
+api integration,205,1.11
+flask,204,1.1
+gradle,204,1.1
+bigquery,202,1.09
+jmeter,200,1.08
+multi-cloud,200,1.08
+hybrid cloud,199,1.08
+iis,198,1.07
+sass,195,1.06
+identity management,195,1.06
+solution architecture,195,1.06
+grpc,194,1.05
+data migration,193,1.05
+tensorflow,192,1.04
+fastapi,190,1.03
+objective-c,188,1.02
+cisa,187,1.01
+tomcat,185,1.0
+ssl,185,1.0
+virtual machines,184,1.0
+test planning,183,0.99
+waterfall,182,0.99
+jwt,181,0.98
+cassandra,178,0.96
+technical architecture,177,0.96
+pci dss,175,0.95
+prompt engineering,172,0.93
+nlp,171,0.93
+aks,171,0.93
+giac,171,0.93
+testng,168,0.91
+clean code,166,0.9
+zero trust,165,0.89
+visual studio code,164,0.89
+flutter,164,0.89
+e2e testing,163,0.88
+azure functions,163,0.88
+npm,161,0.87
+rag,160,0.87
+informatica,160,0.87
+claude,159,0.86
+dbt,158,0.86
+matlab,157,0.85
+websocket,155,0.84
+pytorch,155,0.84
+load testing,155,0.84
+a/b testing,154,0.83
+ubuntu,153,0.83
+switching,151,0.82
+threat hunting,151,0.82
+sns,150,0.81
+new relic,150,0.81
+nginx,150,0.81
+tls,150,0.81
+groovy,148,0.8
+sketch,147,0.8
+patch management,146,0.79
+api management,144,0.78
+test strategy,143,0.77
+soar,141,0.76
+endpoint security,141,0.76
+data transformation,141,0.76
+predictive analytics,140,0.76
+swagger,140,0.76
+yaml,140,0.76
+mlops,139,0.75
+ccna,138,0.75
+mitre att&ck,138,0.75
+appium,137,0.74
+laravel,136,0.74
+adobe xd,136,0.74
+pair programming,135,0.73
+aurora,135,0.73
+circleci,135,0.73
+ldap,134,0.73
+dhcp,134,0.73
+segment,132,0.71
+pyspark,129,0.7
+langchain,128,0.69
+uml,128,0.69
+bamboo,128,0.69
+ddd,125,0.68
+pytest,123,0.67
+visual basic,121,0.66
+vb.net,119,0.64
+openapi,118,0.64
+azure solutions architect,118,0.64
+statistical analysis,115,0.62
+google analytics,114,0.62
+oscp,114,0.62
+nest.js,113,0.61
+mockito,110,0.6
+xcode,108,0.58
+chatgpt,107,0.58
+vulnerability assessment,107,0.58
+kibana,105,0.57
+master data management,103,0.56
+service mesh,102,0.55
+hyper-v,101,0.55
+fine-tuning,101,0.55
+deep learning,99,0.54
+material ui,98,0.53
+scss,96,0.52
+pandas,94,0.51
+gke,94,0.51
+api security,93,0.5
+pam,93,0.5
+jasmine,92,0.5
+code coverage,92,0.5
+centos,90,0.49
+d3.js,86,0.47
+step functions,86,0.47
+branching strategies,85,0.46
+cdn,83,0.45
+vite,82,0.44
+teamcity,81,0.44
+nunit,81,0.44
+comptia network+,81,0.44
+canvas,80,0.43
+istio,80,0.43
+sqlite,80,0.43
+react testing library,78,0.42
+aws solutions architect,78,0.42
+malware analysis,77,0.42
+mocha,75,0.41
+sas,74,0.4
+fargate,73,0.4
+swiftui,73,0.4
+cka,73,0.4
+android studio,73,0.4
+sagemaker,71,0.38
+looker,71,0.38
+xdr,71,0.38
+intellij,70,0.38
+web api,68,0.37
+yarn,67,0.36
+mobile testing,66,0.36
+clean architecture,65,0.35
+xamarin,65,0.35
+azure administrator,65,0.35
+route53,65,0.35
+vba,65,0.35
+model deployment,63,0.34
+babel,63,0.34
+numpy,63,0.34
+csv,63,0.34
+gulp,62,0.34
+debian,62,0.34
+karma,61,0.33
+rxjs,61,0.33
+storybook,61,0.33
+anthropic,61,0.33
+batch processing,61,0.33
+security assessment,61,0.33
+scikit-learn,60,0.32
+ooad,60,0.32
+ccnp,59,0.32
+cloudfront,58,0.31
+jetpack compose,58,0.31
+digital forensics,58,0.31
+gemini,57,0.31
+argo,57,0.31
+webgl,57,0.31
+dart,57,0.31
+workflow orchestration,57,0.31
+talend,55,0.3
+transformers,55,0.3
+svelte,54,0.29
+notion,54,0.29
+huggingface,53,0.29
+gpt,52,0.28
+business analytics,52,0.28
+tanstack query,52,0.28
+static analysis,51,0.28
+stress testing,51,0.28
+kong,51,0.28
+cobol,49,0.27
+xunit,48,0.26
+cloud functions,48,0.26
+asana,48,0.26
+pmp,47,0.25
+azure developer,46,0.25
+activemq,46,0.25
+lua,45,0.24
+pinecone,45,0.24
+ember,45,0.24
+six sigma,45,0.24
+togaf,45,0.24
+invision,43,0.23
+ngrx,42,0.23
+zustand,42,0.23
+monorepo,40,0.22
+fivetran,40,0.22
+mlflow,39,0.21
+stream processing,39,0.21
+grunt,38,0.21
+data lineage,38,0.21
+three.js,37,0.2
+csm,37,0.2
+parquet,37,0.2
+prefect,37,0.2
+ado.net,37,0.2
+logstash,36,0.19
+neo4j,36,0.19
+qlik,36,0.19
+dax,36,0.19
+micro frontends,35,0.19
+ionic,35,0.19
+nx,35,0.19
+elixir,35,0.19
+ckad,35,0.19
+dagster,35,0.19
+symfony,34,0.18
+gcs,34,0.18
+llamaindex,33,0.18
+vertex ai,32,0.17
+aria,32,0.17
+adobe analytics,32,0.17
+gatling,32,0.17
+k6,32,0.17
+firewall management,32,0.17
+cis benchmarks,32,0.17
+trello,32,0.17
+neural networks,31,0.17
+cqrs,31,0.17
+linkerd,31,0.17
+protobuf,30,0.16
+celery,30,0.16
+aiops,30,0.16
+azure devops engineer,30,0.16
+gitflow,29,0.16
+event sourcing,29,0.16
+robot framework,29,0.16
+aws developer,28,0.15
+vitest,28,0.15
+weaviate,28,0.15
+data orchestration,28,0.15
+cloud practitioner,28,0.15
+azure pipelines,27,0.15
+monolith,27,0.15
+trunk-based development,27,0.15
+enzyme,26,0.14
+haproxy,26,0.14
+kubeflow,26,0.14
+mobx,25,0.14
+azure ml,25,0.14
+azure data engineer,24,0.13
+cordova,23,0.12
+highcharts,23,0.12
+rspec,23,0.12
+llama,23,0.12
+ga4,23,0.12
+nuxt,22,0.12
+chart.js,22,0.12
+locust,22,0.12
+data lakehouse,22,0.12
+qlikview,22,0.12
+envoy,21,0.11
+avro,21,0.11
+lora,21,0.11
+styled-components,20,0.11
+model serving,20,0.11
+amplitude,20,0.11
+scipy,20,0.11
+az-104,20,0.11
+data catalog,19,0.1
+shadcn,19,0.1
+vector database,19,0.1
+power query,19,0.1
+faiss,19,0.1
+plotly,18,0.1
+rollup,18,0.1
+puppeteer,18,0.1
+chai,18,0.1
+clojure,18,0.1
+aws devops engineer,18,0.1
+statistical modeling,17,0.09
+vuex,16,0.09
+webstorm,16,0.09
+az-400,16,0.09
+parcel,15,0.08
+superset,15,0.08
+mixpanel,15,0.08
+comptia a+,15,0.08
+cks,15,0.08
+codeigniter,14,0.08
+ccie,14,0.08
+az-305,14,0.08
+data mesh,14,0.08
+travis ci,13,0.07
+recoil,13,0.07
+web scraping,13,0.07
+svg,13,0.07
+phonegap,12,0.06
+gcp professional,12,0.06
+hashicorp certified,12,0.06
+fortran,12,0.06
+metabase,12,0.06
+cohere,11,0.06
+luigi,11,0.06
+testing library,11,0.06
+model monitoring,11,0.06
+az-204,11,0.06
+remix,11,0.06
+spss,11,0.06
+unittest,11,0.06
+module federation,10,0.05
+keras,10,0.05
+zeplin,10,0.05
+lottie,10,0.05
+recharts,9,0.05
+ant design,9,0.05
+turborepo,9,0.05
+stitch,9,0.05
+looker studio,9,0.05
+esbuild,9,0.05
+astro,9,0.05
+single-spa,9,0.05
+experiment tracking,9,0.05
+mistral,9,0.05
+argo workflows,9,0.05
+hapi,8,0.04
+couchdb,8,0.04
+pinia,8,0.04
+haskell,8,0.04
+aws sysops,8,0.04
+airbyte,8,0.04
+milvus,7,0.04
+vuetify,7,0.04
+swc,7,0.04
+az-900,7,0.04
+iso27002,7,0.04
+erlang,7,0.04
+feature store,7,0.04
+gsap,7,0.04
+bert,7,0.04
+f#,6,0.03
+pnpm,6,0.03
+rider,6,0.03
+aws data engineer,6,0.03
+chakra ui,6,0.03
+r,6,0.03
+swr,6,0.03
+framer motion,6,0.03
+zsh,6,0.03
+gcp certified,6,0.03
+zod,5,0.03
+gatsby,5,0.03
+stata,5,0.03
+testcafe,5,0.03
+pycharm,5,0.03
+readme,5,0.03
+radix,4,0.02
+ollama,4,0.02
+quasar,4,0.02
+jotai,4,0.02
+hypothesis testing,4,0.02
+data studio,4,0.02
+m language,4,0.02
+dalle,4,0.02
+stable diffusion,4,0.02
+whisper,4,0.02
+koa,3,0.02
+semantic ui,3,0.02
+scrapy,3,0.02
+lerna,3,0.02
+redis pub/sub,3,0.02
+sphinx,3,0.02
+react hook form,3,0.02
+vim,3,0.02
+gcp associate,3,0.02
+sisense,3,0.02
+chromadb,3,0.02
+midjourney,3,0.02
+emacs,3,0.02
+primevue,2,0.01
+formik,2,0.01
+beautifulsoup,2,0.01
+css animations,2,0.01
+qliksense,2,0.01
+screen reader,2,0.01
+redis queue,2,0.01
+cakephp,2,0.01
+calculated columns,2,0.01
+redash,2,0.01
+primereact,1,0.01
+aiohttp,1,0.01
+yup,1,0.01
+jsdoc,1,0.01
+descriptive analytics,1,0.01
+headless ui,1,0.01
+httpx,1,0.01
+xstate,1,0.01
+qlora,1,0.01
+swagger ui,1,0.01
+mage,1,0.01
+aws machine learning specialty,1,0.01
+mkdocs,1,0.01
+prescriptive analytics,1,0.01
+radix ui,1,0.01
+sublime text,1,0.01
+web animations,1,0.01

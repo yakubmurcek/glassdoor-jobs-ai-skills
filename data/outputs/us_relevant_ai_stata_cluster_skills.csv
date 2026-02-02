@@ -1,0 +1,241 @@
+Cluster,Cluster_Label,Rank,Skill,Count,Percentage
+cluster_architecture___methods,Architecture & Methods,1,software engineering,7651,50.84
+cluster_architecture___methods,Architecture & Methods,2,python,5622,37.36
+cluster_architecture___methods,Architecture & Methods,3,agile,5428,36.07
+cluster_architecture___methods,Architecture & Methods,4,aws,4856,32.27
+cluster_architecture___methods,Architecture & Methods,5,system design,4666,31.01
+cluster_architecture___methods,Architecture & Methods,6,ci/cd,4477,29.75
+cluster_architecture___methods,Architecture & Methods,7,api,4455,29.6
+cluster_architecture___methods,Architecture & Methods,8,javascript,4186,27.82
+cluster_architecture___methods,Architecture & Methods,9,sql,4144,27.54
+cluster_architecture___methods,Architecture & Methods,10,java,3914,26.01
+cluster_frontend_development,Frontend Development,1,software engineering,5051,45.37
+cluster_frontend_development,Frontend Development,2,api,4914,44.14
+cluster_frontend_development,Frontend Development,3,javascript,4288,38.52
+cluster_frontend_development,Frontend Development,4,agile,3916,35.18
+cluster_frontend_development,Frontend Development,5,frontend development,3836,34.46
+cluster_frontend_development,Frontend Development,6,python,3777,33.93
+cluster_frontend_development,Frontend Development,7,aws,3648,32.77
+cluster_frontend_development,Frontend Development,8,rest,3569,32.06
+cluster_frontend_development,Frontend Development,9,sql,3389,30.44
+cluster_frontend_development,Frontend Development,10,ci/cd,3357,30.16
+cluster_dynamic___web,Dynamic & Web,1,python,6472,62.78
+cluster_dynamic___web,Dynamic & Web,2,software engineering,4740,45.98
+cluster_dynamic___web,Dynamic & Web,3,javascript,4654,45.15
+cluster_dynamic___web,Dynamic & Web,4,aws,3953,38.35
+cluster_dynamic___web,Dynamic & Web,5,agile,3384,32.83
+cluster_dynamic___web,Dynamic & Web,6,api,3356,32.55
+cluster_dynamic___web,Dynamic & Web,7,ci/cd,3354,32.53
+cluster_dynamic___web,Dynamic & Web,8,frontend development,3167,30.72
+cluster_dynamic___web,Dynamic & Web,9,sql,3149,30.55
+cluster_dynamic___web,Dynamic & Web,10,java,3026,29.35
+cluster_testing__qa___debugging,"Testing, QA & Debugging",1,software engineering,4974,48.99
+cluster_testing__qa___debugging,"Testing, QA & Debugging",2,agile,3763,37.06
+cluster_testing__qa___debugging,"Testing, QA & Debugging",3,python,3711,36.55
+cluster_testing__qa___debugging,"Testing, QA & Debugging",4,ci/cd,3322,32.72
+cluster_testing__qa___debugging,"Testing, QA & Debugging",5,api,3302,32.52
+cluster_testing__qa___debugging,"Testing, QA & Debugging",6,aws,3136,30.88
+cluster_testing__qa___debugging,"Testing, QA & Debugging",7,sql,3009,29.63
+cluster_testing__qa___debugging,"Testing, QA & Debugging",8,javascript,2963,29.18
+cluster_testing__qa___debugging,"Testing, QA & Debugging",9,debugging,2908,28.64
+cluster_testing__qa___debugging,"Testing, QA & Debugging",10,rest,2866,28.23
+cluster_backend_development,Backend Development,1,software engineering,4737,46.82
+cluster_backend_development,Backend Development,2,rest,4049,40.02
+cluster_backend_development,Backend Development,3,api,3960,39.14
+cluster_backend_development,Backend Development,4,aws,3831,37.87
+cluster_backend_development,Backend Development,5,javascript,3734,36.91
+cluster_backend_development,Backend Development,6,agile,3639,35.97
+cluster_backend_development,Backend Development,7,python,3615,35.73
+cluster_backend_development,Backend Development,8,sql,3406,33.67
+cluster_backend_development,Backend Development,9,ci/cd,3314,32.76
+cluster_backend_development,Backend Development,10,java,3225,31.88
+cluster_devops___containers,DevOps & Containers,1,ci/cd,4741,53.72
+cluster_devops___containers,DevOps & Containers,2,software engineering,4335,49.12
+cluster_devops___containers,DevOps & Containers,3,aws,4264,48.31
+cluster_devops___containers,DevOps & Containers,4,python,4165,47.19
+cluster_devops___containers,DevOps & Containers,5,agile,3553,40.26
+cluster_devops___containers,DevOps & Containers,6,devops,3524,39.93
+cluster_devops___containers,DevOps & Containers,7,kubernetes,3090,35.01
+cluster_devops___containers,DevOps & Containers,8,api,3034,34.38
+cluster_devops___containers,DevOps & Containers,9,azure,3023,34.25
+cluster_devops___containers,DevOps & Containers,10,docker,2955,33.48
+cluster_databases___storage,Databases & Storage,1,sql,4777,57.52
+cluster_databases___storage,Databases & Storage,2,software engineering,3700,44.55
+cluster_databases___storage,Databases & Storage,3,aws,3424,41.23
+cluster_databases___storage,Databases & Storage,4,python,3413,41.1
+cluster_databases___storage,Databases & Storage,5,agile,2953,35.56
+cluster_databases___storage,Databases & Storage,6,api,2878,34.65
+cluster_databases___storage,Databases & Storage,7,javascript,2748,33.09
+cluster_databases___storage,Databases & Storage,8,ci/cd,2653,31.94
+cluster_databases___storage,Databases & Storage,9,rest,2640,31.79
+cluster_databases___storage,Databases & Storage,10,java,2596,31.26
+cluster_cloud_computing,Cloud Computing,1,aws,5510,68.94
+cluster_cloud_computing,Cloud Computing,2,azure,4053,50.71
+cluster_cloud_computing,Cloud Computing,3,python,3784,47.35
+cluster_cloud_computing,Cloud Computing,4,software engineering,3624,45.35
+cluster_cloud_computing,Cloud Computing,5,ci/cd,3403,42.58
+cluster_cloud_computing,Cloud Computing,6,agile,2833,35.45
+cluster_cloud_computing,Cloud Computing,7,api,2729,34.15
+cluster_cloud_computing,Cloud Computing,8,devops,2700,33.78
+cluster_cloud_computing,Cloud Computing,9,kubernetes,2604,32.58
+cluster_cloud_computing,Cloud Computing,10,sql,2547,31.87
+cluster_enterprise___managed,Enterprise & Managed,1,java,4289,65.37
+cluster_enterprise___managed,Enterprise & Managed,2,software engineering,3553,54.15
+cluster_enterprise___managed,Enterprise & Managed,3,agile,2712,41.34
+cluster_enterprise___managed,Enterprise & Managed,4,python,2673,40.74
+cluster_enterprise___managed,Enterprise & Managed,5,sql,2627,40.04
+cluster_enterprise___managed,Enterprise & Managed,6,c#,2617,39.89
+cluster_enterprise___managed,Enterprise & Managed,7,javascript,2471,37.66
+cluster_enterprise___managed,Enterprise & Managed,8,aws,2280,34.75
+cluster_enterprise___managed,Enterprise & Managed,9,api,2265,34.52
+cluster_enterprise___managed,Enterprise & Managed,10,rest,2259,34.43
+cluster_bi___analytics,BI & Analytics,1,python,2526,39.65
+cluster_bi___analytics,BI & Analytics,2,reporting,2511,39.41
+cluster_bi___analytics,BI & Analytics,3,software engineering,2493,39.13
+cluster_bi___analytics,BI & Analytics,4,sql,2209,34.67
+cluster_bi___analytics,BI & Analytics,5,aws,1933,30.34
+cluster_bi___analytics,BI & Analytics,6,agile,1930,30.29
+cluster_bi___analytics,BI & Analytics,7,api,1748,27.44
+cluster_bi___analytics,BI & Analytics,8,ci/cd,1614,25.33
+cluster_bi___analytics,BI & Analytics,9,system design,1611,25.29
+cluster_bi___analytics,BI & Analytics,10,azure,1582,24.83
+cluster_security___identity,Security & Identity,1,python,2425,40.16
+cluster_security___identity,Security & Identity,2,aws,2412,39.95
+cluster_security___identity,Security & Identity,3,cybersecurity,2284,37.83
+cluster_security___identity,Security & Identity,4,software engineering,2249,37.25
+cluster_security___identity,Security & Identity,5,ci/cd,1916,31.73
+cluster_security___identity,Security & Identity,6,azure,1907,31.58
+cluster_security___identity,Security & Identity,7,system design,1704,28.22
+cluster_security___identity,Security & Identity,8,devops,1617,26.78
+cluster_security___identity,Security & Identity,9,agile,1595,26.42
+cluster_security___identity,Security & Identity,10,api,1488,24.64
+cluster_data_engineering,Data Engineering,1,python,2656,46.09
+cluster_data_engineering,Data Engineering,2,sql,2532,43.94
+cluster_data_engineering,Data Engineering,3,software engineering,2496,43.31
+cluster_data_engineering,Data Engineering,4,aws,2417,41.94
+cluster_data_engineering,Data Engineering,5,api,2065,35.83
+cluster_data_engineering,Data Engineering,6,agile,2001,34.72
+cluster_data_engineering,Data Engineering,7,ci/cd,1996,34.63
+cluster_data_engineering,Data Engineering,8,java,1882,32.66
+cluster_data_engineering,Data Engineering,9,azure,1867,32.4
+cluster_data_engineering,Data Engineering,10,rest,1845,32.01
+cluster_networking,Networking,1,networking,2461,47.82
+cluster_networking,Networking,2,python,2221,43.16
+cluster_networking,Networking,3,software engineering,2097,40.75
+cluster_networking,Networking,4,aws,1911,37.14
+cluster_networking,Networking,5,https,1813,35.23
+cluster_networking,Networking,6,system design,1562,30.35
+cluster_networking,Networking,7,ci/cd,1520,29.54
+cluster_networking,Networking,8,linux,1434,27.87
+cluster_networking,Networking,9,azure,1383,26.88
+cluster_networking,Networking,10,agile,1366,26.54
+cluster_os___embedded,OS & Embedded,1,linux,3108,79.49
+cluster_os___embedded,OS & Embedded,2,python,2144,54.83
+cluster_os___embedded,OS & Embedded,3,software engineering,1724,44.09
+cluster_os___embedded,OS & Embedded,4,aws,1342,34.32
+cluster_os___embedded,OS & Embedded,5,windows,1317,33.68
+cluster_os___embedded,OS & Embedded,6,networking,1195,30.56
+cluster_os___embedded,OS & Embedded,7,system design,1140,29.16
+cluster_os___embedded,OS & Embedded,8,agile,1095,28.01
+cluster_os___embedded,OS & Embedded,9,java,1086,27.77
+cluster_os___embedded,OS & Embedded,10,ci/cd,1059,27.08
+cluster_mobile___desktop,Mobile & Desktop,1,windows,1800,58.9
+cluster_mobile___desktop,Mobile & Desktop,2,software engineering,1288,42.15
+cluster_mobile___desktop,Mobile & Desktop,3,linux,1171,38.32
+cluster_mobile___desktop,Mobile & Desktop,4,python,1025,33.54
+cluster_mobile___desktop,Mobile & Desktop,5,agile,884,28.93
+cluster_mobile___desktop,Mobile & Desktop,6,java,856,28.01
+cluster_mobile___desktop,Mobile & Desktop,7,android,845,27.65
+cluster_mobile___desktop,Mobile & Desktop,8,aws,840,27.49
+cluster_mobile___desktop,Mobile & Desktop,9,api,822,26.9
+cluster_mobile___desktop,Mobile & Desktop,10,javascript,812,26.57
+cluster_systems_programming,Systems Programming,1,c++,2407,80.61
+cluster_systems_programming,Systems Programming,2,software engineering,1835,61.45
+cluster_systems_programming,Systems Programming,3,python,1732,58.0
+cluster_systems_programming,Systems Programming,4,linux,1099,36.81
+cluster_systems_programming,Systems Programming,5,system design,1006,33.69
+cluster_systems_programming,Systems Programming,6,java,991,33.19
+cluster_systems_programming,Systems Programming,7,debugging,831,27.83
+cluster_systems_programming,Systems Programming,8,agile,823,27.56
+cluster_systems_programming,Systems Programming,9,c#,667,22.34
+cluster_systems_programming,Systems Programming,10,git,657,22.0
+cluster_data_science___ml,Data Science & ML,1,machine learning,1426,61.02
+cluster_data_science___ml,Data Science & ML,2,python,1356,58.02
+cluster_data_science___ml,Data Science & ML,3,software engineering,1125,48.14
+cluster_data_science___ml,Data Science & ML,4,aws,985,42.15
+cluster_data_science___ml,Data Science & ML,5,ci/cd,762,32.61
+cluster_data_science___ml,Data Science & ML,6,system design,732,31.32
+cluster_data_science___ml,Data Science & ML,7,api,715,30.59
+cluster_data_science___ml,Data Science & ML,8,sql,681,29.14
+cluster_data_science___ml,Data Science & ML,9,azure,665,28.46
+cluster_data_science___ml,Data Science & ML,10,agile,626,26.79
+cluster_scripting___shell,Scripting & Shell,1,python,1631,80.11
+cluster_scripting___shell,Scripting & Shell,2,bash,1231,60.46
+cluster_scripting___shell,Scripting & Shell,3,powershell,1048,51.47
+cluster_scripting___shell,Scripting & Shell,4,aws,987,48.48
+cluster_scripting___shell,Scripting & Shell,5,linux,917,45.04
+cluster_scripting___shell,Scripting & Shell,6,devops,871,42.78
+cluster_scripting___shell,Scripting & Shell,7,azure,862,42.34
+cluster_scripting___shell,Scripting & Shell,8,ci/cd,842,41.36
+cluster_scripting___shell,Scripting & Shell,9,kubernetes,751,36.89
+cluster_scripting___shell,Scripting & Shell,10,software engineering,722,35.46
+cluster_generative_ai,Generative AI,1,python,669,52.59
+cluster_generative_ai,Generative AI,2,aws,597,46.93
+cluster_generative_ai,Generative AI,3,software engineering,593,46.62
+cluster_generative_ai,Generative AI,4,api,567,44.58
+cluster_generative_ai,Generative AI,5,generative ai,471,37.03
+cluster_generative_ai,Generative AI,6,ci/cd,469,36.87
+cluster_generative_ai,Generative AI,7,llm,451,35.46
+cluster_generative_ai,Generative AI,8,system design,434,34.12
+cluster_generative_ai,Generative AI,9,azure,428,33.65
+cluster_generative_ai,Generative AI,10,react,392,30.82
+cluster_certifications,Certifications,1,aws,614,57.92
+cluster_certifications,Certifications,2,azure,510,48.11
+cluster_certifications,Certifications,3,python,461,43.49
+cluster_certifications,Certifications,4,devops,455,42.92
+cluster_certifications,Certifications,5,ci/cd,448,42.26
+cluster_certifications,Certifications,6,terraform,373,35.19
+cluster_certifications,Certifications,7,networking,367,34.62
+cluster_certifications,Certifications,8,agile,363,34.25
+cluster_certifications,Certifications,9,software engineering,338,31.89
+cluster_certifications,Certifications,10,kubernetes,334,31.51
+cluster_tools___editors,Tools & Editors,1,visual studio,554,59.38
+cluster_tools___editors,Tools & Editors,2,software engineering,514,55.09
+cluster_tools___editors,Tools & Editors,3,sql,455,48.77
+cluster_tools___editors,Tools & Editors,4,agile,417,44.69
+cluster_tools___editors,Tools & Editors,5,javascript,409,43.84
+cluster_tools___editors,Tools & Editors,6,c#,405,43.41
+cluster_tools___editors,Tools & Editors,7,git,362,38.8
+cluster_tools___editors,Tools & Editors,8,dotnet,352,37.73
+cluster_tools___editors,Tools & Editors,9,java,346,37.08
+cluster_tools___editors,Tools & Editors,10,rest,321,34.41
+cluster_enterprise_platforms,Enterprise Platforms,1,data management,629,73.4
+cluster_enterprise_platforms,Enterprise Platforms,2,software engineering,375,43.76
+cluster_enterprise_platforms,Enterprise Platforms,3,python,357,41.66
+cluster_enterprise_platforms,Enterprise Platforms,4,sql,336,39.21
+cluster_enterprise_platforms,Enterprise Platforms,5,aws,318,37.11
+cluster_enterprise_platforms,Enterprise Platforms,6,agile,301,35.12
+cluster_enterprise_platforms,Enterprise Platforms,7,api,297,34.66
+cluster_enterprise_platforms,Enterprise Platforms,8,system design,267,31.16
+cluster_enterprise_platforms,Enterprise Platforms,9,ci/cd,257,29.99
+cluster_enterprise_platforms,Enterprise Platforms,10,azure,238,27.77
+cluster_data_analysis___stats,Data Analysis & Stats,1,python,158,65.83
+cluster_data_analysis___stats,Data Analysis & Stats,2,matlab,157,65.42
+cluster_data_analysis___stats,Data Analysis & Stats,3,c++,126,52.5
+cluster_data_analysis___stats,Data Analysis & Stats,4,software engineering,125,52.08
+cluster_data_analysis___stats,Data Analysis & Stats,5,system design,80,33.33
+cluster_data_analysis___stats,Data Analysis & Stats,6,linux,75,31.25
+cluster_data_analysis___stats,Data Analysis & Stats,7,sas,74,30.83
+cluster_data_analysis___stats,Data Analysis & Stats,8,debugging,67,27.92
+cluster_data_analysis___stats,Data Analysis & Stats,9,agile,63,26.25
+cluster_data_analysis___stats,Data Analysis & Stats,10,sql,60,25.0
+cluster_legacy___mainframe,Legacy & Mainframe,1,cobol,49,100.0
+cluster_legacy___mainframe,Legacy & Mainframe,2,sql,32,65.31
+cluster_legacy___mainframe,Legacy & Mainframe,3,software engineering,19,38.78
+cluster_legacy___mainframe,Legacy & Mainframe,4,debugging,16,32.65
+cluster_legacy___mainframe,Legacy & Mainframe,5,agile,14,28.57
+cluster_legacy___mainframe,Legacy & Mainframe,6,system design,10,20.41
+cluster_legacy___mainframe,Legacy & Mainframe,7,javascript,9,18.37
+cluster_legacy___mainframe,Legacy & Mainframe,8,reporting,9,18.37
+cluster_legacy___mainframe,Legacy & Mainframe,9,azure,8,16.33
+cluster_legacy___mainframe,Legacy & Mainframe,10,information security,8,16.33
