@@ -23,7 +23,7 @@ class JobAnalysisResult(BaseModel):
     ai_tier: AITier = AITier.NONE
     ai_skills_mentioned: List[str] = Field(default_factory=list)
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
-    rationale: str = ""
+
     # Raw skill extractions from LLM (normalized in pipeline)
     hardskills_raw: List[str] = Field(default_factory=list)
     softskills_raw: List[str] = Field(default_factory=list)
@@ -48,7 +48,7 @@ class JobAnalysisResult(BaseModel):
             "desc_ai_llm": ", ".join(self.ai_skills_mentioned),
             "desc_conf_llm": self.confidence,
             "ai_confidence": self.confidence,
-            "desc_rationale_llm": self.rationale if self.confidence < 0.8 else "",
+
             # "-" indicates task was intentionally skipped (not an error)
             "edulevel_llm": self.min_education_level if self.min_education_level else "-",
             "experience_min_llm": self.min_years_experience if self.min_years_experience is not None else "-",
@@ -68,7 +68,7 @@ class JobAnalysisResultWithId(BaseModel):
     ai_tier: AITier  # No default - required by OpenAI
     ai_skills_mentioned: List[str]  # No default - required by OpenAI
     confidence: float = Field(ge=0.0, le=1.0)  # No default - required by OpenAI
-    rationale: str  # No default - required by OpenAI
+
     hardskills_raw: List[str]  # No default - required by OpenAI
     softskills_raw: List[str]  # No default - required by OpenAI
     min_years_experience: Optional[float] = Field(default=None, ge=0.0)  # Optional in extraction
@@ -86,7 +86,7 @@ class JobAnalysisResultWithId(BaseModel):
             ai_tier=self.ai_tier,
             ai_skills_mentioned=self.ai_skills_mentioned,
             confidence=self.confidence,
-            rationale=self.rationale,
+
             hardskills_raw=self.hardskills_raw,
             softskills_raw=self.softskills_raw,
             min_years_experience=self.min_years_experience,
@@ -118,7 +118,7 @@ class AITierResultWithId(BaseModel):
     ai_tier: AITier
     ai_skills_mentioned: List[str]  # AI/ML specific skills (tensorflow, pytorch, llm, etc.)
     confidence: float = Field(ge=0.0, le=1.0)
-    rationale: str
+
 
     @field_validator("confidence")
     @classmethod

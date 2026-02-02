@@ -63,7 +63,7 @@ ALSO EXTRACT SKILLS:
 
 **ai_skills_mentioned**: AI/ML specific skills (tensorflow, pytorch, llm, etc.)
 
-**hardskills_raw**: ALL technical skills explicitly mentioned (languages, frameworks, tools, databases, cloud, etc.)
+**hardskills_raw**: ALL technical skills explicitly mentioned. Translate to English if needed.
 
 **softskills_raw**: Interpersonal traits explicitly mentioned (communication, teamwork, leadership, etc.)
 
@@ -83,6 +83,13 @@ EDUCATION & EXPERIENCE:
 - Many job postings do not specify education — that's OK, just return null
 - DO NOT assume "Bachelor's" just because it's a tech job
 - Only return a value if you see words like: "degree required", "Bachelor's", "BS/MS", "PhD", etc.
+
+GERMAN TERMS MAPPING:
+- "Abgeschlossenes Studium" (or just "Studium") -> "Bachelor's"
+- "Master Abschluss" / "Diplom" -> "Master's"
+- "Bachelor Abschluss" -> "Bachelor's"
+- "Ausbildung" / "Fachinformatiker" -> "Associate"
+- "Promotion" / "Doktor" -> "PhD"
     """
     return dedent(template).strip()
 
@@ -101,8 +108,7 @@ def job_analysis_batch_prompt(batch_items: list[tuple[str, str, str]]) -> str:
         """
         Analyze each of the following job descriptions independently.
         Return a JSON object with a top-level `results` array.
-        Each entry must include: id, ai_tier (one of: core_ai, applied_ai, ai_integration, none), ai_skills_mentioned, confidence, rationale, hardskills_raw, softskills_raw, min_years_experience (float or null), min_education_level (string or null).
-        IMPORTANT: If confidence >= 0.8, rationale MUST be an empty string "". Only provide rationale if confidence < 0.8.
+        Each entry must include: id, ai_tier (one of: core_ai, applied_ai, ai_integration, none), ai_skills_mentioned, confidence, hardskills_raw, softskills_raw, min_years_experience (float or null), min_education_level (string or null).
         """
     ).strip()
 
@@ -175,8 +181,7 @@ def ai_tier_batch_prompt(batch_items: list[tuple[str, str, str]]) -> str:
     """
     header = dedent(
         """
-        For each job, return: id, ai_tier (core_ai/applied_ai/ai_integration/none), ai_skills_mentioned (list of AI/ML skills), confidence (0.0-1.0), rationale (brief).
-        IMPORTANT: If confidence >= 0.8, rationale MUST be an empty string "". Only provide rationale if confidence < 0.8.
+        For each job, return: id, ai_tier (core_ai/applied_ai/ai_integration/none), ai_skills_mentioned (list of AI/ML skills), confidence (0.0-1.0).
         """
     ).strip()
 
@@ -213,7 +218,7 @@ Extract skills from each job description. Return three lists:
 
 RULES:
 1. Extract ONLY skills explicitly mentioned — do NOT infer
-2. Return raw skill names as written
+2. ALWAYS translate non-English skills to English (e.g., "Softwareentwicklung" -> "Software Development")
 3. If a skill appears multiple times, include it once
     """
     return dedent(template).strip()
@@ -283,6 +288,15 @@ EXAMPLES:
 - "MS/PhD in CS" → education: "Master's" (minimum)
 - No education mentioned in posting → education: **null** (NOT "Bachelor's")
 - "Bachelor's preferred" or "degree a plus" → education: **null** (not required)
+
+GERMAN TERMS MAPPING:
+- "Abgeschlossenes Studium" (or just "Studium") -> "Bachelor's"
+- "Master Abschluss" / "Diplom" -> "Master's"
+- "Bachelor Abschluss" -> "Bachelor's"
+- "Ausbildung" / "Fachinformatiker" -> "Associate"
+- "Promotion" / "Doktor" -> "PhD"
+- "Mehrjährige Berufserfahrung" -> experience: 3.0
+- "Jahre" = "years"
     """
     return dedent(template).strip()
 

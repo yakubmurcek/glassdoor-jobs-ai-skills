@@ -584,7 +584,7 @@ class OpenAIJobAnalyzer:
             results[idx] = JobAnalysisResult(
                 ai_tier=tier.ai_tier if tier else results[idx].ai_tier,
                 confidence=tier.confidence if tier else 0.0,
-                rationale=tier.rationale if tier else "",
+
                 ai_skills_mentioned=tier.ai_skills_mentioned if tier else [],
                 hardskills_raw=skills.hardskills_raw if skills else [],
                 softskills_raw=skills.softskills_raw if skills else [],

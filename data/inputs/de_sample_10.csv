@@ -1,0 +1,861 @@
+﻿id;id_posting;job_title;location;company_id;company;age_in_days;pay_currency;pay_period;salary_min;salary_mid;salary_max;rating;discover_date;job_types;remote_work_types;educations;skills;job_desc_html;job_desc_text;city;state;country;latitude;longitude;ceo;ceo_photo;headquarters;industry;sector;revenue;size;type;year_founded
+1;1.0099E+12;Cyber Security Engineer/Specialist (m/w/d) - Standort Garching;Deutschland;1794418;ITQ GmbH;0;EUR;;;;;4.1;2025-10-07T00:00:00;Full-time;;;English, Systems engineering, Cybersecurity, German;"<p><b>&Uuml;BER UNS</b></p><p>Als unabh&auml;ngiges Dienstleistungsunternehmen stehen wir seit &uuml;ber 25 Jahren f&uuml;r Software und Systems Engineering sowie digitale Ausbildung. Wir unterst&uuml;tzen Unternehmen aus dem Bereich des Maschinen- und Anlagenbaus bei der Verbesserung der Qualit&auml;t von Software-Komponenten und bei der Optimierung der Entwicklungsprozesse. Moderne Ausbildung von jungen Menschen in digitalen Technologien auf internationalem Niveau zeichnet uns aus (www.technikmachtspass.org).</p><p><b>Gestalte die digitale Zukunft sicher mit uns</b></p><p>Unsere spannenden und herausfordernden Kundenprojekte stellen h&ouml;chste Anspr&uuml;che an Sicherheit und Qualit&auml;t &ndash; und genau hier kommst Du ins Spiel. Mit Deinem Know-how und Deiner Leidenschaft f&uuml;r Security Engineering machst Du Digitalisierung zu einem echten Erfolgsfaktor.</p><p>Freue Dich auf abwechslungsreiche Aufgaben, in denen Du nicht nur Deine fachliche Expertise, sondern auch Deine kommunikativen und strategischen F&auml;higkeiten einbringen kannst.</p><p><b>WIR SUCHEN DICH:</b></p><p>Einen <b>begeisterten Cyber Security Engineer/Specialist (m/w/d)</b> in Vollzeit zur Verst&auml;rkung unseres ITQ-Teams am Standort Garching</p><p><b>DEINE AUFGABEN BEI UNS:</b></p><ul><li>Du ber&auml;tst unsere Kunden bei komplexen Cyber Security-Fragestellungen und entwickelst gemeinsam mit ihnen tragf&auml;hige, zukunftssichere Sicherheitsl&ouml;sungen</li><li>Du f&uuml;hrst fundierte Bedrohungs- und Risikoanalysen durch, um Schwachstellen in Produkten und Softwarel&ouml;sungen unserer Kunden systematisch zu identifizieren und zu beheben</li><li>Deine Expertise bringst Du sowohl in Kundenprojekten als auch bei ITQ intern wirkungsvoll ein &ndash; mit dem Ziel, nachhaltige und sichere Systeme sowie Prozesse zu gestalten</li><li>Du entwickelst und implementierst Strategien zur Risikominimierung</li><li>Du hilfst unseren Kunden bei der Implementierung eines Secure Software Engineering Prozesses unter Ber&uuml;cksichtigung von gesetzlichen und regulatorischen Anforderungen sowie von Security Standards</li></ul><p><b>WAS BRINGST DU MIT:</b></p><ul><li>Abgeschlossenes technisches Studium idealerweise IT-Security, (Wirtschafts-) Informatik, Maschinenbau bzw. eine vergleichbare Ausbildung oder relevante Praxiserfahrung</li><li>Mehrj&auml;hrige Erfahrung in Prozessen und Standards im Bereich der Informations- und IT Sicherheit)</li><li>Idealerweise Zertifizierungen wie CISM, CISSP oder ISO27001</li><li>Gerne Erfahrung in Penetration Testing, Attack Surface Reduction und Risk Evaluation</li><li>Zuverl&auml;ssige, analytische, strukturierte Arbeitsweise auch im Team</li><li>Verhandlungssicheres Deutsch und Englisch</li></ul><p><b>UNSER ANGEBOT AN DICH:</b></p><ul><li>Abwechslungsreiche (Kunden-) Projekte mit modernster Technik Individuelle Weiterentwicklungsm&ouml;glichkeiten</li><li>Flache Hierarchien und ein freundschaftliches Miteinander</li><li>Flexible Arbeitszeiten und Home-Office Tage</li><li>Vereinbarkeit von Familie und Beruf</li></ul><p><b>UNSERE ITQ VISION:</b></p><ul><li>Wir schaffen Innovationen mit modernster Technologie</li><li>Wir k&uuml;mmern uns um die Ausbildung und die Zukunft von jungen Leuten Gerda-Stetter-Stiftung</li><li>Wir treiben nachhaltige Projekte f&uuml;r unseren Planeten Circular Society</li><li>Wir wollen durch Innovation wirtschaftliche Kraft wieder in unser Land bringen.</li></ul><p>Dir sind Humor und Spa&szlig; im Job wichtig? Uns auch! Freue dich auf ein unkompliziertes Miteinander, freundliche Kollegen/-innen, eine au&szlig;ergew&ouml;hnliche Atmosph&auml;re und eine sichere, berufliche Zukunft. Dein B&uuml;ro, dein Laptop und dein Team warten schon auf dich.</p><p>Mehr Infos zu ITQ GmbH findest du unter: www.itq.de/karriere</p><p>Art der Stelle: Vollzeit</p><p>Leistungen:</p><ul><li>Betriebliche Altersvorsorge</li><li>Betriebliche Weiterbildung</li><li>Firmenevents</li><li>Flexible Arbeitszeiten</li><li>Mentoring-Programm f&uuml;r Mitarbeiter</li></ul><p>Arbeitsort: Vor Ort</p>";"ÜBER UNS
+Als unabhängiges Dienstleistungsunternehmen stehen wir seit über 25 Jahren für Software und Systems Engineering sowie digitale Ausbildung. Wir unterstützen Unternehmen aus dem Bereich des Maschinen- und Anlagenbaus bei der Verbesserung der Qualität von Software-Komponenten und bei der Optimierung der Entwicklungsprozesse. Moderne Ausbildung von jungen Menschen in digitalen Technologien auf internationalem Niveau zeichnet uns aus (www.technikmachtspass.org).
+Gestalte die digitale Zukunft sicher mit uns
+Unsere spannenden und herausfordernden Kundenprojekte stellen höchste Ansprüche an Sicherheit und Qualität – und genau hier kommst Du ins Spiel. Mit Deinem Know-how und Deiner Leidenschaft für Security Engineering machst Du Digitalisierung zu einem echten Erfolgsfaktor.
+Freue Dich auf abwechslungsreiche Aufgaben, in denen Du nicht nur Deine fachliche Expertise, sondern auch Deine kommunikativen und strategischen Fähigkeiten einbringen kannst.
+WIR SUCHEN DICH:
+Einen
+in Vollzeit zur Verstärkung unseres ITQ-Teams am Standort Garching
+begeisterten Cyber Security Engineer/Specialist (m/w/d)
+DEINE AUFGABEN BEI UNS:
+Du berätst unsere Kunden bei komplexen Cyber Security-Fragestellungen und entwickelst gemeinsam mit ihnen tragfähige, zukunftssichere Sicherheitslösungen
+Du führst fundierte Bedrohungs- und Risikoanalysen durch, um Schwachstellen in Produkten und Softwarelösungen unserer Kunden systematisch zu identifizieren und zu beheben
+Deine Expertise bringst Du sowohl in Kundenprojekten als auch bei ITQ intern wirkungsvoll ein – mit dem Ziel, nachhaltige und sichere Systeme sowie Prozesse zu gestalten
+Du entwickelst und implementierst Strategien zur Risikominimierung
+Du hilfst unseren Kunden bei der Implementierung eines Secure Software Engineering Prozesses unter Berücksichtigung von gesetzlichen und regulatorischen Anforderungen sowie von Security Standards
+WAS BRINGST DU MIT:
+Abgeschlossenes technisches Studium idealerweise IT-Security, (Wirtschafts-) Informatik, Maschinenbau bzw. eine vergleichbare Ausbildung oder relevante Praxiserfahrung
+Mehrjährige Erfahrung in Prozessen und Standards im Bereich der Informations- und IT Sicherheit)
+Idealerweise Zertifizierungen wie CISM, CISSP oder ISO27001
+Gerne Erfahrung in Penetration Testing, Attack Surface Reduction und Risk Evaluation
+Zuverlässige, analytische, strukturierte Arbeitsweise auch im Team
+Verhandlungssicheres Deutsch und Englisch
+UNSER ANGEBOT AN DICH:
+Abwechslungsreiche (Kunden-) Projekte mit modernster Technik Individuelle Weiterentwicklungsmöglichkeiten
+Flache Hierarchien und ein freundschaftliches Miteinander
+Flexible Arbeitszeiten und Home-Office Tage
+Vereinbarkeit von Familie und Beruf
+UNSERE ITQ VISION:
+Wir schaffen Innovationen mit modernster Technologie
+Wir kümmern uns um die Ausbildung und die Zukunft von jungen Leuten Gerda-Stetter-Stiftung
+Wir treiben nachhaltige Projekte für unseren Planeten Circular Society
+Wir wollen durch Innovation wirtschaftliche Kraft wieder in unser Land bringen.
+Dir sind Humor und Spaß im Job wichtig? Uns auch! Freue dich auf ein unkompliziertes Miteinander, freundliche Kollegen/-innen, eine außergewöhnliche Atmosphäre und eine sichere, berufliche Zukunft. Dein Büro, dein Laptop und dein Team warten schon auf dich.
+Mehr Infos zu ITQ GmbH findest du unter: www.itq.de/karriere
+Art der Stelle: Vollzeit
+Leistungen:
+Betriebliche Altersvorsorge
+Betriebliche Weiterbildung
+Firmenevents
+Flexible Arbeitszeiten
+Mentoring-Programm für Mitarbeiter
+Arbeitsort: Vor Ort";;;Germany;51;9;;;Garching b.München, Deutschland;;;Unbekannt/Nicht zutreffend;1 bis 50 Mitarbeiter;Privatunternehmen;
+2;1.00981E+12;Cyber-Security Engineer (w/m/d);Osterholz-Scharmbeck;932902;Matthäi Verden;83;EUR;;;;;4.8;2025-09-16T00:00:00;;;;System administration, Analysis skills, Computer networking;"<div><p>Zur Verst&auml;rkung unseres Teams in der <b>Bremer &Uuml;berseestadt</b> suchen wir Sie als</p>
+<h1 class=""jobSectionHeader""><b>Cyber-Security Engineer </b><b>(w/m/d)</b></h1>
+<div><h2 class=""jobSectionHeader""><b>Ihre Rolle in unserem Team</b></h2>
+<p>Als Cyber-Security Engineer (w/m/d) sind Sie in unserem Team in der <b>Bremer &Uuml;berseestadt</b> verantwortlich f&uuml;r die Planung, Entwicklung und Implementierung technischer Sicherheitsma&szlig;nahmen, um unsere IT-Systeme vor Cyberangriffen und Datenverlust zu sch&uuml;tzen.</p><ul><li>
+Identifikation und Analyse von Sicherheitsschwachstellen in IT-Systemen</li><li>
+Entwicklung und Implementierung von vorbeugenden IT-Sicherheitsma&szlig;nahmen
+</li><li>Kontinuierliche &Uuml;berwachung und Optimierung der Sicherheitsinfrastruktur</li><li>
+Mitarbeit bei der Analyse und Behandlung von Sicherheitsvorf&auml;llen</li><li>
+Unterst&uuml;tzung bei der Entwicklung und Umsetzung technischer Sicherheitsstrategien
+</li><li>Steuerung und Durchf&uuml;hrung regelm&auml;&szlig;iger Sicherheitspr&uuml;fungen</li></ul>
+<h2 class=""jobSectionHeader""><b>Das bringen Sie mit</b></h2>
+<ul><li>Abgeschlossenes Studium der (Wirtschafts-) Informatik, IT-Sicherheit, oder eine abgeschlossene Ausbildung zum Fachinformatiker (w/m/d) oder vergleichbar</li><li>
+Fundierte Erfahrung in der technischen Umsetzung von Sicherheitsl&ouml;sungen</li><li>
+Kenntnisse in Netzwerk- und Systemadministration, relevanten Sicherheitstechnologien, sowie g&auml;ngigen Betriebssystemen und Netzwerktechnologien</li><li>
+Starke analytische F&auml;higkeiten, Aufmerksamkeit f&uuml;r Details und hohes Verantwortungsbewusstsein</li></ul>
+<h2 class=""jobSectionHeader""><b>Das bieten wir Ihnen</b></h2>
+<ul><li>Hervorragende Entwicklungsm&ouml;glichkeiten &amp; individuelle Weiterbildung</li><li>
+Verg&uuml;tung nach Bau-Tarif mit Sonderkonditionen</li><li>
+Betriebliche Krankenzusatzversicherung</li><li>
+M&ouml;glichkeit der Mitarbeiterbeteiligung</li><li>
+Mitarbeiterrabatte &uuml;ber Corporate Benefits</li><li>
+Bike-Leasing</li><li>
+Firmenfitness (Partnerstudios)</li><li>
+Betriebliche Altersvorsorge</li><li>
+Betriebsinterner Arbeits- und Gesundheitsschutz</li><li>
+Und f&uuml;r uns sehr wichtig: wir bieten Ihnen ein Umfeld in einem sehr guten, unterst&uuml;tzenden Betriebsklima!</li></ul>
+<p>#dubisteinervonuns</p>
+<h2 class=""jobSectionHeader""><b>Ihr Kontakt</b></h2>
+<p><b>Matth&auml;i Verden</b><br>
+Bremer Stra&szlig;e 135<br>
+27283 Verden<br>
+</p><p>Tel. +49 4231 766-118<br>
+E-Mail: bewerbung(at)matthaei.de<br>
+</p><div><h2 class=""jobSectionHeader""><b>&Uuml;ber uns</b></h2>
+<p>Die Matth&auml;i-Gruppe ist in allen Disziplinen des Bauens erfolgreich. Gemeinsam mit unseren rund 3.500 Mitarbeitern an &uuml;ber 75 Standorten bauen wir leistungsstarke Infrastrukturen, die der Gesellschaft heute und morgen wertvolle Dienste leisten. Dabei &uuml;berzeugen wir durch Service- und Kundenorientierung und eine Unternehmensphilosophie, die immer den Menschen in den Mittelpunkt stellt.</p></div></div></div>";"Zur Verstärkung unseres Teams in der
+suchen wir Sie als
+Bremer Überseestadt
+Cyber-Security Engineer
+(w/m/d)
+Ihre Rolle in unserem Team
+Als Cyber-Security Engineer (w/m/d) sind Sie in unserem Team in der
+verantwortlich für die Planung, Entwicklung und Implementierung technischer Sicherheitsmaßnahmen, um unsere IT-Systeme vor Cyberangriffen und Datenverlust zu schützen.
+Bremer Überseestadt
+Identifikation und Analyse von Sicherheitsschwachstellen in IT-Systemen
+Entwicklung und Implementierung von vorbeugenden IT-Sicherheitsmaßnahmen
+Kontinuierliche Überwachung und Optimierung der Sicherheitsinfrastruktur
+Mitarbeit bei der Analyse und Behandlung von Sicherheitsvorfällen
+Unterstützung bei der Entwicklung und Umsetzung technischer Sicherheitsstrategien
+Steuerung und Durchführung regelmäßiger Sicherheitsprüfungen
+Das bringen Sie mit
+Abgeschlossenes Studium der (Wirtschafts-) Informatik, IT-Sicherheit, oder eine abgeschlossene Ausbildung zum Fachinformatiker (w/m/d) oder vergleichbar
+Fundierte Erfahrung in der technischen Umsetzung von Sicherheitslösungen
+Kenntnisse in Netzwerk- und Systemadministration, relevanten Sicherheitstechnologien, sowie gängigen Betriebssystemen und Netzwerktechnologien
+Starke analytische Fähigkeiten, Aufmerksamkeit für Details und hohes Verantwortungsbewusstsein
+Das bieten wir Ihnen
+Hervorragende Entwicklungsmöglichkeiten & individuelle Weiterbildung
+Vergütung nach Bau-Tarif mit Sonderkonditionen
+Betriebliche Krankenzusatzversicherung
+Möglichkeit der Mitarbeiterbeteiligung
+Mitarbeiterrabatte über Corporate Benefits
+Bike-Leasing
+Firmenfitness (Partnerstudios)
+Betriebliche Altersvorsorge
+Betriebsinterner Arbeits- und Gesundheitsschutz
+Und für uns sehr wichtig: wir bieten Ihnen ein Umfeld in einem sehr guten, unterstützenden Betriebsklima!
+#dubisteinervonuns
+Ihr Kontakt
+Bremer Straße 135
+27283 Verden
+Matthäi Verden
+Tel. +49 4231 766-118
+E-Mail: bewerbung(at)matthaei.de
+Über uns
+Die Matthäi-Gruppe ist in allen Disziplinen des Bauens erfolgreich. Gemeinsam mit unseren rund 3.500 Mitarbeitern an über 75 Standorten bauen wir leistungsstarke Infrastrukturen, die der Gesellschaft heute und morgen wertvolle Dienste leisten. Dabei überzeugen wir durch Service- und Kundenorientierung und eine Unternehmensphilosophie, die immer den Menschen in den Mittelpunkt stellt.";Osterholz-Scharmbeck;Niedersachsen;Germany;53.230404;8.782826;Andreas Höttler;;Verden (Aller), Deutschland;Bauwesen;Bauwesen, Reparatur- und Wartungsservices;Unbekannt/Nicht zutreffend;1.001 bis 5.000 Mitarbeiter;Unbekannt;1995
+3;1.00934E+12;Detection Engineer (m/w/d);Neckarsulm;10042042;Schwarz IT;316;EUR;;;;;4;2025-09-24T00:00:00;Full-time;;;English, Analysis skills, Splunk, German;"<div><div><div><p>Die Schwarz IT betreut die gesamte digitale Infrastruktur und alle Softwarel&ouml;sungen der Unternehmen der Schwarz Gruppe. Sie ist somit f&uuml;r Auswahl, Bereitstellung und Betrieb sowie Weiterentwicklung von IT-Infrastrukturen, IT-Plattformen und Business-Anwendungen zust&auml;ndig. Um die Fachbereiche durch IT-L&ouml;sungen optimal bei deren Gesch&auml;ftsprozessen zu unterst&uuml;tzen, nimmt die Schwarz IT die Anforderungen der Fachbereiche in Beratungsgespr&auml;chen auf und erarbeitet gemeinsam mit diesen professionelle und leistungsf&auml;hige IT-L&ouml;sungen.</p><p>
+</p><p><b>Werde Teil unseres hybriden Teams am Standort BERLIN oder NECKARSULM.</b></p></div></div><h3 class=""jobSectionHeader""><b>
+Deine Aufgaben</b></h3><div><ul><li>
+Du bist mit verantwortlich f&uuml;r die Weiterentwicklung und Dokumentation unserer Use Cases</li><li>
+Du hilfst die Sicht des Cyber Defense Centers auf IT-Prozesse im Unternehmen mit sinnvollen Logging Policies und Detection Rules zu erweitern</li><li>
+Du erkennst aktiv L&uuml;cken in unserer Detection Coverage und hilfst diese zu schlie&szlig;en</li><li>
+Du &uuml;berpr&uuml;fst bestehende Use Cases auf deren Sinnhaftigkeit und Aktualit&auml;t</li><li>
+Du h&auml;ltst die allgemeine Bedrohungslage im Blick und ermittelst Handlungsempfehlungen</li><li>
+Du entwickelst zusammen mit unseren Incident Respondern Handlungsschritte zur Bearbeitung von Alarmen</li><li>
+Du ber&auml;tst ggf. interne Projekte im Hinblick auf sicherheitstechnische Fragestellungen</li></ul></div><h3 class=""jobSectionHeader""><b>
+Dein Profil</b></h3><div><ul><li>
+Du hast eine Berufsausbildung im IT-Bereich (bevorzugt mit Fokus auf Security) mit entsprechender Weiterbildung oder ein Studium der Fachrichtung Informatik erfolgreich abgeschlossen</li><li>
+Du verf&uuml;gst &uuml;ber Kenntnisse relevanter Standards und Frameworks im Bereich des Detection Engineering wie MITRE ATT&amp;CK und CIS</li><li>
+Du hast Erfahrungen in der Entwicklung von effizienten Suchen und Alarmen in SPL (Splunk Search Processing Language)</li><li>
+Du zeichnest dich durch hohe analytische und kommunikative F&auml;higkeiten aus, arbeitest eigenverantwortlich und bist teamf&auml;hig</li><li>
+Du trittst &uuml;berzeugend auf und kommunizierst dabei sicher in Deutsch und Englisch</li></ul></div><div><p><b>
+Wir freuen uns auf deine Bewerbung!</b></p><p>
+Schwarz Dienstleistung KG &middot; Jana Scherer &middot; Referenz-Nr. 38995
+<br>
+Stiftsbergstra&szlig;e 1 &middot; 74172 Neckarsulm
+<br>
+www.it.schwarz</p></div></div>";"Die Schwarz IT betreut die gesamte digitale Infrastruktur und alle Softwarelösungen der Unternehmen der Schwarz Gruppe. Sie ist somit für Auswahl, Bereitstellung und Betrieb sowie Weiterentwicklung von IT-Infrastrukturen, IT-Plattformen und Business-Anwendungen zuständig. Um die Fachbereiche durch IT-Lösungen optimal bei deren Geschäftsprozessen zu unterstützen, nimmt die Schwarz IT die Anforderungen der Fachbereiche in Beratungsgesprächen auf und erarbeitet gemeinsam mit diesen professionelle und leistungsfähige IT-Lösungen.
+Werde Teil unseres hybriden Teams am Standort BERLIN oder NECKARSULM.
+Deine Aufgaben
+Du bist mit verantwortlich für die Weiterentwicklung und Dokumentation unserer Use Cases
+Du hilfst die Sicht des Cyber Defense Centers auf IT-Prozesse im Unternehmen mit sinnvollen Logging Policies und Detection Rules zu erweitern
+Du erkennst aktiv Lücken in unserer Detection Coverage und hilfst diese zu schließen
+Du überprüfst bestehende Use Cases auf deren Sinnhaftigkeit und Aktualität
+Du hältst die allgemeine Bedrohungslage im Blick und ermittelst Handlungsempfehlungen
+Du entwickelst zusammen mit unseren Incident Respondern Handlungsschritte zur Bearbeitung von Alarmen
+Du berätst ggf. interne Projekte im Hinblick auf sicherheitstechnische Fragestellungen
+Dein Profil
+Du hast eine Berufsausbildung im IT-Bereich (bevorzugt mit Fokus auf Security) mit entsprechender Weiterbildung oder ein Studium der Fachrichtung Informatik erfolgreich abgeschlossen
+Du verfügst über Kenntnisse relevanter Standards und Frameworks im Bereich des Detection Engineering wie MITRE ATT&CK und CIS
+Du hast Erfahrungen in der Entwicklung von effizienten Suchen und Alarmen in SPL (Splunk Search Processing Language)
+Du zeichnest dich durch hohe analytische und kommunikative Fähigkeiten aus, arbeitest eigenverantwortlich und bist teamfähig
+Du trittst überzeugend auf und kommunizierst dabei sicher in Deutsch und Englisch
+Wir freuen uns auf deine Bewerbung!
+Schwarz Dienstleistung KG · Jana Scherer · Referenz-Nr. 38995
+Stiftsbergstraße 1 · 74172 Neckarsulm
+www.it.schwarz";Neckarsulm;Baden-Württemberg;Germany;49.190147;9.223944;;;Neckarsulm, Deutschland;;;Unbekannt/Nicht zutreffend;1.001 bis 5.000 Mitarbeiter;Privatunternehmen;
+4;1.00987E+12;Cyber Security Engineer (m/w/d);Heilbronn;946922;top itservices AG;25;EUR;;;;;3.8;2025-09-11T00:00:00;Full-time, Contract;;;English, IT, Cybersecurity, German;"<div><p>Kompetent, pers&ouml;nlich und initiativ - das ist die top itservices AG. Wir beraten Unternehmen ganzheitlich in ihren IT-Projekten und unterst&uuml;tzen sie durch die professionelle Vermittlung von Fach- und F&uuml;hrungskr&auml;ften. F&uuml;r Festanstellungen, Projekte oder auf Zeit. Sie suchen Ihre n&auml;chste Herausforderung? Dann suchen wir Sie! Gemeinsam m&ouml;chten wir einen signifikanten Mehrwert sowohl f&uuml;r Ihre individuelle Entwicklung als auch f&uuml;r den Erfolg unserer Kunden schaffen!<br>
+<br>
+Nehmen Sie die Herausforderung an und besetzen Sie zusammen mit uns eine vakante Position oder auch ein Projekt als Cyber Security Engineer (m/w/d).</p><h3 class=""jobSectionHeader""><b>
+Cyber Security Engineer (m/w/d)</b></h3><p>
+Heilbronn, Remote | Freiberuflich oder Festanstellung | Ab sofort oder nach Vereinbarung</p><p><b>
+Ihre Aufgaben</b>:</p><ul><li>
+Konzeption und Weiterf&uuml;hrung des Key &amp; Secret Managements und teilweise PKI</li><li>
+Erstellung technischer Implementierungsdesigns f&uuml;r das Key &amp; Secret Management sowie PKI</li><li>
+Aufbau, Automatisierung und Testing von in der Dev- und Test-Plattform</li><li>
+Analyse und Dokumentation der Infrastruktur, der Automatisierung und der Prozesse</li><li>
+Erstellung von technischen Sicherheitsrichtlinien und Schulungsunterlagen</li></ul><p></p><p><b>
+Ihr Profil</b>:</p><ul><li>
+Abgeschlossenes Studium in Informatik oder eine vergleichbare Qualifikation</li><li>
+Mehrj&auml;hrige Berufserfahrung als Cyber Security Engineer mit PKI und Key &amp; Secret Management</li><li>
+Know-how in Implementierungsdesign sowie im Aufbau und Testing von Dev- und Test-Plattformen</li><li>
+Routinierter Umgang mit IT-Infrastrukturen und in der Automatisierung</li><li>
+Sehr gute Deutsch- und gute Englischkenntnisse in Wort und Schrift</li></ul><p></p><p><b>
+Ihre Chance</b>:</p><ul><li>
+Vertrauensvolle &amp; pers&ouml;nliche Begleitung zu jeder Zeit &ndash; Partnerschaftlichkeit ist die Basis unserer Zusammenarbeit</li><li>
+Sichere Festanstellung bei der top itservices AG als Consultant oder rechtssichere Projektdurchf&uuml;hrung im Dienstvertrag</li><li>
+Transparenter und schneller Bewerbungsprozess mit einer verbindlichen R&uuml;ckmeldung binnen 14 Tagen</li><li>
+Zugang zu einem deutschlandweiten Netzwerk und Projekteins&auml;tze bei renommierten Kunden von KMU bis DAX-Konzern</li><li>
+Ortsungebunden und flexibel durch die M&ouml;glichkeit Remote zu arbeiten</li></ul><p></p><p><b>
+Bewerben</b>:<br>
+<br>
+Erkennen Sie sich wieder? Dann senden Sie Ihre Unterlagen unter Angabe der Kennziffer 425-12532 an Frau Nicola Kristen. Erste Informationsw&uuml;nsche und Fragen beantwortet Ihnen Nicola Kristen gern telefonisch unter +49 30 2014497-37. Wir freuen uns bald von Ihnen zu h&ouml;ren!</p><p>
+Zimmerstra&szlig;e 27<br>
+10969 Berlin<br>
++49 30 2014497-0</p><ul><li>Erfolgt im Text zugunsten einer besseren Lesbarkeit keine explizite Differenzierung zwischen der weiblichen, m&auml;nnlichen und weiteren Formen, so sind dennoch stets alle gemeint.</li></ul></div>";"Kompetent, persönlich und initiativ - das ist die top itservices AG. Wir beraten Unternehmen ganzheitlich in ihren IT-Projekten und unterstützen sie durch die professionelle Vermittlung von Fach- und Führungskräften. Für Festanstellungen, Projekte oder auf Zeit. Sie suchen Ihre nächste Herausforderung? Dann suchen wir Sie! Gemeinsam möchten wir einen signifikanten Mehrwert sowohl für Ihre individuelle Entwicklung als auch für den Erfolg unserer Kunden schaffen!
+Nehmen Sie die Herausforderung an und besetzen Sie zusammen mit uns eine vakante Position oder auch ein Projekt als Cyber Security Engineer (m/w/d).
+Cyber Security Engineer (m/w/d)
+Heilbronn, Remote | Freiberuflich oder Festanstellung | Ab sofort oder nach Vereinbarung
+:
+Ihre Aufgaben
+Konzeption und Weiterführung des Key & Secret Managements und teilweise PKI
+Erstellung technischer Implementierungsdesigns für das Key & Secret Management sowie PKI
+Aufbau, Automatisierung und Testing von in der Dev- und Test-Plattform
+Analyse und Dokumentation der Infrastruktur, der Automatisierung und der Prozesse
+Erstellung von technischen Sicherheitsrichtlinien und Schulungsunterlagen
+:
+Ihr Profil
+Abgeschlossenes Studium in Informatik oder eine vergleichbare Qualifikation
+Mehrjährige Berufserfahrung als Cyber Security Engineer mit PKI und Key & Secret Management
+Know-how in Implementierungsdesign sowie im Aufbau und Testing von Dev- und Test-Plattformen
+Routinierter Umgang mit IT-Infrastrukturen und in der Automatisierung
+Sehr gute Deutsch- und gute Englischkenntnisse in Wort und Schrift
+:
+Ihre Chance
+Vertrauensvolle & persönliche Begleitung zu jeder Zeit – Partnerschaftlichkeit ist die Basis unserer Zusammenarbeit
+Sichere Festanstellung bei der top itservices AG als Consultant oder rechtssichere Projektdurchführung im Dienstvertrag
+Transparenter und schneller Bewerbungsprozess mit einer verbindlichen Rückmeldung binnen 14 Tagen
+Zugang zu einem deutschlandweiten Netzwerk und Projekteinsätze bei renommierten Kunden von KMU bis DAX-Konzern
+Ortsungebunden und flexibel durch die Möglichkeit Remote zu arbeiten
+:
+Erkennen Sie sich wieder? Dann senden Sie Ihre Unterlagen unter Angabe der Kennziffer 425-12532 an Frau Nicola Kristen. Erste Informationswünsche und Fragen beantwortet Ihnen Nicola Kristen gern telefonisch unter +49 30 2014497-37. Wir freuen uns bald von Ihnen zu hören!
+Bewerben
+Zimmerstraße 27
+10969 Berlin
++49 30 2014497-0
+Erfolgt im Text zugunsten einer besseren Lesbarkeit keine explizite Differenzierung zwischen der weiblichen, männlichen und weiteren Formen, so sind dennoch stets alle gemeint.";Heilbronn;Baden-Württemberg;Germany;49.140427;9.217953;Christoph Sedlmeir;;Unterhaching, Deutschland;Personalwesen & Personalvermittlungen;Personalwesen;25 bis 100 Millionen $ (USD);201 bis 500 Mitarbeiter;Aktiengesellschaft;1980
+5;1.00987E+12;Network & Cyber Security Engineer (m/w/d)*;Regensburg;10660;Krones;25;EUR;;;;;4.1;2025-09-12T00:00:00;;;;English, IT, Cybersecurity, Communication skills, German;"<div><h1 class=""jobSectionHeader""><b>Network &amp; Cyber Security Engineer (m/w/d)*</b></h1><p><br>
+Als Weltmarktf&uuml;hrer arbeiten wir bei Krones an zukunftsorientierten L&ouml;sungen f&uuml;r nachhaltige und bezahlbare Getr&auml;nke und Lebensmittel &ndash; f&uuml;r alle und &uuml;berall. Um diese in die Welt zu tragen, braucht es dich!</p><p>
+In der internationalen Krones.digital Community arbeiten alle Digital-Expertinnen und Experten der Krones Gruppe zusammen. Wir sind Fans von Cutting-Edge-Technologien und entwickeln innovative Services und L&ouml;sungen, die bei jeder vierten Getr&auml;nkeflasche weltweit zum Einsatz kommen. Uns vereint der Anspruch, mehr als nur H&auml;kchen auf To-do-Listen zu setzen: Wir wollen echten Mehrwert f&uuml;r unsere Kunden schaffen und die Getr&auml;nke- und Liquid-Food-Produktion &uuml;berall da optimieren, wo noch Luft nach oben ist &ndash; und so unseren Beitrag f&uuml;r eine nachhaltige und bessere Zukunft leisten.</p><p>
+Interessiert? Dann werde Teil des Krones Teams &ndash; denn gemeinsam erreichen wir mehr!</p><br>
+<br>
+<h2 class=""jobSectionHeader""><b>Benefits</b></h2>
+<ul><li>Internationale Community mit mehr als 100 Standorten auf der ganzen Welt</li>
+<li>Sinnstiftende Arbeit in der Getr&auml;nke- und Lebensmittelindustrie</li>
+<li>Flexible Arbeitswelt, z.B. Mobiles Arbeiten (bis zu 50 Prozent m&ouml;glich), flexible Arbeitszeiten und modern ausgestattete Arbeitspl&auml;tze</li>
+<li>Attraktive Verg&uuml;tung mit Sonderzahlungen und freiwilligen betrieblichen Zusatzleistungen sowie deutschlandweit exklusiven Rabatten &uuml;ber Krones Rabattplattform</li>
+<li>Betriebliche und pers&ouml;nliche Weiterbildungs- und Umschulungsangebote</li>
+<li>Betriebliches Gesundheitsmanagement mit kostenlosen Check-ups, Kursen oder Vortr&auml;gen</li>
+<li>Betriebseigene Krankenkasse sowie Betriebs&auml;rztlicher Dienst</li>
+<li>Ausgleich zum Arbeitsalltag durch Fitness- und Entspannungskurse, Betriebssportgruppen und Sportevents</li>
+<li>Kantine und Verpflegungsm&ouml;glichkeiten inkl. Verpflegungszuschuss</li>
+<li>Kostenfreie Parkpl&auml;tze, E-Lades&auml;ulen direkt vor Ort und sehr gute Verkehrsanbindung</li>
+<li>J&auml;hrliches Betriebsfest</li><br>
+</ul><br>
+<h2 class=""jobSectionHeader""><b>Das erwartet dich</b></h2><ul><li>
+Interne und externe Beratungst&auml;tigkeiten im Bereich IT/OT Security von Personen im Automatisierungsbereich</li><li>
+Durchsetzung interner IT/OT-Sicherheitsma&szlig;nahmen sowie aktive Vertretung und Kommunikation des Themas gegen&uuml;ber relevanten internen Stakeholdern</li><li>
+Konzeption und Unterst&uuml;tzen der Umsetzung technischer Security-L&ouml;sungen f&uuml;r den Automatisierungsbereich</li><li>
+Sammlung, Kommunikation und Beheben von Security relevanten Problematiken innerhalb des Unternehmen und bei Kunden</li><li>
+Erarbeitung von Methoden und Tools f&uuml;r zuk&uuml;nftige Projekte in der Prozess- und Fertigungsindustrie sowie f&uuml;r kritischen Infrastrukturen</li><li>
+Kontinuierliche Weiterentwicklung spezifischer IT und OT Security-Kenntnisse auf Messen, sowohl pers&ouml;nlich als auch im Team</li><li>
+Vertretung des Themas industrielle Vernetzung und Security f&uuml;r deine Organisation bei Kunden sowie durch Ver&ouml;ffentlichungen und Vortr&auml;ge</li><li>
+Beratung unsere Kunden im Bereich Industrie 4.0, Connectivity und OT/IoT-Sicherheit unserer Digitalisierungsl&ouml;sungen sowie deren Anbindung an das Krones-Ecosystem</li></ul><h2 class=""jobSectionHeader""><b><br>
+Das bringst du mit</b></h2><ul><li>
+Erfolgreich abgeschlossenes Studium der Fachrichtung Wirtschaftsinformatik, Automatisierungstechnik oder ein erfolgreich abgeschlossenes technisches Studium mit Schwerpunkt IT/OT, Security, IT, IT-Sicherheit</li><li>
+Erfahrung in IT/OT Security, Entwicklung und Inbetriebnahme von industriellen IoT-Komponenten oder dem Betreiben von Industrie-Netzwerken</li><li>
+Berufserfahrung in mindestens einem der folgenden Bereiche: Netzwerksicherheit, Client- und Serverh&auml;rtung, Schwachstellenanalyse, Pentesting oder Koordination von Sicherheitsma&szlig;nahmen</li><li>
+Relevante Berufserfahrung in der fertigenden Industrie erforderlich</li><li>
+Ausgezeichnete Kommunikationsf&auml;higkeit und Teamarbeit</li><li>
+Kenntnisse der IEC 62443, CRA erforderlich sowie ISO 27001, BSI Best Practices, DSGVO w&uuml;nschenswert.</li><li>
+Kenntnisse und/oder Zertifizierungen f&uuml;r OT Security L&ouml;sungen (bspw. CSSA, GICSP, ISACA CSP OT, HTB CJCA, CBRCOR etc.) w&uuml;nschenswert</li><li>
+Kundenorientierte Arbeitsweise insb. im Erkl&auml;ren komplexer Sachverhalte zwischen Technik und Fachfremden</li><li>
+Interesse an Wissen &uuml;ber die weltweiten Regularien (USA, APAC, Afrika, ect.)</li><li>
+Gute Deutsch- und Englischkenntnisse in Wort und Schrift</li><li>
+Gelegentliche Reisebereitschaft</li></ul><h2 class=""jobSectionHeader""><b><br>
+Deine Bewerbung</b></h2><p>
+Wir konnten dein Interesse wecken?<b> Dann bewirb dich!</b> Es erwartet dich ein abwechslungsreiches Aufgabengebiet in einem motivierten Team mit attraktiven Rahmenbedingungen.</p><p>
+Hast du noch Fragen? N&auml;here Informationen erh&auml;ltst du vom <b>Recruiting Team, Tel. 09401 70 1573</b>.</p><p>
+Damit wir deine Bewerbung effizient und zeitnah bearbeiten k&ouml;nnen, benutze bitte unser Online-Formular - die Eingabe dauert maximal <b>5 Minuten</b>.</p><p>
+Diese Position ist auch f&uuml;r Menschen mit Schwerbehinderung geeignet.</p><p>
+Wir freuen uns auf deine Bewerbung!</p><ul><li>Aus Gr&uuml;nden der besseren Lesbarkeit verzichten wir auf die gleichzeitige Verwendung genderspezifischer Sprachformen. Unsere Ausschreibung richtet sich an alle Interessenten.</li></ul></div>";"Network & Cyber Security Engineer (m/w/d)*
+Als Weltmarktführer arbeiten wir bei Krones an zukunftsorientierten Lösungen für nachhaltige und bezahlbare Getränke und Lebensmittel – für alle und überall. Um diese in die Welt zu tragen, braucht es dich!
+In der internationalen Krones.digital Community arbeiten alle Digital-Expertinnen und Experten der Krones Gruppe zusammen. Wir sind Fans von Cutting-Edge-Technologien und entwickeln innovative Services und Lösungen, die bei jeder vierten Getränkeflasche weltweit zum Einsatz kommen. Uns vereint der Anspruch, mehr als nur Häkchen auf To-do-Listen zu setzen: Wir wollen echten Mehrwert für unsere Kunden schaffen und die Getränke- und Liquid-Food-Produktion überall da optimieren, wo noch Luft nach oben ist – und so unseren Beitrag für eine nachhaltige und bessere Zukunft leisten.
+Interessiert? Dann werde Teil des Krones Teams – denn gemeinsam erreichen wir mehr!
+Benefits
+Internationale Community mit mehr als 100 Standorten auf der ganzen Welt
+Sinnstiftende Arbeit in der Getränke- und Lebensmittelindustrie
+Flexible Arbeitswelt, z.B. Mobiles Arbeiten (bis zu 50 Prozent möglich), flexible Arbeitszeiten und modern ausgestattete Arbeitsplätze
+Attraktive Vergütung mit Sonderzahlungen und freiwilligen betrieblichen Zusatzleistungen sowie deutschlandweit exklusiven Rabatten über Krones Rabattplattform
+Betriebliche und persönliche Weiterbildungs- und Umschulungsangebote
+Betriebliches Gesundheitsmanagement mit kostenlosen Check-ups, Kursen oder Vorträgen
+Betriebseigene Krankenkasse sowie Betriebsärztlicher Dienst
+Ausgleich zum Arbeitsalltag durch Fitness- und Entspannungskurse, Betriebssportgruppen und Sportevents
+Kantine und Verpflegungsmöglichkeiten inkl. Verpflegungszuschuss
+Kostenfreie Parkplätze, E-Ladesäulen direkt vor Ort und sehr gute Verkehrsanbindung
+Jährliches Betriebsfest
+Das erwartet dich
+Interne und externe Beratungstätigkeiten im Bereich IT/OT Security von Personen im Automatisierungsbereich
+Durchsetzung interner IT/OT-Sicherheitsmaßnahmen sowie aktive Vertretung und Kommunikation des Themas gegenüber relevanten internen Stakeholdern
+Konzeption und Unterstützen der Umsetzung technischer Security-Lösungen für den Automatisierungsbereich
+Sammlung, Kommunikation und Beheben von Security relevanten Problematiken innerhalb des Unternehmen und bei Kunden
+Erarbeitung von Methoden und Tools für zukünftige Projekte in der Prozess- und Fertigungsindustrie sowie für kritischen Infrastrukturen
+Kontinuierliche Weiterentwicklung spezifischer IT und OT Security-Kenntnisse auf Messen, sowohl persönlich als auch im Team
+Vertretung des Themas industrielle Vernetzung und Security für deine Organisation bei Kunden sowie durch Veröffentlichungen und Vorträge
+Beratung unsere Kunden im Bereich Industrie 4.0, Connectivity und OT/IoT-Sicherheit unserer Digitalisierungslösungen sowie deren Anbindung an das Krones-Ecosystem
+Das bringst du mit
+Erfolgreich abgeschlossenes Studium der Fachrichtung Wirtschaftsinformatik, Automatisierungstechnik oder ein erfolgreich abgeschlossenes technisches Studium mit Schwerpunkt IT/OT, Security, IT, IT-Sicherheit
+Erfahrung in IT/OT Security, Entwicklung und Inbetriebnahme von industriellen IoT-Komponenten oder dem Betreiben von Industrie-Netzwerken
+Berufserfahrung in mindestens einem der folgenden Bereiche: Netzwerksicherheit, Client- und Serverhärtung, Schwachstellenanalyse, Pentesting oder Koordination von Sicherheitsmaßnahmen
+Relevante Berufserfahrung in der fertigenden Industrie erforderlich
+Ausgezeichnete Kommunikationsfähigkeit und Teamarbeit
+Kenntnisse der IEC 62443, CRA erforderlich sowie ISO 27001, BSI Best Practices, DSGVO wünschenswert.
+Kenntnisse und/oder Zertifizierungen für OT Security Lösungen (bspw. CSSA, GICSP, ISACA CSP OT, HTB CJCA, CBRCOR etc.) wünschenswert
+Kundenorientierte Arbeitsweise insb. im Erklären komplexer Sachverhalte zwischen Technik und Fachfremden
+Interesse an Wissen über die weltweiten Regularien (USA, APAC, Afrika, ect.)
+Gute Deutsch- und Englischkenntnisse in Wort und Schrift
+Gelegentliche Reisebereitschaft
+Deine Bewerbung
+Wir konnten dein Interesse wecken?
+Es erwartet dich ein abwechslungsreiches Aufgabengebiet in einem motivierten Team mit attraktiven Rahmenbedingungen.
+Dann bewirb dich!
+Hast du noch Fragen? Nähere Informationen erhältst du vom
+.
+Recruiting Team, Tel. 09401 70 1573
+Damit wir deine Bewerbung effizient und zeitnah bearbeiten können, benutze bitte unser Online-Formular - die Eingabe dauert maximal
+.
+5 Minuten
+Diese Position ist auch für Menschen mit Schwerbehinderung geeignet.
+Wir freuen uns auf deine Bewerbung!
+Aus Gründen der besseren Lesbarkeit verzichten wir auf die gleichzeitige Verwendung genderspezifischer Sprachformen. Unsere Ausschreibung richtet sich an alle Interessenten.";Regensburg;Bayern;Germany;49.017445;12.097166;Christoph Klenk;;Neutraubling, Deutschland;Fertigungsbetriebe;Produktion;weniger als 1 Million $ (USD);Mehr als 10.000 Mitarbeiter;Privatunternehmen;1951
+6;1.0097E+12;Defence Digital Engineering - IVV Test Engineer (d/f/m);Immenstaad;10387272;E Airbus Defence and Space GmbH;181;EUR;;;;;3.8;2025-09-09T00:00:00;Full-time;;;Jira, Computer science, Test automation, English, Confluence, German;"<div><b>Job Description:</b>
+<br>
+<br>
+Wir suchen zur Verst&auml;rkung unseres Teams &bdquo;Delivery Germany &amp; International - System IVV&ldquo; einen Test Engineer (d/m/w) f&uuml;r die Definition, Durchf&uuml;hrung und Dokumentation von Pr&uuml;fprozeduren und Testkampagnen, die zur erfolgreichen Auslieferung und Kundenabnahme unserer aktuellen und zuk&uuml;nftigen Projekte innerhalb der Airbus Defence &amp; Space &bdquo;Defence Digital&ldquo; Program-Linie notwendig sind.<br>
+<br>
+Die Mission der Defence Digital Program-Linie bei Airbus Defence and Space ist das Design, die Entwicklung und Lieferung sowohl von cyber-resilienten und verbundenen Command &amp; Control (C2)- als auch Intelligence, Surveillance &amp; Reconnaisance (ISR)-Systemen und L&ouml;sungen f&uuml;r unsere Kunden weltweit. Wirft man einen Blick auf die aktuellen, geo-politischen Risiken und Konflikte in unserer Welt so wird sehr schnell klar, dass unsere F&auml;higkeiten und L&ouml;sungen im Bereich Security Services, Combat Cloud &amp; Connectivity als auch Information &amp; Decision Superiority von gr&ouml;&szlig;ter Bedeutung und in starker Nachfrage sind. Hieraus ergeben sich ganz aktuell und in naher Zukunft zahlreiche M&ouml;glichkeiten und Herausforderungen f&uuml;r neue Projekte.<br>
+<br>
+Als Test Engineer k&uuml;mmern Sie sich um die Definition, Dokumentation, Durchf&uuml;hrung und Analyse von Pr&uuml;fprozeduren und Testf&auml;llen f&uuml;r unsere Softwareprodukte und Systemkomponenten sowie deren zuk&uuml;nftige Evolution in verschiedenen Kundenprojekten. Im Rahmen der f&uuml;r ein Produkt oder Projekt definierten Testaktivit&auml;ten (IVV Plan) werden Sie das IVV Projektteam unterst&uuml;tzen, um kontinuierlich Testergebnisse an Entwickler- und Integrationsteams r&uuml;ckzumelden, den Testerf&uuml;llungsgrad bezogen auf die Anforderungen zu bewerten, sowie m&ouml;gliche Bugs und empfohlene Design&auml;nderungen zu kommunizieren. Hierbei stellen Sie zu jeder Zeit sicher, dass die Testdurchf&uuml;hrung konform zu Airbus-internen und projektspezifischen Standards absolviert werden. Dar&uuml;berhinaus unterst&uuml;tzen Sie die Test-Koordination mit potentiellen Lieferanten oder Partnerorganisationen auf System-/Subsystem-Ebene. Dies beinhaltet beispielsweise die Vorbereitung und Durchf&uuml;hrung von Acceptance Tests (FAT, SAT) und entsprechende Dry-runs im Rahmen einer Kundenabnahme.<br>
+<br>
+Die lokalen Schwerpunkte unseres Teams &ldquo;Delivery Germany &amp; International - System IVV&rdquo; befinden sich an unseren Standorten in Immenstaad und Ulm, wobei wir als internationales Unternehmen sehr eng mit unseren Teams an anderen europ&auml;ischen Standorten sowie auch mit anderen nationalen und internationalen Partnerorganisationen zusammenarbeiten.<br>
+<br>
+Aus diesem Grund gehen wir von einer gelegentlichen Verf&uuml;gbarkeit f&uuml;r Dienstreisen aus und Bewerbende sollten in der Lage sein, entsprechende Reisen durchf&uuml;hren zu k&ouml;nnen.<br>
+<br>
+<b>Standort</b><br>
+<br>
+Am Airbus-Standort in Immenstaad arbeitest du dort an Innovationen, wo andere Urlaub machen. Genie&szlig;e den Panoramablick auf den Bodensee, w&auml;hrend du in unserer Kantine zu Mittag isst. Und nach der Arbeit schlie&szlig;t du dich einer unserer vielen Betriebssportgruppen an, um zu laufen, zu segeln oder Ski zu fahren.
+<br>
+<br>
+<b>Vorteile</b><br>
+<ul><li>
+Attraktive Verg&uuml;tung und Sonderzahlungen
+<br>
+</li><li>30 Tage bezahlter Urlaub und zus&auml;tzliche freie Tage f&uuml;r besondere Anl&auml;sse
+<br>
+</li><li>Ausgezeichnete Weiterbildungsm&ouml;glichkeiten und tolle internationale, konzernweite Entwicklungsperspektiven
+<br>
+</li><li>Sonderleistungen: arbeitgeberfinanzierte Altersversorgung, Mitarbeiteraktienoptionen, verg&uuml;nstigtes Autoleasing, Sonderkonditionen f&uuml;r Versicherungen, Bezuschussung im &ouml;ffentlichen Personennahverkehr, Mitarbeitervorteile bei kooperierenden Unternehmen
+<br>
+</li><li>Vor-Ort-Einrichtungen: Standortnaher Kindergarten, Arzt f&uuml;r Check-ups und andere gesundheitsbezogene Dienstleistungen, Kantine und Cafeteria mit Seeblick
+<br>
+</li><li>Betriebssportgruppen und Freizeitaktivit&auml;ten wie Segeln, Tennis und Wintersport
+<br>
+</li><li>Vereinbarkeit von Familie &amp; Beruf (Jobsharing, Teilzeitmodelle, flexible Arbeitszeiten, individuelle Auszeit)
+<br>
+</li>Arbeiten in einem diversen Umfeld, mit mehr als 140 Nationalit&auml;ten, in dem jede Stimme geh&ouml;rt wird<br>
+<li>
+<br>
+</li></ul><br>
+<br>
+<b>Aufgaben und Verantwortlichkeiten</b><br>
+<ul><li>
+Umsetzung von L2 (System) und L3 (Software) Anforderungen in valide Testf&auml;lle und Pr&uuml;fprozeduren f&uuml;r die Software- und Systemintegration<br>
+</li><li>
+Umsetzung HW-spezifischer Integrationsanforderungen in valide Testf&auml;lle und Pr&uuml;fprozeduren f&uuml;r die Durchf&uuml;hrung von HW-Integrationstests<br>
+</li><li>
+Ausf&uuml;hren von Testf&auml;llen und Pr&uuml;fprozeduren in Integrations- und Referenzanlagen sowie ggf. an Kundenstandorten inkl. Auswertung der Testergebnisse<br>
+</li><li>
+Erstellung und Review der geforderten Testdokumentation (Pr&uuml;fprozeduren, Testf&auml;lle, Problem-Reports, Test- Reports) f&uuml;r die Testkampagnen<br>
+</li><li>
+Unterst&uuml;tzung im Bereich Testautomatisierung</li></ul><br>
+<b>
+Erforderliche Kenntnisse und Qualifikationen</b><br>
+<ul><li>
+Master Abschluss im Bereich Informatik, Telekommunikation, Luft- und Raumfahrt, Automotive oder &auml;hnlicher Studiengang<br>
+</li><li>
+Fundierte Kenntnisse im Bereich Software- und System-Test, vorzugsweise in den Bereichen C2, ISR, Battle Management oder vergleichbare Systeme (Qualifizierung gem&auml;&szlig; ISTQB&reg; w&auml;re w&uuml;nschenswert)<br>
+</li><li>
+Fundierte Kenntnisse im Umgang mit Anforderungs- sowie Testmanagement- und Testdurchf&uuml;hrungs-Werkzeugen (z.B. Rationale DOORS, Octane, Quality Center, QFTest, Jira/Confluence etc.)
+<br>
+</li><li>Erfahrung im Bereich Testautomatisierung (w&uuml;nschenswert)<br>
+</li><li>
+Team Player, der sich gern in ein internationales Team einbringt und nicht vor einer Multi-Projekt Umgebung zur&uuml;ckscheut<br>
+</li><li>
+Gute Deutsch- und Englisch-Kenntnisse</li></ul><br>
+Keine 100%ige &Uuml;bereinstimmung? Kein Grund zur Sorge! Airbus unterst&uuml;tzt deine pers&ouml;nliche Entwicklung mit ma&szlig;geschneiderten Entwicklungsl&ouml;sungen.
+<br>
+<br>
+Bring deine Karriere auf ein neues Level und bewirb dich jetzt online !
+<br>
+<br>
+#CI_2025
+<br>
+<br>
+This job requires an awareness of any potential compliance risks and a commitment to act with integrity, as the foundation for the Company&rsquo;s success, reputation and sustainable growth.<br>
+<br>
+<b>Company:</b>
+<br>
+Airbus Defence and Space GmbH<br>
+<br>
+<b>Employment Type:</b><br>
+Permanent<br>
+-<br>
+<br>
+<b>Experience Level:</b><br>
+Professional<br>
+<br>
+<b>Job Family:</b><br>
+Software Engineering
+<br>
+<br>
+By submitting your CV or application you are consenting to Airbus using and storing information about you for monitoring purposes relating to your application or future employment. This information will only be used by Airbus.<br>
+Airbus is committed to achieving workforce diversity and creating an inclusive working environment. We welcome all applications irrespective of social and cultural background, age, gender, disability, sexual orientation or religious belief.<br>
+<br>
+Airbus is, and always has been, committed to equal opportunities for all. As such, we will never ask for any type of monetary exchange in the frame of a recruitment process. Any impersonation of Airbus to do so should be reported to emsom@airbus.com .
+<br>
+<br>
+At Airbus, we support you to work, connect and collaborate more easily and flexibly. Wherever possible, we foster flexible working arrangements to stimulate innovative thinking.</div>";"Wir suchen zur Verstärkung unseres Teams „Delivery Germany & International - System IVV“ einen Test Engineer (d/m/w) für die Definition, Durchführung und Dokumentation von Prüfprozeduren und Testkampagnen, die zur erfolgreichen Auslieferung und Kundenabnahme unserer aktuellen und zukünftigen Projekte innerhalb der Airbus Defence & Space „Defence Digital“ Program-Linie notwendig sind.
+Die Mission der Defence Digital Program-Linie bei Airbus Defence and Space ist das Design, die Entwicklung und Lieferung sowohl von cyber-resilienten und verbundenen Command & Control (C2)- als auch Intelligence, Surveillance & Reconnaisance (ISR)-Systemen und Lösungen für unsere Kunden weltweit. Wirft man einen Blick auf die aktuellen, geo-politischen Risiken und Konflikte in unserer Welt so wird sehr schnell klar, dass unsere Fähigkeiten und Lösungen im Bereich Security Services, Combat Cloud & Connectivity als auch Information & Decision Superiority von größter Bedeutung und in starker Nachfrage sind. Hieraus ergeben sich ganz aktuell und in naher Zukunft zahlreiche Möglichkeiten und Herausforderungen für neue Projekte.
+Als Test Engineer kümmern Sie sich um die Definition, Dokumentation, Durchführung und Analyse von Prüfprozeduren und Testfällen für unsere Softwareprodukte und Systemkomponenten sowie deren zukünftige Evolution in verschiedenen Kundenprojekten. Im Rahmen der für ein Produkt oder Projekt definierten Testaktivitäten (IVV Plan) werden Sie das IVV Projektteam unterstützen, um kontinuierlich Testergebnisse an Entwickler- und Integrationsteams rückzumelden, den Testerfüllungsgrad bezogen auf die Anforderungen zu bewerten, sowie mögliche Bugs und empfohlene Designänderungen zu kommunizieren. Hierbei stellen Sie zu jeder Zeit sicher, dass die Testdurchführung konform zu Airbus-internen und projektspezifischen Standards absolviert werden. Darüberhinaus unterstützen Sie die Test-Koordination mit potentiellen Lieferanten oder Partnerorganisationen auf System-/Subsystem-Ebene. Dies beinhaltet beispielsweise die Vorbereitung und Durchführung von Acceptance Tests (FAT, SAT) und entsprechende Dry-runs im Rahmen einer Kundenabnahme.
+Die lokalen Schwerpunkte unseres Teams “Delivery Germany & International - System IVV” befinden sich an unseren Standorten in Immenstaad und Ulm, wobei wir als internationales Unternehmen sehr eng mit unseren Teams an anderen europäischen Standorten sowie auch mit anderen nationalen und internationalen Partnerorganisationen zusammenarbeiten.
+Aus diesem Grund gehen wir von einer gelegentlichen Verfügbarkeit für Dienstreisen aus und Bewerbende sollten in der Lage sein, entsprechende Reisen durchführen zu können.
+Am Airbus-Standort in Immenstaad arbeitest du dort an Innovationen, wo andere Urlaub machen. Genieße den Panoramablick auf den Bodensee, während du in unserer Kantine zu Mittag isst. Und nach der Arbeit schließt du dich einer unserer vielen Betriebssportgruppen an, um zu laufen, zu segeln oder Ski zu fahren.
+Keine 100%ige Übereinstimmung? Kein Grund zur Sorge! Airbus unterstützt deine persönliche Entwicklung mit maßgeschneiderten Entwicklungslösungen.
+Bring deine Karriere auf ein neues Level und bewirb dich jetzt online !
+#CI_2025
+This job requires an awareness of any potential compliance risks and a commitment to act with integrity, as the foundation for the Company’s success, reputation and sustainable growth.
+Airbus Defence and Space GmbH
+Permanent
+-
+Professional
+Software Engineering
+By submitting your CV or application you are consenting to Airbus using and storing information about you for monitoring purposes relating to your application or future employment. This information will only be used by Airbus.
+Airbus is committed to achieving workforce diversity and creating an inclusive working environment. We welcome all applications irrespective of social and cultural background, age, gender, disability, sexual orientation or religious belief.
+Airbus is, and always has been, committed to equal opportunities for all. As such, we will never ask for any type of monetary exchange in the frame of a recruitment process. Any impersonation of Airbus to do so should be reported to emsom@airbus.com .
+At Airbus, we support you to work, connect and collaborate more easily and flexibly. Wherever possible, we foster flexible working arrangements to stimulate innovative thinking.
+Job Description:
+Standort
+Vorteile
+Arbeiten in einem diversen Umfeld, mit mehr als 140 Nationalitäten, in dem jede Stimme gehört wird
+Attraktive Vergütung und Sonderzahlungen
+30 Tage bezahlter Urlaub und zusätzliche freie Tage für besondere Anlässe
+Ausgezeichnete Weiterbildungsmöglichkeiten und tolle internationale, konzernweite Entwicklungsperspektiven
+Sonderleistungen: arbeitgeberfinanzierte Altersversorgung, Mitarbeiteraktienoptionen, vergünstigtes Autoleasing, Sonderkonditionen für Versicherungen, Bezuschussung im öffentlichen Personennahverkehr, Mitarbeitervorteile bei kooperierenden Unternehmen
+Vor-Ort-Einrichtungen: Standortnaher Kindergarten, Arzt für Check-ups und andere gesundheitsbezogene Dienstleistungen, Kantine und Cafeteria mit Seeblick
+Betriebssportgruppen und Freizeitaktivitäten wie Segeln, Tennis und Wintersport
+Vereinbarkeit von Familie & Beruf (Jobsharing, Teilzeitmodelle, flexible Arbeitszeiten, individuelle Auszeit)
+Aufgaben und Verantwortlichkeiten
+Umsetzung von L2 (System) und L3 (Software) Anforderungen in valide Testfälle und Prüfprozeduren für die Software- und Systemintegration
+Umsetzung HW-spezifischer Integrationsanforderungen in valide Testfälle und Prüfprozeduren für die Durchführung von HW-Integrationstests
+Ausführen von Testfällen und Prüfprozeduren in Integrations- und Referenzanlagen sowie ggf. an Kundenstandorten inkl. Auswertung der Testergebnisse
+Erstellung und Review der geforderten Testdokumentation (Prüfprozeduren, Testfälle, Problem-Reports, Test- Reports) für die Testkampagnen
+Unterstützung im Bereich Testautomatisierung
+Erforderliche Kenntnisse und Qualifikationen
+Master Abschluss im Bereich Informatik, Telekommunikation, Luft- und Raumfahrt, Automotive oder ähnlicher Studiengang
+Fundierte Kenntnisse im Bereich Software- und System-Test, vorzugsweise in den Bereichen C2, ISR, Battle Management oder vergleichbare Systeme (Qualifizierung gemäß ISTQB® wäre wünschenswert)
+Fundierte Kenntnisse im Umgang mit Anforderungs- sowie Testmanagement- und Testdurchführungs-Werkzeugen (z.B. Rationale DOORS, Octane, Quality Center, QFTest, Jira/Confluence etc.)
+Erfahrung im Bereich Testautomatisierung (wünschenswert)
+Team Player, der sich gern in ein internationales Team einbringt und nicht vor einer Multi-Projekt Umgebung zurückscheut
+Gute Deutsch- und Englisch-Kenntnisse
+Company:
+Employment Type:
+Experience Level:
+Job Family:";Immenstaad;Baden-Wurttemberg;Germany;47.666622;9.37146;;;Getafe, Spanien;;;Unbekannt/Nicht zutreffend;1 bis 50 Mitarbeiter;Unbekannt;
+7;1.00974E+12;Security Engineer - Operation Center (m/w/d);Essen;3751217;Westnetz GmbH;152;EUR;;;;;4.8;2025-10-07T00:00:00;Full-time;;;Cybersecurity;"<div><p><b>Du. Mit uns?</b> F&uuml;r unser <b>Team Security, Standort Wesseling, </b><b>Arnsberg</b>, <b>Bad Kreuznach</b>, <b>Dortmund</b>, <b>D&uuml;ren</b>, <b>M&uuml;nster, Osnabr&uuml;ck, Siegen, Idar-Oberstein, Trier, Saffig, Wesel, Essen</b> oder <b>Neuss</b><b>, </b>suchen wir zum n&auml;chstm&ouml;glichen Zeitpunkt engagierte Verst&auml;rkung.</p><p>
+Deine Arbeit sollte sinnstiftend sein und Du willst Dich mit all Deinen Facetten einbringen? Dann bist Du bei uns richtig. Wie Du bist, was Du f&uuml;hlst: Wir sehen Dich.</p><p>
+Die Westnetz GmbH, eine 100-prozentige Tochter der Westenergie AG, ist der gr&ouml;&szlig;te Verteilnetzbetreiber Deutschlands. Mit &uuml;ber 6.000 Mitarbeiter*innen und unserer offenen Unternehmenskultur stellen wir die zuverl&auml;ssige Versorgung unserer Kundinnen und Kunden sicher &ndash; rund um die Uhr, an 365 Tagen im Jahr. Wenn Du mit uns die Energiewende mitgestalten, die Lebensqualit&auml;t von Menschen verbessern und die regionale Infrastruktur st&auml;rken willst, findest Du bei uns Raum zur Verwirklichung.</p>
+<p>Wir, das Team Security, suchen kreative Entdecker*innen, zuverl&auml;ssige Macher*innen, Kundenversteher*innen, Auf-mich-und-andere-Achter*innen und echte Teamplayer*innen, die Lust darauf haben, gemeinsam mit uns ganzheitliche technologie&uuml;bergreifende Sicherheitsl&ouml;sungen der n&auml;chsten Generation f&uuml;r die Anforderungen der Energiewende von heute und morgen zu schaffen &ndash; passgenau, hocheffizient und sicher! Wir sind ein hybrides Team, welches sich &uuml;ber die Standorte Arnsberg, Bad Kreuznach, Berzdorf, Dortmund, D&uuml;ren, M&uuml;nster und Neuss erstreckt und legen daher Wert auf eine gute hybride Arbeitskultur, welche sich durch Transparenz, Hilfsbereitschaft, Wertsch&auml;tzung, offene Kommunikation und Spa&szlig;, auszeichnet. Als gr&ouml;&szlig;ter Verteilnetzbetreiber Deutschlands sind wir Dreh- und Angelpunkt der Energiewende und tragen mit unserem Bereich Systemf&uuml;hrung &ndash; Nachrichtentechnik ma&szlig;geblich zur sicheren Digitalisierung und Smartifizierung unserer Energienetze bei. Du m&ouml;chtest Dir einen ersten Eindruck &uuml;ber uns verschaffen? &ndash; Dann klicke hier</p><p><b>
+Daf&uuml;r stehst Du auf:</b></p><ul><li><p>
+Du analysierst kontinuierlich die neuesten Cyber-Bedrohungen und suchst proaktiv nach Anzeichen von Angriffen. Dabei nutzt Du Tools und Methoden, um potentielle Schwachstellen zu identifizieren und zu beheben</p></li><li><p>
+Du bist zur Stelle, wenn ein sicherheitsrelevanter Vorfall auftritt, um ihn gr&uuml;ndlich zu untersuchen. Dabei analysierst Du die Ursache des Vorfalls, bewertest den Schaden und ergreifst Gegenma&szlig;nahmen</p></li><li><p>
+Du wirst die Erkennungslogik f&uuml;r sicherheitsrelevante Ereignisse st&auml;ndig &uuml;berpr&uuml;fen und optimieren</p></li><li><p>
+Du arbeitest aktiv an der Weiterentwicklung unserer IT-Sicherheitsinfrastruktur, was die Implementierung neuer Technologien und Prozesse beinhaltet, um unsere Systeme zukunftssicher zu gestalten</p></li><li><p>
+Du nimmst regelm&auml;&szlig;ig am Bereitschaftsdienst teil, um sicherzustellen, dass wir jederzeit auf potentielle Gef&auml;hrdungssituationen reagieren k&ouml;nnen</p></li><li><p>
+Du wirst als ein Teil in der gruppenweiten Cyber-Sicherheitsorganisation arbeiten und in Konzernarbeitsgruppen mitwirken. Das bietet Dir die M&ouml;glichkeit, Dich mit Expert*innen aus verschiedenen Bereichen auszutauschen</p></li></ul><p><b>
+Das bringst Du mit:
+</b></p><ul><li><p>Du hast ein abgeschlossenes Studium der Cyber Security, Informatik, Nachrichtentechnik oder vergleichbar</p></li><li><p>
+Du bringst idealerweise Erfahrung im Bereich Security Operations, insbesondere mit Technologien wie CWPP, SIEM, IDS, EDR und SOAR mit</p></li><li><p>
+Du begeisterst Dich f&uuml;r Operative Technologien und hast fundierte Kenntnisse in SCADA, HMI, PLC sowie RTU</p></li><li><p>
+Du bist in der Lage komplexe Sachverhalte zu analysieren und mit Prozessen zu verkn&uuml;pfen</p></li><li><p>
+Du stehst Ver&auml;nderungen positiv gegen&uuml;ber und nutzt die Chancen, die sich daraus ergeben</p></li><li><p>
+Du positionierst Dich auch in schwierigen Situationen als kompetenter Ansprechpartner und kannst Inhalte verst&auml;ndlich und Adressatengerecht kommunizieren</p></li><li><p>
+Du achtest auf das eigene Wohlbefinden und eine gute Work-Life-Balance</p></li></ul><p><b>
+Das bieten wir Dir:</b></p><ul><li><p>
+Die M&ouml;glichkeit <b>Verantwortung </b>zu &uuml;bernehmen, Entscheidungen in Deinem Verantwortungsrahmen eigenst&auml;ndig zu f&auml;llen und umzusetzen</p></li><li><p>
+Deine <b>Work-Life-Balance</b> ist uns wichtig! Daher gibt es bei uns flexible Arbeitszeiten sowie 30 Tage Jahresurlaub. Bei uns kannst Du au&szlig;erdem Dein&quot;Home&quot; zum &quot;Office&quot; machen, um noch flexibler zu werden</p></li><li><p>
+Die Gelegenheit in diesem <b>Verantwortungsbereich zu wachsen</b> und Deine Kenntnisse, Kompetenzen und Ideen dar&uuml;ber hinaus einbringen zu k&ouml;nnen</p></li><li><p>
+Die M&ouml;glichkeit an <b>&uuml;bergreifenden Projekten</b> teilzunehmen und sich unternehmensweit zu vernetzen</p></li><li><p>
+Du bist Teil eines <b>motivierten und dynamischen Teams</b>, dass die Herausforderungen der Energiewende gestaltet</p></li><li><p>
+Wenn es um den Erfolg im Job geht, ist die <b>Vereinbarkeit von Beruf und Familie </b>f&uuml;r viele entscheidend. Westnetz steht Dir dabei als zertifizierter familienfreundlicher Arbeitgeber in unterschiedlichen Lebenslagen zur Seite</p></li><li><p><b>
+Unser Tarifvertrag bietet Sicherheit: </b>Wir bieten Dir eine attraktive Verg&uuml;tung sowie viele Zusatzleistungen: Zuschl&auml;ge f&uuml;r Rufbereitschaft, Weihnachtsgeld, Zuschuss zum Krankengeld, eine Unfallversicherung und eine arbeitgeberfinanzierte Altersversorgung
+</p></li></ul><p><b>Bist Du interessiert?</b><br>
+Dann bewirb Dich bitte ausschlie&szlig;lich online (Anzeigencode: 236351).</p>
+<p>Mit unserer offenen und wertsch&auml;tzenden Unternehmenskultur hei&szlig;en wir alle Menschen willkommen. Denn wir sind davon &uuml;berzeugt, dass uns Unterschiede bereichern &ndash; sei es in Herkunft, Geschlecht, Alter, Lebens- und Arbeitsstilen, Talenten, F&auml;higkeiten und Einschr&auml;nkungen.</p>
+<p>Wir freuen uns auf Deine vollst&auml;ndige und aussagekr&auml;ftige Bewerbung mit Lebenslauf und relevanten Zeugnissen. Um Dir den Bewerbungsprozess zu erleichtern, verzichten wir auf ein Anschreiben.</p>
+<p><b>Westnetz GmbH</b> Maximilian Meister, +49 271 584-2057
+<br>
+Deine Fragen beantworten wir auch gerne unter maximilian.meister@westnetz.de</p>
+<p><b>Wir sind ein Top-Arbeitgeber!</b></p>
+<p><b>&Uuml;berzeuge Dich selbst:</b><br>
+https://www.kununu.com/de/westnetz</p>
+<p><b>Was du sonst noch wissen solltest:</b></p>
+<p><b>Besch&auml;ftigungsart:</b> Unbefristet</p>
+<p><b>Arbeitsmodell:</b> Hybrid Remote</p>
+<p><b>Besch&auml;ftigungsgrad:</b> f</p>
+<p><b>Gesellschaft:</b> Westnetz GmbH</p>
+<h3 class=""jobSectionHeader""><b>
+Inklusion</b></h3>
+<p>
+Uns ist wichtig, Menschen mit Behinderung ein faires Bewerbungsverfahren zu erm&ouml;glichen, in dem sie ihr Bestes zeigen k&ouml;nnen. Daher wird unsere Schwerbehindertenvertretung fr&uuml;hzeitig in das Verfahren einbezogen. Bitte teile uns &uuml;ber das Bewerbungsformular mit, ob du technische oder organisatorische Anpassungen f&uuml;r das Bewerbungsverfahren ben&ouml;tigst. Wir stellen diese gern zur Verf&uuml;gung.</p>
+<p>
+Wenn es dir nicht m&ouml;glich ist, dich online zu bewerben und du stattdessen mit jemandem sprechen m&ouml;chtest, kontaktiere bitte deinen lokalen Recruiter.</p></div>";"Für unser
+,
+,
+,
+,
+oder
+suchen wir zum nächstmöglichen Zeitpunkt engagierte Verstärkung.
+Du. Mit uns?
+Team Security, Standort Wesseling,
+Arnsberg
+Bad Kreuznach
+Dortmund
+Düren
+Münster, Osnabrück, Siegen, Idar-Oberstein, Trier, Saffig, Wesel, Essen
+Neuss
+,
+Deine Arbeit sollte sinnstiftend sein und Du willst Dich mit all Deinen Facetten einbringen? Dann bist Du bei uns richtig. Wie Du bist, was Du fühlst: Wir sehen Dich.
+Die Westnetz GmbH, eine 100-prozentige Tochter der Westenergie AG, ist der größte Verteilnetzbetreiber Deutschlands. Mit über 6.000 Mitarbeiter*innen und unserer offenen Unternehmenskultur stellen wir die zuverlässige Versorgung unserer Kundinnen und Kunden sicher – rund um die Uhr, an 365 Tagen im Jahr. Wenn Du mit uns die Energiewende mitgestalten, die Lebensqualität von Menschen verbessern und die regionale Infrastruktur stärken willst, findest Du bei uns Raum zur Verwirklichung.
+Wir, das Team Security, suchen kreative Entdecker*innen, zuverlässige Macher*innen, Kundenversteher*innen, Auf-mich-und-andere-Achter*innen und echte Teamplayer*innen, die Lust darauf haben, gemeinsam mit uns ganzheitliche technologieübergreifende Sicherheitslösungen der nächsten Generation für die Anforderungen der Energiewende von heute und morgen zu schaffen – passgenau, hocheffizient und sicher! Wir sind ein hybrides Team, welches sich über die Standorte Arnsberg, Bad Kreuznach, Berzdorf, Dortmund, Düren, Münster und Neuss erstreckt und legen daher Wert auf eine gute hybride Arbeitskultur, welche sich durch Transparenz, Hilfsbereitschaft, Wertschätzung, offene Kommunikation und Spaß, auszeichnet. Als größter Verteilnetzbetreiber Deutschlands sind wir Dreh- und Angelpunkt der Energiewende und tragen mit unserem Bereich Systemführung – Nachrichtentechnik maßgeblich zur sicheren Digitalisierung und Smartifizierung unserer Energienetze bei. Du möchtest Dir einen ersten Eindruck über uns verschaffen? – Dann klicke hier
+Dafür stehst Du auf:
+Du analysierst kontinuierlich die neuesten Cyber-Bedrohungen und suchst proaktiv nach Anzeichen von Angriffen. Dabei nutzt Du Tools und Methoden, um potentielle Schwachstellen zu identifizieren und zu beheben
+Du bist zur Stelle, wenn ein sicherheitsrelevanter Vorfall auftritt, um ihn gründlich zu untersuchen. Dabei analysierst Du die Ursache des Vorfalls, bewertest den Schaden und ergreifst Gegenmaßnahmen
+Du wirst die Erkennungslogik für sicherheitsrelevante Ereignisse ständig überprüfen und optimieren
+Du arbeitest aktiv an der Weiterentwicklung unserer IT-Sicherheitsinfrastruktur, was die Implementierung neuer Technologien und Prozesse beinhaltet, um unsere Systeme zukunftssicher zu gestalten
+Du nimmst regelmäßig am Bereitschaftsdienst teil, um sicherzustellen, dass wir jederzeit auf potentielle Gefährdungssituationen reagieren können
+Du wirst als ein Teil in der gruppenweiten Cyber-Sicherheitsorganisation arbeiten und in Konzernarbeitsgruppen mitwirken. Das bietet Dir die Möglichkeit, Dich mit Expert*innen aus verschiedenen Bereichen auszutauschen
+Das bringst Du mit:
+Du hast ein abgeschlossenes Studium der Cyber Security, Informatik, Nachrichtentechnik oder vergleichbar
+Du bringst idealerweise Erfahrung im Bereich Security Operations, insbesondere mit Technologien wie CWPP, SIEM, IDS, EDR und SOAR mit
+Du begeisterst Dich für Operative Technologien und hast fundierte Kenntnisse in SCADA, HMI, PLC sowie RTU
+Du bist in der Lage komplexe Sachverhalte zu analysieren und mit Prozessen zu verknüpfen
+Du stehst Veränderungen positiv gegenüber und nutzt die Chancen, die sich daraus ergeben
+Du positionierst Dich auch in schwierigen Situationen als kompetenter Ansprechpartner und kannst Inhalte verständlich und Adressatengerecht kommunizieren
+Du achtest auf das eigene Wohlbefinden und eine gute Work-Life-Balance
+Das bieten wir Dir:
+Die Möglichkeit
+zu übernehmen, Entscheidungen in Deinem Verantwortungsrahmen eigenständig zu fällen und umzusetzen
+Verantwortung
+Deine
+ist uns wichtig! Daher gibt es bei uns flexible Arbeitszeiten sowie 30 Tage Jahresurlaub. Bei uns kannst Du außerdem Dein""Home"" zum ""Office"" machen, um noch flexibler zu werden
+Work-Life-Balance
+Die Gelegenheit in diesem
+und Deine Kenntnisse, Kompetenzen und Ideen darüber hinaus einbringen zu können
+Verantwortungsbereich zu wachsen
+Die Möglichkeit an
+teilzunehmen und sich unternehmensweit zu vernetzen
+übergreifenden Projekten
+Du bist Teil eines
+, dass die Herausforderungen der Energiewende gestaltet
+motivierten und dynamischen Teams
+Wenn es um den Erfolg im Job geht, ist die
+für viele entscheidend. Westnetz steht Dir dabei als zertifizierter familienfreundlicher Arbeitgeber in unterschiedlichen Lebenslagen zur Seite
+Vereinbarkeit von Beruf und Familie
+Wir bieten Dir eine attraktive Vergütung sowie viele Zusatzleistungen: Zuschläge für Rufbereitschaft, Weihnachtsgeld, Zuschuss zum Krankengeld, eine Unfallversicherung und eine arbeitgeberfinanzierte Altersversorgung
+Unser Tarifvertrag bietet Sicherheit:
+Dann bewirb Dich bitte ausschließlich online (Anzeigencode: 236351).
+Bist Du interessiert?
+Mit unserer offenen und wertschätzenden Unternehmenskultur heißen wir alle Menschen willkommen. Denn wir sind davon überzeugt, dass uns Unterschiede bereichern – sei es in Herkunft, Geschlecht, Alter, Lebens- und Arbeitsstilen, Talenten, Fähigkeiten und Einschränkungen.
+Wir freuen uns auf Deine vollständige und aussagekräftige Bewerbung mit Lebenslauf und relevanten Zeugnissen. Um Dir den Bewerbungsprozess zu erleichtern, verzichten wir auf ein Anschreiben.
+Maximilian Meister, +49 271 584-2057
+Deine Fragen beantworten wir auch gerne unter maximilian.meister@westnetz.de
+Westnetz GmbH
+Wir sind ein Top-Arbeitgeber!
+https://www.kununu.com/de/westnetz
+Überzeuge Dich selbst:
+Was du sonst noch wissen solltest:
+Unbefristet
+Beschäftigungsart:
+Hybrid Remote
+Arbeitsmodell:
+f
+Beschäftigungsgrad:
+Westnetz GmbH
+Gesellschaft:
+Inklusion
+Uns ist wichtig, Menschen mit Behinderung ein faires Bewerbungsverfahren zu ermöglichen, in dem sie ihr Bestes zeigen können. Daher wird unsere Schwerbehindertenvertretung frühzeitig in das Verfahren einbezogen. Bitte teile uns über das Bewerbungsformular mit, ob du technische oder organisatorische Anpassungen für das Bewerbungsverfahren benötigst. Wir stellen diese gern zur Verfügung.
+Wenn es dir nicht möglich ist, dich online zu bewerben und du stattdessen mit jemandem sprechen möchtest, kontaktiere bitte deinen lokalen Recruiter.";Essen;Nordrhein-Westfalen;Germany;51.455845;7.012583;Jürgen Grönner;https://media.glassdoor.com/people/sql/3751217/westnetz-ceo1701762414984.png;Dortmund, Deutschland;Energie- & Versorgungswirtschaft;Energie, Bergbau, Versorgungswirtschaft;5 bis 10 Milliarden $ (USD);5.001 bis 10.000 Mitarbeiter;Tochtergesellschaft oder Geschäftsbereich;2013
+8;1.00988E+12;Administratorin/Administrator (m/w/d) im Security Operations Center (SOC Engineer);Düsseldorf;935367;Information und Technik Nordrhein-Westfalen (IT.NRW);14;EUR;;;;;3.7;2025-09-22T00:00:00;Full-time, Part-time;;Bachelor's degree;CI/CD, Kubernetes, Splunk, IT, Linux, TCP/IP, GitLab, Python, German;"<div></div><div><div><div><div><div><div><h3 class=""jobSectionHeader""><b>Administratorin/Administrator (m/w/d) im Security Operations Center (SOC Engineer)</b></h3>
+</div><div></div><div><p>Standort: D&uuml;sseldorf, Vertrag: Teilzeit/Vollzeit (unbefristet), Verg&uuml;tung: Entgeltgruppe 11/12 TV-L</p>
+<p><b>Ihre Mission: Die digitale Verwaltung in NRW sicherer machen</b><br>
+Bei IT.NRW geht es um mehr als &bdquo;nur&ldquo; einen Job. Es geht um einen wichtigen gesellschaftlichen Auftrag: ein ganzes Bundesland digital vorw&auml;rtsbringen. Als Administratorin/Administrator (m/w/d) im Security Operations Center (SOC) stellen Sie die technischen Plattformen und Services bereit, um Bedrohungen f&uuml;r die Informationssicherheit schnell erkennen und abwehren zu k&ouml;nnen. Damit tragen Sie essenziell zu einer sicheren, digitalen Verwaltung bei. Bringen Sie sich jetzt ein und leisten Sie einen wichtigen Beitrag f&uuml;r 18 Millionen B&uuml;rgerinnen und B&uuml;rger in NRW!</p>
+<p><b>Ihr Bereich: Security Operations Center (SOC)</b><br>
+Das Security Operations Center (SOC) ist eine Serviceeinheit des bei IT.NRW angesiedelten Computer Emergency Response Teams der Landesverwaltung NRW (CERT NRW).<br>
+Um Cyberangriffe gegen Systeme und IT-Services der Landesverwaltung NRW zentral und schnell erkennen und darauf reagieren zu k&ouml;nnen, betreiben wir eine Cyber Defense Plattorm bestehend aus SIEM, SOAR und anderen Komponenten. Mit unserem derzeit 7-k&ouml;pfigen Team aus Spezialistinnen und Spezialisten f&uuml;r Security-Analyse, Incident-Handling, Engineering und Digital Forensics and Incident Response (DFIR) entwickeln wir die Erkennungs- und Reaktionsf&auml;higkeiten stetig weiter.</p>
+</div><div><h3 class=""jobSectionHeader""><b>Stiftet Sinn: </b><b>Ihre Aufgaben</b></h3>
+</div><div><p><b>Ihre Hauptt&auml;tigkeit:</b></p>
+<ul><li>Sie sind zust&auml;ndig f&uuml;r Betrieb, Ausbau und die Optimierung der technischen Systeme des Security Operations Center, beispielsweise des Security Information and Event Management Systems (SIEM). Dabei haben Sie die Bed&uuml;rfnisse des SOC-Teams stets im Blick.</li>
+<li>Sie binden Logquellen sowie Cyber Threat Intelligence Quellen an, erstellen SIEM-Use-Cases und SOAR-Playbooks sowie Dashboards und Workflows f&uuml;r die Bearbeitung von Alarmen und die Fallbehandlung (Case Management) in SIEM, SOAR und Ticketsystem.</li>
+<li>Sie &uuml;bernehmen die Nutzerverwaltung der Systeme, sind verantwortlich f&uuml;r die Rollen- und Rechtevergabe sowie die Anbindung und Integration weiterer Schnittstellen zu anderen Systemen.</li>
+<li>Sie recherchieren, untersuchen und erproben neue Technologien, die unser SOC voranbringen und erstellen Anforderungskataloge und Unterlagen zur Auswahl geeigneter Produkte.</li>
+<li>Sie betreiben das Konfigurationsmanagement f&uuml;r die von Ihnen verantworteten Systeme und dokumentieren in Form von Betriebshandb&uuml;chern, Informationssicherheits-, L&ouml;sch-, Datensicherungs- und Notfallkonzepten.</li>
+</ul><p><b>Ihr Aufgabenfeld umfasst zudem:
+</b></p><ul><li>Sie vertreten und unterst&uuml;tzen Ihre Kolleginnen und Kollegen im SOC-Engineering-Team bei Bedarf im Betrieb und Support der Systeme, die in deren Fachschwerpunkt und Verantwortung liegen.</li>
+<li>Sie beteiligen sich regelm&auml;&szlig;ig aktiv in teilnehmender sowie dozierender Rolle am teaminternen Wissenstransfer in Form von Fachvortr&auml;gen und &Uuml;bungen.</li>
+</ul></div><div><h3 class=""jobSectionHeader""><b>Bewegt mehr:</b><b> Ihr Profil</b></h3>
+</div><div><p>Sie bringen mit:</p>
+<ul><li>Abgeschlossenes Fachhochschul- oder Bachelorstudium im Bereich Informationstechnik, Mathematik, Physik oder in einem Studiengang mit IT-Bezug</li>
+<li>Alternativ zum Studium: Abschluss als Operative Professional oder langj&auml;hrige einschl&auml;gige Berufserfahrung in der IT</li>
+<li>Fundierte Grundkenntnisse der Linux-Administration</li>
+<li>Praktische Erfahrung in der Automation wiederkehrender Aufgaben mittels Erstellung von Scripten mit Python und Linux-Shell</li>
+<li>Grundlagenwissen
+<ul><li>zu praxisrelevanten kryptografischen Verfahren (symmetrisch, asymmetrisch, hybrid)</li>
+<li>zu Netzwerkprotokollen wie ARP, DHCP, ICMP, TCP/IP, SMB, HTTP, SMTP, IMAP und DNS</li>
+</ul></li><li>F&uuml;r die EG 12: mindestens 3 Jahre praktische Berufserfahrung in der Administration von IT-Systemen, davon mindestens ein Jahr einschl&auml;gige Praxiserfahrung in der Administration von SIEM-, Logmanagement-, SOAR- oder &auml;hnlichen Systemen, die im SOC-Kontext eingesetzt werden</li>
+<li>Sicheres Deutsch (in Wort und Schrift)</li>
+</ul><p>W&uuml;nschenswert sind zudem:</p>
+<ul><li>Praxiserfahrung in der Administration
+<ul><li>von SIEM-Systemen, insbesondere Splunk</li>
+<li>von Tenable Security Center, OTRS/Znuny, VMRay oder MISP</li>
+<li>containerbasierter Systeme, z.B. mittels Podman und Kubernetes in Verbindung mit CI/CD Tools wie z.B. Gitlab</li>
+</ul></li></ul><p>Ihre Pers&ouml;nlichkeit:</p>
+<ul><li>Teamgeist, offen im Umgang mit Ver&auml;nderungen</li>
+<li>Service- und L&ouml;sungsorientiert</li>
+<li>Qualit&auml;tsbewusstsein</li>
+</ul></div><div><h3 class=""jobSectionHeader""><b>Zus&auml;tzliche Stelleninfos</b></h3>
+</div><div><p>Eine &Uuml;bertragung der vollst&auml;ndigen T&auml;tigkeit auf dem konkreten Arbeitsplatz und damit eine Eingruppierung in die Entgeltgruppe 11 TV-L erfolgt, wenn Sie &uuml;ber eine mindestens sechsmonatige, einschl&auml;gige Berufserfahrung verf&uuml;gen. In allen anderen F&auml;llen werden Sie f&uuml;r die Dauer des ersten halben Jahres zun&auml;chst in der Entgeltgruppe 10 TV-L eingestellt. Die Eingruppierung in die Entgeltgruppe 12 TV- L erfolgt, wenn Sie &uuml;ber eine mindestens dreij&auml;hrige praktische Erfahrung im genannten Bereich verf&uuml;gen. F&uuml;r diese Stelle ist eine erfolgreiche Sicherheits&uuml;berpr&uuml;fung nach &sect; 11 S&Uuml;G NRW erforderlich (wird im Rahmen des Einstellungsprozesses angesto&szlig;en).</p>
+<p><b>Ihre Benefits</b></p>
+<ul><li>Gute Entwicklungs- und Weiterbildungsm&ouml;glichkeiten</li>
+<li>Gute Work-Life-Balance sowie Vereinbarkeit von Beruf und Familie durch hohe Flexibilit&auml;t (z.B. flexible Arbeitszeiten, Option auf Teilzeitarbeit, bis zu 80 % Homeoffice)</li>
+<li>Betriebliche Altersvorsorge</li>
+<li>Betriebliches Gesundheitsmanagement</li>
+<li>Ein offenes Arbeitsklima</li>
+<li>Standortabh&auml;ngig: Kantine sowie kostenfreie Parkpl&auml;tze</li>
+</ul></div><div><h3 class=""jobSectionHeader""><b>Der richtige Schritt:</b><b> Ihre Bewerbung</b></h3>
+</div><div><p>Bewerben Sie sich jetzt einfach online und leisten Sie mit uns gemeinsam einen wichtigen Beitrag f&uuml;r 18 Millionen Menschen in NRW.
+</p></div><div><h3 class=""jobSectionHeader""><b>Jetzt bewerben</b></h3>
+</div><div><p>Zu Ihrer vollst&auml;ndigen Bewerbung geh&ouml;ren folgende Unterlagen:</p>
+<ul><li>Lebenslauf</li>
+<li>Abschluss- und Arbeitszeugnisse</li>
+<li>Anstatt eines Anschreibens beantworten Sie uns bitte folgende Fragen im Bewerbungsportal:<br>
+1. Welche fachlichen Erfahrungen und Qualifikationen bringen Sie f&uuml;r die genannten Bereiche mit?2. Welche pers&ouml;nlichen St&auml;rken qualifizieren Sie f&uuml;r dieses Thema?<br>
+3. In welcher Form haben Sie sich bereits mit dem Thema IT-Sicherheit besch&auml;ftigt?<br>
+4. Welche Erfahrung in der Programmierung oder Entwicklung von Scripten sowie der Linux-Administration bringen Sie mit?</li>
+</ul><p>Selbstverst&auml;ndlich achten wir auf den Datenschutz und behandeln Ihre Unterlagen vertraulich.</p>
+<p><b>Unser Bewerbungsprozess</b><br>
+Bewerben Sie sich bitte ausschlie&szlig;lich &uuml;ber unser Bewerbungsportal (per E-Mail oder Post &uuml;bermittelte Unterlagen k&ouml;nnen leider nicht ber&uuml;cksichtigt werden). Nach dem Absenden Ihrer Bewerbung erhalten Sie eine Eingangsbest&auml;tigung. Anschlie&szlig;end pr&uuml;fen wir Ihre Unterlagen und geben Ihnen nach Ablauf der Bewerbungsfrist eine R&uuml;ckmeldung. Das Kennenlernen findet &uuml;berwiegend per Videokonferenz statt. Das weitere Vorgehen besprechen wir dann gemeinsam.</p>
+<p><b>Wir leben Vielfalt</b><br>
+Wir freuen uns besonders &uuml;ber Bewerbungen von Frauen und bevorzugen Frauen nach Ma&szlig;gabe des LGG NRW in Bereichen, in denen sie unterrepr&auml;sentiert sind. Bewerbungen schwerbehinderter Menschen sowie gleichgestellter behinderter Menschen im Sinne des &sect; 2 SGB IX sind ausdr&uuml;cklich erw&uuml;nscht. Wir bekennen uns ausdr&uuml;cklich zu Vielfalt in unserem Arbeitsumfeld und freuen uns &uuml;ber die Bewerbungen aller Talente &ndash; ungeachtet von Alter, Geschlecht und geschlechtlicher Identit&auml;t, ethnischer, kultureller und sozialer Herkunft, Religion und Weltanschauung, Behinderung, sexueller Orientierung und Identit&auml;t. Deshalb hat IT.NRW die Charta der Vielfalt unterzeichnet: www.charta-der-vielfalt.de.</p>
+<p><b>Ihr Draht zu uns</b><br>
+Fragen zum Aufgabengebiet beantwortet</p>
+<ul><li>Detmar Liesen, detmar.liesen(at)it.nrw.de, Tel. 0211/9449-4684</li>
+</ul><p>Fragen zum Bewerbungsverfahren beantwortet</p>
+<ul><li>Merdzana Mrzljak, merdzana.mrzljak(at)it.nrw.de, Tel. 0211/9449-6957</li></ul></div></div></div></div></div></div>";"Administratorin/Administrator (m/w/d) im Security Operations Center (SOC Engineer)
+Standort: Düsseldorf, Vertrag: Teilzeit/Vollzeit (unbefristet), Vergütung: Entgeltgruppe 11/12 TV-L
+Bei IT.NRW geht es um mehr als „nur“ einen Job. Es geht um einen wichtigen gesellschaftlichen Auftrag: ein ganzes Bundesland digital vorwärtsbringen. Als Administratorin/Administrator (m/w/d) im Security Operations Center (SOC) stellen Sie die technischen Plattformen und Services bereit, um Bedrohungen für die Informationssicherheit schnell erkennen und abwehren zu können. Damit tragen Sie essenziell zu einer sicheren, digitalen Verwaltung bei. Bringen Sie sich jetzt ein und leisten Sie einen wichtigen Beitrag für 18 Millionen Bürgerinnen und Bürger in NRW!
+Ihre Mission: Die digitale Verwaltung in NRW sicherer machen
+Das Security Operations Center (SOC) ist eine Serviceeinheit des bei IT.NRW angesiedelten Computer Emergency Response Teams der Landesverwaltung NRW (CERT NRW).
+Um Cyberangriffe gegen Systeme und IT-Services der Landesverwaltung NRW zentral und schnell erkennen und darauf reagieren zu können, betreiben wir eine Cyber Defense Plattorm bestehend aus SIEM, SOAR und anderen Komponenten. Mit unserem derzeit 7-köpfigen Team aus Spezialistinnen und Spezialisten für Security-Analyse, Incident-Handling, Engineering und Digital Forensics and Incident Response (DFIR) entwickeln wir die Erkennungs- und Reaktionsfähigkeiten stetig weiter.
+Ihr Bereich: Security Operations Center (SOC)
+Stiftet Sinn:
+Ihre Aufgaben
+Ihre Haupttätigkeit:
+Sie sind zuständig für Betrieb, Ausbau und die Optimierung der technischen Systeme des Security Operations Center, beispielsweise des Security Information and Event Management Systems (SIEM). Dabei haben Sie die Bedürfnisse des SOC-Teams stets im Blick.
+Sie binden Logquellen sowie Cyber Threat Intelligence Quellen an, erstellen SIEM-Use-Cases und SOAR-Playbooks sowie Dashboards und Workflows für die Bearbeitung von Alarmen und die Fallbehandlung (Case Management) in SIEM, SOAR und Ticketsystem.
+Sie übernehmen die Nutzerverwaltung der Systeme, sind verantwortlich für die Rollen- und Rechtevergabe sowie die Anbindung und Integration weiterer Schnittstellen zu anderen Systemen.
+Sie recherchieren, untersuchen und erproben neue Technologien, die unser SOC voranbringen und erstellen Anforderungskataloge und Unterlagen zur Auswahl geeigneter Produkte.
+Sie betreiben das Konfigurationsmanagement für die von Ihnen verantworteten Systeme und dokumentieren in Form von Betriebshandbüchern, Informationssicherheits-, Lösch-, Datensicherungs- und Notfallkonzepten.
+Ihr Aufgabenfeld umfasst zudem:
+Sie vertreten und unterstützen Ihre Kolleginnen und Kollegen im SOC-Engineering-Team bei Bedarf im Betrieb und Support der Systeme, die in deren Fachschwerpunkt und Verantwortung liegen.
+Sie beteiligen sich regelmäßig aktiv in teilnehmender sowie dozierender Rolle am teaminternen Wissenstransfer in Form von Fachvorträgen und Übungen.
+Bewegt mehr:
+Ihr Profil
+Sie bringen mit:
+Abgeschlossenes Fachhochschul- oder Bachelorstudium im Bereich Informationstechnik, Mathematik, Physik oder in einem Studiengang mit IT-Bezug
+Alternativ zum Studium: Abschluss als Operative Professional oder langjährige einschlägige Berufserfahrung in der IT
+Fundierte Grundkenntnisse der Linux-Administration
+Praktische Erfahrung in der Automation wiederkehrender Aufgaben mittels Erstellung von Scripten mit Python und Linux-Shell
+Grundlagenwissen
+zu praxisrelevanten kryptografischen Verfahren (symmetrisch, asymmetrisch, hybrid)
+zu Netzwerkprotokollen wie ARP, DHCP, ICMP, TCP/IP, SMB, HTTP, SMTP, IMAP und DNS
+Für die EG 12: mindestens 3 Jahre praktische Berufserfahrung in der Administration von IT-Systemen, davon mindestens ein Jahr einschlägige Praxiserfahrung in der Administration von SIEM-, Logmanagement-, SOAR- oder ähnlichen Systemen, die im SOC-Kontext eingesetzt werden
+Sicheres Deutsch (in Wort und Schrift)
+Wünschenswert sind zudem:
+Praxiserfahrung in der Administration
+von SIEM-Systemen, insbesondere Splunk
+von Tenable Security Center, OTRS/Znuny, VMRay oder MISP
+containerbasierter Systeme, z.B. mittels Podman und Kubernetes in Verbindung mit CI/CD Tools wie z.B. Gitlab
+Ihre Persönlichkeit:
+Teamgeist, offen im Umgang mit Veränderungen
+Service- und Lösungsorientiert
+Qualitätsbewusstsein
+Zusätzliche Stelleninfos
+Eine Übertragung der vollständigen Tätigkeit auf dem konkreten Arbeitsplatz und damit eine Eingruppierung in die Entgeltgruppe 11 TV-L erfolgt, wenn Sie über eine mindestens sechsmonatige, einschlägige Berufserfahrung verfügen. In allen anderen Fällen werden Sie für die Dauer des ersten halben Jahres zunächst in der Entgeltgruppe 10 TV-L eingestellt. Die Eingruppierung in die Entgeltgruppe 12 TV- L erfolgt, wenn Sie über eine mindestens dreijährige praktische Erfahrung im genannten Bereich verfügen. Für diese Stelle ist eine erfolgreiche Sicherheitsüberprüfung nach § 11 SÜG NRW erforderlich (wird im Rahmen des Einstellungsprozesses angestoßen).
+Ihre Benefits
+Gute Entwicklungs- und Weiterbildungsmöglichkeiten
+Gute Work-Life-Balance sowie Vereinbarkeit von Beruf und Familie durch hohe Flexibilität (z.B. flexible Arbeitszeiten, Option auf Teilzeitarbeit, bis zu 80 % Homeoffice)
+Betriebliche Altersvorsorge
+Betriebliches Gesundheitsmanagement
+Ein offenes Arbeitsklima
+Standortabhängig: Kantine sowie kostenfreie Parkplätze
+Der richtige Schritt:
+Ihre Bewerbung
+Bewerben Sie sich jetzt einfach online und leisten Sie mit uns gemeinsam einen wichtigen Beitrag für 18 Millionen Menschen in NRW.
+Jetzt bewerben
+Zu Ihrer vollständigen Bewerbung gehören folgende Unterlagen:
+Lebenslauf
+Abschluss- und Arbeitszeugnisse
+Anstatt eines Anschreibens beantworten Sie uns bitte folgende Fragen im Bewerbungsportal:
+1. Welche fachlichen Erfahrungen und Qualifikationen bringen Sie für die genannten Bereiche mit?2. Welche persönlichen Stärken qualifizieren Sie für dieses Thema?
+3. In welcher Form haben Sie sich bereits mit dem Thema IT-Sicherheit beschäftigt?
+4. Welche Erfahrung in der Programmierung oder Entwicklung von Scripten sowie der Linux-Administration bringen Sie mit?
+Selbstverständlich achten wir auf den Datenschutz und behandeln Ihre Unterlagen vertraulich.
+Bewerben Sie sich bitte ausschließlich über unser Bewerbungsportal (per E-Mail oder Post übermittelte Unterlagen können leider nicht berücksichtigt werden). Nach dem Absenden Ihrer Bewerbung erhalten Sie eine Eingangsbestätigung. Anschließend prüfen wir Ihre Unterlagen und geben Ihnen nach Ablauf der Bewerbungsfrist eine Rückmeldung. Das Kennenlernen findet überwiegend per Videokonferenz statt. Das weitere Vorgehen besprechen wir dann gemeinsam.
+Unser Bewerbungsprozess
+Wir freuen uns besonders über Bewerbungen von Frauen und bevorzugen Frauen nach Maßgabe des LGG NRW in Bereichen, in denen sie unterrepräsentiert sind. Bewerbungen schwerbehinderter Menschen sowie gleichgestellter behinderter Menschen im Sinne des § 2 SGB IX sind ausdrücklich erwünscht. Wir bekennen uns ausdrücklich zu Vielfalt in unserem Arbeitsumfeld und freuen uns über die Bewerbungen aller Talente – ungeachtet von Alter, Geschlecht und geschlechtlicher Identität, ethnischer, kultureller und sozialer Herkunft, Religion und Weltanschauung, Behinderung, sexueller Orientierung und Identität. Deshalb hat IT.NRW die Charta der Vielfalt unterzeichnet: www.charta-der-vielfalt.de.
+Wir leben Vielfalt
+Fragen zum Aufgabengebiet beantwortet
+Ihr Draht zu uns
+Detmar Liesen, detmar.liesen(at)it.nrw.de, Tel. 0211/9449-4684
+Fragen zum Bewerbungsverfahren beantwortet
+Merdzana Mrzljak, merdzana.mrzljak(at)it.nrw.de, Tel. 0211/9449-6957";Düsseldorf;Nordrhein-Westfalen;Germany;51.22422;6.780068;Dr. Oliver Heidinger;;Düsseldorf, Deutschland;Landes- & Regionalbehörden;Regierung & öffentliche Verwaltung;100 bis 500 Millionen $ (USD);1.001 bis 5.000 Mitarbeiter;Öffentlicher Dienst;1948
+9;1.00938E+12;Senior IT-Security Engineer / Consultant (m/w/d) in der IT-Beratung;Weingarten;5882227;carmasec GmbH & Co. KG;431;EUR;ANNUAL;66400;78200;90000;-0.100000001;2025-10-01T00:00:00;Full-time, Part-time;;;IT, Cybersecurity, Leadership;"<p>Wir sind ein Team von Cyber Security Expert: innen und setzen uns leidenschaftlich f&uuml;r den Schutz digitaler Infrastrukturen ein.</p><p>Mit einer Kombination aus langj&auml;hriger Beratungserfahrung, agilen Arbeitsweisen und kontinuierlicher Weiterentwicklung unterst&uuml;tzen wir unsere Kunden branchenneutral und herstellerunabh&auml;ngig. Dabei bieten wir interdisziplin&auml;re Kompetenz aus einer Hand.</p><p>Wir leben kollegiale Unterst&uuml;tzung im Team und eine respektvolle Feedback- und Fehlerkultur. Bei kniffligen Aufgaben findest Du immer Ansprechpartner: innen f&uuml;r Deine Fragen.</p><p><b>Unsere Vision</b><br/><i>Eine Welt, in der sich unsere Mitarbeiter: innen selbst verwirklichen und sich unsere Kunden in Sicherheit auf ihr Kerngesch&auml;ft fokussieren k&ouml;nnen.</i></p><p><b>Aufgaben</b></p><ul><li>Konzeption und Implementierung: Du entwickelst und setzt Cyber Security L&ouml;sungen verschiedener Hersteller in komplexen IT-Infrastrukturen unserer Kunden im gehobenen Mittelstand und Konzernumfeld um.</li><li>Strategieentwicklung: Du erstellst technische Security Strategien zur Abwehr von Cyberangriffen.</li><li>Sytemh&auml;rtung: Du implementierst ma&szlig;geschneiderte Sicherheitsma&szlig;nahmen f&uuml;r Endger&auml;te, Netzwerke und Authentifizierungssysteme.</li><li>Erkennung von Angriffen: Du etablierst Ma&szlig;nahmen zur fr&uuml;hzeitigen Erkennung von Cyberbedrohungen.</li><li>Beratung: Du ber&auml;tst und unterst&uuml;tzt unsere Kunden in allen Fragen der Cyber Security/ IT-Security.</li><li>Projektleitung: Du leitest und verantwortest technische Security-Projekte.</li></ul><p>Gemeinsam suchen wir nach Projekten, die Deinen Interessen entsprechen. Du entscheidest mit, welches Kundenprojekt Du bearbeiten wirst.</p><p><b>Deine F&auml;higkeiten (wichtig f&uuml;r uns)</b></p><p>F&uuml;r uns ist es wichtig, dass Du Spa&szlig; daran hast, Neues zu lernen und Dein Wissen weiterzugeben.</p><p>Das w&uuml;nschen wir uns von Dir:</p><ul><li>Mehrj&auml;hrige Erfahrung im Aufbau und Betrieb sicherer IT-Infrastrukturen</li><li>Gute Kenntnisse der Security Technologien etablierter Hersteller (z.B. Palo Alto, Fortinet, Microsoft, Trellix oder Okta)</li><li>L&ouml;sungsorientiertes Denken und die F&auml;higkeit, komplexe technische Herausforderungen zu meistern</li></ul><p><b>Deine F&auml;higkeiten (nice to have)</b></p><p>&Uuml;ber folgenden F&auml;higkeiten von Dir freuen wir uns, ansonsten erlernst Du die Aspekte im Rahmen der Einarbeitung:</p><ul><li>Umgang mit Frameworks wie MITRE ATT&amp;CK und CIS Benchmarks</li><li>Relevante Security-Zertifizierungen (z.B. CISSP, CompTIA Security+, FCP, PCNSA, SC-100)</li><li>Erfahrung in der F&uuml;hrung von Projektteams in technischen Security Umfeld</li></ul><p><b>Benefits</b></p><ul><li>Selbstverwirklichung: Freiraum zum Ausprobieren, eine offene Fehlerkultur und die Mitgestaltung von Strukturen im Unternehmen sind bei uns selbstverst&auml;ndlich.</li><li>Dein Weg zur Expertin/zum Experten: Unsere erfahrenen Mitarbeitenden begleiten Dich bei Deiner pers&ouml;nlichen und fachlichen Entwicklung.</li><li>Flexible Arbeitszeiten: Arbeite in Deiner produktiven Zeit und plane private Verpflichtungen flexibel ein. Mehrarbeit wird ausgeglichen.</li><li>Zusatzleistungen: Du hast die Wahl zwischen verschiedenen Angeboten wie Deutschland-Jobticket, Urban Sports Club Mitgliedschaft oder Kitaplatzes F&ouml;rderung.</li><li>Weiterbildungen: Wir investieren in Deine Entwicklung durch regelm&auml;&szlig;ige Weiterbildungen und renommierte Zertifizierungen.</li><li>Individuelle Hardware-Auswahl: Du entscheidest, welche Hardware Du nutzen m&ouml;chtest.</li><li>Geringe Reiset&auml;tigkeit: Wir arbeiten remote oder in unseren B&uuml;ros in K&ouml;ln oder Essen. Besprechungen vor-Ort beim Kunden sind bei uns die Ausnahme.</li><li>Teambuilding: Unser monatlicher Open Space dient der kreativen Arbeit an aktuellen Themen. Regelm&auml;&szlig;ige Events (z.B. gemeinsame Workation, Sommerfest oder Weihnachtsfeier) werden vom Team selbst geplant und umgesetzt.</li><li>Workation: Kombiniere Arbeit und Reisen oder nimm Dir eine l&auml;ngere Auszeit im Rahmen eines Sabbaticals.</li><li>Urlaub: 30 Tage Urlaub pro Jahr und Sonderurlaub f&uuml;r besondere Anl&auml;sse.</li></ul><p>Du brennst f&uuml;r Cyber Security und bist begeistert, Teil eines starken und diversen Teams zu sein, in dem auch der Spa&szlig; nicht zu kurz kommt. Wenn Du unser Unternehmen langfristig mitgestalten m&ouml;chtest, bist Du bei uns genau richtig!</p><p>Unser Bewerbungsprozess ist schlank und unkompliziert. Es erwarten Dich keine endlosen Fragerunden oder Assessment Center. Im Interview geht es uns vor allem um den lockeren Austausch und das gegenseitige Kennenlernen.</p><p>Schick uns lediglich einen kurzen Lebenslauf mit den wichtigsten Stationen, die f&uuml;r die Stellenausschreibung relevant sind. Wir melden uns umgehend zur&uuml;ck und vereinbaren einen Termin via Microsoft Teams.</p><p><b>Dein Ansprechpartner</b><br/>Jan Sudmeyer<br/>Managing Partner<br/>#gerne per Du</p><p><b>Besuche unser Karriereportal</b><br/>www.carmasec.com/karriere</p><p>Art der Stelle: Vollzeit, Teilzeit, Festanstellung</p><p>Erwartete Arbeitsstunden: 24&ndash;40 pro Woche</p><p>Arbeitszeiten:</p><ul><li>Keine Wochenenden</li><li>Montag bis Freitag</li></ul><p>Leistungen:</p><ul><li>Betriebliche Weiterbildung</li><li>Empfehlungsprogramm</li><li>Erfolgsbeteiligung</li><li>Firmenevents</li><li>Firmenhandy</li><li>Firmenwagen</li><li>Flexible Arbeitszeiten</li><li>Gleitzeit</li><li>Homeoffice-M&ouml;glichkeit</li><li>Kostenlose Getr&auml;nke</li><li>Mentoring-Programm f&uuml;r Mitarbeiter</li><li>Mitarbeiter-Rabatt</li><li>Sabbatical</li><li>Zus&auml;tzliche Urlaubstage</li></ul><p>Sonderzahlung:</p><ul><li>Provision</li><li>Zusatzzahlungen</li></ul><p>Arbeitsort: Zum Teil im Homeoffice in 50670 K&ouml;ln</p><p>Voraussichtliches Einstiegsdatum: 01.10.2024</p>";"Wir sind ein Team von Cyber Security Expert: innen und setzen uns leidenschaftlich für den Schutz digitaler Infrastrukturen ein.
+Mit einer Kombination aus langjähriger Beratungserfahrung, agilen Arbeitsweisen und kontinuierlicher Weiterentwicklung unterstützen wir unsere Kunden branchenneutral und herstellerunabhängig. Dabei bieten wir interdisziplinäre Kompetenz aus einer Hand.
+Wir leben kollegiale Unterstützung im Team und eine respektvolle Feedback- und Fehlerkultur. Bei kniffligen Aufgaben findest Du immer Ansprechpartner: innen für Deine Fragen.
+Unsere Vision
+Eine Welt, in der sich unsere Mitarbeiter: innen selbst verwirklichen und sich unsere Kunden in Sicherheit auf ihr Kerngeschäft fokussieren können.
+Aufgaben
+Konzeption und Implementierung: Du entwickelst und setzt Cyber Security Lösungen verschiedener Hersteller in komplexen IT-Infrastrukturen unserer Kunden im gehobenen Mittelstand und Konzernumfeld um.
+Strategieentwicklung: Du erstellst technische Security Strategien zur Abwehr von Cyberangriffen.
+Sytemhärtung: Du implementierst maßgeschneiderte Sicherheitsmaßnahmen für Endgeräte, Netzwerke und Authentifizierungssysteme.
+Erkennung von Angriffen: Du etablierst Maßnahmen zur frühzeitigen Erkennung von Cyberbedrohungen.
+Beratung: Du berätst und unterstützt unsere Kunden in allen Fragen der Cyber Security/ IT-Security.
+Projektleitung: Du leitest und verantwortest technische Security-Projekte.
+Gemeinsam suchen wir nach Projekten, die Deinen Interessen entsprechen. Du entscheidest mit, welches Kundenprojekt Du bearbeiten wirst.
+Deine Fähigkeiten (wichtig für uns)
+Für uns ist es wichtig, dass Du Spaß daran hast, Neues zu lernen und Dein Wissen weiterzugeben.
+Das wünschen wir uns von Dir:
+Mehrjährige Erfahrung im Aufbau und Betrieb sicherer IT-Infrastrukturen
+Gute Kenntnisse der Security Technologien etablierter Hersteller (z.B. Palo Alto, Fortinet, Microsoft, Trellix oder Okta)
+Lösungsorientiertes Denken und die Fähigkeit, komplexe technische Herausforderungen zu meistern
+Deine Fähigkeiten (nice to have)
+Über folgenden Fähigkeiten von Dir freuen wir uns, ansonsten erlernst Du die Aspekte im Rahmen der Einarbeitung:
+Umgang mit Frameworks wie MITRE ATT&CK und CIS Benchmarks
+Relevante Security-Zertifizierungen (z.B. CISSP, CompTIA Security+, FCP, PCNSA, SC-100)
+Erfahrung in der Führung von Projektteams in technischen Security Umfeld
+Benefits
+Selbstverwirklichung: Freiraum zum Ausprobieren, eine offene Fehlerkultur und die Mitgestaltung von Strukturen im Unternehmen sind bei uns selbstverständlich.
+Dein Weg zur Expertin/zum Experten: Unsere erfahrenen Mitarbeitenden begleiten Dich bei Deiner persönlichen und fachlichen Entwicklung.
+Flexible Arbeitszeiten: Arbeite in Deiner produktiven Zeit und plane private Verpflichtungen flexibel ein. Mehrarbeit wird ausgeglichen.
+Zusatzleistungen: Du hast die Wahl zwischen verschiedenen Angeboten wie Deutschland-Jobticket, Urban Sports Club Mitgliedschaft oder Kitaplatzes Förderung.
+Weiterbildungen: Wir investieren in Deine Entwicklung durch regelmäßige Weiterbildungen und renommierte Zertifizierungen.
+Individuelle Hardware-Auswahl: Du entscheidest, welche Hardware Du nutzen möchtest.
+Geringe Reisetätigkeit: Wir arbeiten remote oder in unseren Büros in Köln oder Essen. Besprechungen vor-Ort beim Kunden sind bei uns die Ausnahme.
+Teambuilding: Unser monatlicher Open Space dient der kreativen Arbeit an aktuellen Themen. Regelmäßige Events (z.B. gemeinsame Workation, Sommerfest oder Weihnachtsfeier) werden vom Team selbst geplant und umgesetzt.
+Workation: Kombiniere Arbeit und Reisen oder nimm Dir eine längere Auszeit im Rahmen eines Sabbaticals.
+Urlaub: 30 Tage Urlaub pro Jahr und Sonderurlaub für besondere Anlässe.
+Du brennst für Cyber Security und bist begeistert, Teil eines starken und diversen Teams zu sein, in dem auch der Spaß nicht zu kurz kommt. Wenn Du unser Unternehmen langfristig mitgestalten möchtest, bist Du bei uns genau richtig!
+Unser Bewerbungsprozess ist schlank und unkompliziert. Es erwarten Dich keine endlosen Fragerunden oder Assessment Center. Im Interview geht es uns vor allem um den lockeren Austausch und das gegenseitige Kennenlernen.
+Schick uns lediglich einen kurzen Lebenslauf mit den wichtigsten Stationen, die für die Stellenausschreibung relevant sind. Wir melden uns umgehend zurück und vereinbaren einen Termin via Microsoft Teams.
+Jan Sudmeyer
+Managing Partner
+#gerne per Du
+Dein Ansprechpartner
+www.carmasec.com/karriere
+Besuche unser Karriereportal
+Art der Stelle: Vollzeit, Teilzeit, Festanstellung
+Erwartete Arbeitsstunden: 24–40 pro Woche
+Arbeitszeiten:
+Keine Wochenenden
+Montag bis Freitag
+Leistungen:
+Betriebliche Weiterbildung
+Empfehlungsprogramm
+Erfolgsbeteiligung
+Firmenevents
+Firmenhandy
+Firmenwagen
+Flexible Arbeitszeiten
+Gleitzeit
+Homeoffice-Möglichkeit
+Kostenlose Getränke
+Mentoring-Programm für Mitarbeiter
+Mitarbeiter-Rabatt
+Sabbatical
+Zusätzliche Urlaubstage
+Sonderzahlung:
+Provision
+Zusatzzahlungen
+Arbeitsort: Zum Teil im Homeoffice in 50670 Köln
+Voraussichtliches Einstiegsdatum: 01.10.2024";Weingarten;North Rhine-Westphalia;Germany;50.933594;6.961899;;;Essen, Deutschland;;;Unbekannt/Nicht zutreffend;Unbekannt;Aktiengesellschaft;
+10;1.00988E+12;Systems Engineer – System Design Consulting (m/w/d);Weingarten;1303004;INFODAS;14;EUR;;;;;3.5;2025-09-22T00:00:00;;;;Configuration management, English, German;"<div><b>Unsere Benefits</b>
+<ul><li>Gleitzeitkonto</li>
+<li>Homeoffice</li>
+<li>Zus&auml;tzlich frei an Br&uuml;ckentagen sowie zwischen Weihnachten und Neujahr</li>
+<li>Erh&ouml;hung des Urlaubsanspruchs nach 5 und 10 Jahren Betriebszugeh&ouml;rigkeit, um jeweils einen Tag</li>
+<li>Eine marktgerechte Verg&uuml;tung und Weihnachtsgeld</li>
+<li>Arbeitgeberfinanzierte Altersvorsorge</li>
+<li>Verm&ouml;genswirksame Leistungen</li>
+<li>Je nach Standort subventioniertes Mittagessen oder &Ouml;PNV-Ticket</li>
+<li>Alle Standorte mit guter Verkehrsanbindung</li>
+<li>Jobrad &bdquo;infodas on bike&ldquo; mit einem monatlichen Arbeitgeberzuschuss</li>
+<li>Mitarbeiterrabatte</li>
+<li>Guten Kaffee, Wasser, Tee, Softdrinks sowie Obstkorb zur freien Verf&uuml;gung</li>
+<li>Und vieles mehr&hellip;</li>
+</ul><b>Deine Aufgaben</b>
+<ul><li>Du gestaltest und realisierst innovative technische Konzepte f&uuml;r komplexe Systemumgebungen, arbeitest aktiv an ihrer Umsetzung und dokumentierst die Ergebnisse sorgf&auml;ltig &ndash; so tr&auml;gst Du ma&szlig;geblich zum Erfolg unserer Kunden-Projekte bei.</li>
+<li>Du planst, installierst und konfigurierst IT-Infrastrukturen, Netzwerke und Softwarel&ouml;sungen, wobei Du sowohl eigenverantwortlich als auch im Team die Anforderungen unserer Kunden pr&auml;zise umsetzt.</li>
+<li>Dein Fachwissen im Bereich IT-Sicherheit bringst Du gezielt ein, insbesondere bei Systemh&auml;rtung, der Entwicklung von Sicherheitsrichtlinien und der Konfiguration sicherheitsrelevanter Komponenten, um robuste Schutzma&szlig;nahmen zu gew&auml;hrleisten.</li>
+<li>Du erstellst technische Konzepte, Migrationspl&auml;ne und Entscheidungsvorlagen, die unseren Kunden eine klare Orientierung f&uuml;r ihre IT-Entscheidungen bieten.</li>
+<li>Durch die Analyse bestehender IT-Infrastrukturen identifizierst Du Optimierungspotenziale und entwickelst innovative Vorschl&auml;ge zur Steigerung von Stabilit&auml;t, Performance und Sicherheit.</li>
+<li>Du arbeitest eng mit Softwareentwicklung, Projektleitung und weiteren Fachbereichen zusammen &ndash; bei Bedarf auch direkt vor Ort beim Kunden &ndash;, um gemeinsam nachhaltige L&ouml;sungen zu realisieren.</li>
+</ul><b>Dein Profil</b>
+<ul><li>Du hast eine abgeschlossene Ausbildung oder ein Studium im Bereich IT, beispielsweise in Fachinformatik, Systemintegration, IT-Sicherheit oder einer vergleichbaren Qualifikation</li>
+<li>Mit Deinen fundierten Kenntnissen im Design und in der Administration von Virtualisierungsl&ouml;sungen, Serverumgebungen (Linux, Windows) und Netzwerken bringst Du das technische Know-how mit, um komplexe IT-Infrastrukturen effizient zu gestalten und zu betreiben.</li>
+<li>Du hast erste praktische Erfahrung oder ein starkes Interesse im Bereich Systemh&auml;rtung, IT-Security und sicherheitskritischer IT-Infrastrukturen &ndash; Du m&ouml;chtest aktiv dazu beitragen, Systeme sicherer zu machen.</li>
+<li>Idealerweise verf&uuml;gst Du &uuml;ber Erfahrung mit Konfigurationsmanagement oder Automatisierungstools.</li>
+<li>Du arbeitest gerne im Team, bist selbstst&auml;ndig, l&ouml;sungsorientiert und bringst die Bereitschaft mit, bei Bedarf projektbezogen zu reisen (unter 20%).</li>
+<li>Sehr gute Deutschkenntnisse sowie gute Englischkenntnisse sind f&uuml;r Dich selbstverst&auml;ndlich und erm&ouml;glichen eine reibungslose Kommunikation.</li>
+</ul><b>&Uuml;ber uns</b>
+<p>
+Die <b>infodas</b>, ein <b>Airbus Tochterunternehmen</b> spezialisiert auf Cyber und IT, z&auml;hlt zu den f&uuml;hrenden Unternehmen f&uuml;r Informationssicherheit, Datenschutz und Hochsicherheitsprodukte. Wir greifen auf jahrzehntelange Erfahrung zur&uuml;ck und sind vertrauensvoller Partner von zahlreichen nationalen sowie internationalen Unternehmen und Institutionen. Werde Teil unseres Teams und gestalte mit uns die digitale Zukunft!</p>
+<b>Das Team</b>
+<p>
+Der Gesch&auml;ftsbereich <b>Applied Technology</b> steht f&uuml;r den gezielten Einsatz innovativer Technologien zur L&ouml;sung komplexer Herausforderungen. Insbesondere dort, wo Standardl&ouml;sungen an ihre Grenzen sto&szlig;en, entwickeln wir ma&szlig;geschneiderte Ans&auml;tze. Unser Consulting-Team unterst&uuml;tzt Kund:innen aus den Bereichen Verteidigung, &ouml;ffentlicher Sektor und Kritische Infrastrukturen bei der Einf&uuml;hrung, Anpassung und Absicherung technologischer Systeme. Dabei verbinden wir tiefgehendes technisches Fachwissen mit methodischer Beratung, um gemeinsam resiliente und zukunftssichere IT-L&ouml;sungen zu gestalten.</p>
+<b>Kontakt</b>
+<p>
+Wir freuen uns auf Deine Bewerbung unter Angabe Deines m&ouml;glichen Eintrittstermins und Deiner Gehaltsvorstellung.</p>
+<p>
+INFODAS GmbH &bull; Rhonestra&szlig;e 2 &bull; 50765 K&ouml;ln</p></div>";"Unsere Benefits
+Gleitzeitkonto
+Homeoffice
+Zusätzlich frei an Brückentagen sowie zwischen Weihnachten und Neujahr
+Erhöhung des Urlaubsanspruchs nach 5 und 10 Jahren Betriebszugehörigkeit, um jeweils einen Tag
+Eine marktgerechte Vergütung und Weihnachtsgeld
+Arbeitgeberfinanzierte Altersvorsorge
+Vermögenswirksame Leistungen
+Je nach Standort subventioniertes Mittagessen oder ÖPNV-Ticket
+Alle Standorte mit guter Verkehrsanbindung
+Jobrad „infodas on bike“ mit einem monatlichen Arbeitgeberzuschuss
+Mitarbeiterrabatte
+Guten Kaffee, Wasser, Tee, Softdrinks sowie Obstkorb zur freien Verfügung
+Und vieles mehr…
+Deine Aufgaben
+Du gestaltest und realisierst innovative technische Konzepte für komplexe Systemumgebungen, arbeitest aktiv an ihrer Umsetzung und dokumentierst die Ergebnisse sorgfältig – so trägst Du maßgeblich zum Erfolg unserer Kunden-Projekte bei.
+Du planst, installierst und konfigurierst IT-Infrastrukturen, Netzwerke und Softwarelösungen, wobei Du sowohl eigenverantwortlich als auch im Team die Anforderungen unserer Kunden präzise umsetzt.
+Dein Fachwissen im Bereich IT-Sicherheit bringst Du gezielt ein, insbesondere bei Systemhärtung, der Entwicklung von Sicherheitsrichtlinien und der Konfiguration sicherheitsrelevanter Komponenten, um robuste Schutzmaßnahmen zu gewährleisten.
+Du erstellst technische Konzepte, Migrationspläne und Entscheidungsvorlagen, die unseren Kunden eine klare Orientierung für ihre IT-Entscheidungen bieten.
+Durch die Analyse bestehender IT-Infrastrukturen identifizierst Du Optimierungspotenziale und entwickelst innovative Vorschläge zur Steigerung von Stabilität, Performance und Sicherheit.
+Du arbeitest eng mit Softwareentwicklung, Projektleitung und weiteren Fachbereichen zusammen – bei Bedarf auch direkt vor Ort beim Kunden –, um gemeinsam nachhaltige Lösungen zu realisieren.
+Dein Profil
+Du hast eine abgeschlossene Ausbildung oder ein Studium im Bereich IT, beispielsweise in Fachinformatik, Systemintegration, IT-Sicherheit oder einer vergleichbaren Qualifikation
+Mit Deinen fundierten Kenntnissen im Design und in der Administration von Virtualisierungslösungen, Serverumgebungen (Linux, Windows) und Netzwerken bringst Du das technische Know-how mit, um komplexe IT-Infrastrukturen effizient zu gestalten und zu betreiben.
+Du hast erste praktische Erfahrung oder ein starkes Interesse im Bereich Systemhärtung, IT-Security und sicherheitskritischer IT-Infrastrukturen – Du möchtest aktiv dazu beitragen, Systeme sicherer zu machen.
+Idealerweise verfügst Du über Erfahrung mit Konfigurationsmanagement oder Automatisierungstools.
+Du arbeitest gerne im Team, bist selbstständig, lösungsorientiert und bringst die Bereitschaft mit, bei Bedarf projektbezogen zu reisen (unter 20%).
+Sehr gute Deutschkenntnisse sowie gute Englischkenntnisse sind für Dich selbstverständlich und ermöglichen eine reibungslose Kommunikation.
+Über uns
+Die
+, ein
+spezialisiert auf Cyber und IT, zählt zu den führenden Unternehmen für Informationssicherheit, Datenschutz und Hochsicherheitsprodukte. Wir greifen auf jahrzehntelange Erfahrung zurück und sind vertrauensvoller Partner von zahlreichen nationalen sowie internationalen Unternehmen und Institutionen. Werde Teil unseres Teams und gestalte mit uns die digitale Zukunft!
+infodas
+Airbus Tochterunternehmen
+Das Team
+Der Geschäftsbereich
+steht für den gezielten Einsatz innovativer Technologien zur Lösung komplexer Herausforderungen. Insbesondere dort, wo Standardlösungen an ihre Grenzen stoßen, entwickeln wir maßgeschneiderte Ansätze. Unser Consulting-Team unterstützt Kund:innen aus den Bereichen Verteidigung, öffentlicher Sektor und Kritische Infrastrukturen bei der Einführung, Anpassung und Absicherung technologischer Systeme. Dabei verbinden wir tiefgehendes technisches Fachwissen mit methodischer Beratung, um gemeinsam resiliente und zukunftssichere IT-Lösungen zu gestalten.
+Applied Technology
+Kontakt
+Wir freuen uns auf Deine Bewerbung unter Angabe Deines möglichen Eintrittstermins und Deiner Gehaltsvorstellung.
+INFODAS GmbH • Rhonestraße 2 • 50765 Köln";Weingarten;Nordrhein-Westfalen;Germany;50.933594;6.961899;Thorsten Ecke | Lutz Franken | Carsten Schulz;;Köln, Deutschland;Unternehmenssoftware & Netzwerklösungen;Informationstechnologie;25 bis 100 Millionen $ (USD);201 bis 500 Mitarbeiter;Privatunternehmen;1974
