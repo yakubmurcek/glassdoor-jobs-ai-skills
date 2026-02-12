@@ -1,4 +1,7 @@
 
+# Large data files (Stata)
+*.dta
+
 data/outputs/old
 data/outputs/backups
 data/processed/

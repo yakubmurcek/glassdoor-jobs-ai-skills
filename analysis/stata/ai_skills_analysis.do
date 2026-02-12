@@ -16,31 +16,47 @@
 * ==============================================================================
 * Vyčistíme paměť a nastavíme working directory
 * Toto je důležité pro reprodukovatelnost - každý běh začíná čistě
+* AUTO-SETUP: Pokus o automatické nastavení složky (Windows)
+capture {
+    local userprofile : environment USERPROFILE
+    * Převod zpětných lomítek na dopředná pro jistotu
+    local userprofile = subinstr("`userprofile'", "\", "/", .)
+    cd "`userprofile'/Projects/glassdoor-jobs-ai-skills/analysis/stata"
+}
+if _rc {
+    display as text "Pozor: Nepodařilo se automaticky nastavit složku. Ujistěte se, že jste v 'analysis/stata'"
+}
+display "Aktuální pracovní složka: " c(pwd)
 
 version 15.1                              
 clear all
 set more off                              
 
 * Nastav cestu k datům - UPRAV PODLE SVÉ STRUKTURY
-global datadir "/Users/yakub/Projects/glassdoor-jobs-ai-skills/data/outputs"
-global outdir "/Users/yakub/Projects/glassdoor-jobs-ai-skills/analysis/stata/output"
+global datadir "../../data/outputs"
+global outdir "./output"
 
 * Vytvoř output složku pokud neexistuje
 capture mkdir "$outdir"
 
 * Log file - zaznamenává veškerý výstup pro pozdější kontrolu
 capture log close
-log using "$outdir/ai_skills_analysis.log", replace text
+* Generovani casoveho razitka pro unikatni nazev log souboru
+local c_date = c(current_date)
+local c_time = c(current_time)
+local time_string = subinstr("`c_date'_`c_time'", " ", "_", .)
+local time_string = subinstr("`time_string'", ":", "-", .)
+log using "$outdir/ai_skills_analysis_`time_string'.log", replace text
 
 
 * ==============================================================================
 * 2. IMPORT DAT
 * ==============================================================================
-* Používáme OPTIMALIZOVANÝ soubor z 'ai-skills clean-stata'
-import delimited "$datadir/us_relevant_ai_stata_optimized.csv", delimiter(";") clear varnames(1) encoding(utf8)
+* Používáme soubor 'us_relevant_ai_stata.csv'
+import delimited "$datadir/us_relevant_ai_stata.csv", delimiter(";") clear varnames(1) encoding(utf8)
 
 * Základní kontrola úspěšného importu
-describe, short
+describe
 display "Počet pozorování (job postů): " _N
 
 
@@ -60,7 +76,7 @@ encode desc_tier_llm, generate(ai_tier_num)
 
 * --- 3.2 AI Flag (Strict Intersection + Buzzword Filter) ---
 * 1. Sloučime zdroje skills do jednoho retezce pro kontrolu
-gen skills_combined = lower(skills_det_ai + " " + desc_ai_llm)
+gen skills_combined = lower(skills_ai_det + " " + desc_ai_llm)
 
 * 2. Odstranime obecne buzzwords (AI, ML, Artificial Intelligence atd.)
 * Pouzivame regex s word boundaries \b aby se smazalo jen "AI" a ne "OpenAI"
@@ -83,6 +99,7 @@ gen has_ai = has_ai_flag
 * --- 3.3 Vzdělání (Hybridní) ---
 * Používáme předpřipravenou 'education_hybrid' proměnnou
 * Normalizované hodnoty: "bachelor", "master", "highschool", "missing"
+replace education_hybrid = "highschool" if education_hybrid == "high school"
 encode education_hybrid, generate(edu_cat)
 label variable edu_cat "Pozadovane vzdelani (kategoricke)"
 
@@ -116,16 +133,12 @@ encode sector, generate(sector_num)
 replace state = "Unknown" if state == ""
 encode state, generate(state_num)
 
-* --- 3.7 Remote práce ---
+* 3.7 Remote práce ---
+* Zde odstranime "capture confirm" abychom videli jestli promenna existuje
 gen is_remote = 0
-if _rc == 0 {
-    * Check if remote_work_types exists
-    capture confirm variable remote_work_types
-    if _rc == 0 {
-        replace is_remote = 1 if strpos(lower(remote_work_types), "home") > 0
-        replace is_remote = 1 if strpos(lower(remote_work_types), "remote") > 0
-    }
-}
+replace is_remote = 1 if strpos(lower(remote_work_types), "home") > 0
+replace is_remote = 1 if strpos(lower(remote_work_types), "remote") > 0
+
 label variable is_remote "Moznost remote prace (1=ano)"
 
 
@@ -154,12 +167,12 @@ display _n "Podil pozic s AI pozadavky: " %5.2f (`n_ai'/`n_total')*100 "%"
 
 * --- 4.2 Požadované vzdělání ---
 display _n "--- 4.2 Distribuce vzdelavacich pozadavku ---"
-tab edu_level, missing
-tab edu_level if edu_level > 0
+tab edu_cat, missing
+tab edu_cat if edu_cat > 0
 
 * Porovnání vzdělání podle AI tier
 display _n "Vzdelani x AI tier (kontingencni tabulka):"
-tab edu_level ai_tier_num if edu_level > 0, chi2 column
+tab edu_cat ai_tier_num if edu_cat > 0, chi2 column
 
 * --- 4.3 Požadované zkušenosti ---
 display _n "--- 4.3 Distribuce pozadavku na zkusenosti ---"
@@ -229,7 +242,7 @@ oneway salary_mid ai_tier_num, tabulate bonferroni
 * Jsou AI pozice náročnější na vzdělání?
 
 display _n "--- 5.3 Chi-square: Vzdelani x AI tier ---"
-tab edu_level has_ai if edu_level > 0, chi2 expected
+tab edu_cat has_ai if edu_cat > 0, chi2 expected
 
 * --- 5.4 Chi-square: Zkušenosti a AI požadavky ---
 display _n "--- 5.4 Chi-square: Zkusenosti x AI tier ---"
@@ -257,23 +270,23 @@ display "=============================================================="
 
 display _n "--- 6.1 OLS regrese: Determinanty platu ---"
 
-regress salary_mid has_ai i.edu_level experience_min_llm is_remote
+regress salary_mid has_ai i.edu_cat experience_min_llm is_remote
 
 * Robustní standardní chyby (heteroskedasticita)
 display _n "--- 6.1b OLS s robustnimi standardnimi chybami ---"
-regress salary_mid has_ai i.edu_level experience_min_llm is_remote, vce(robust)
+regress salary_mid has_ai i.edu_cat experience_min_llm is_remote, vce(robust)
 
 * --- 6.2 Rozšířený model s interakcemi ---
 * AI × vzdělání interakce - má AI větší vliv u vyššího vzdělání?
 
 display _n "--- 6.2 Model s interakcemi ---"
-regress salary_mid c.has_ai##i.edu_level experience_min_llm is_remote, vce(robust)
+regress salary_mid c.has_ai##i.edu_cat experience_min_llm is_remote, vce(robust)
 
 * --- 6.3 Logistická regrese: Co predikuje AI požadavky? ---
 * Které charakteristiky pozice souvisí s AI požadavky?
 
 display _n "--- 6.3 Logisticka regrese: Prediktory AI pozadavku ---"
-logit has_ai i.edu_level experience_min_llm is_remote, or
+logit has_ai i.edu_cat experience_min_llm is_remote, or
 
 * Marginální efekty (interpretovatelné jako procentní změny)
 display _n "--- 6.3b Marginalni efekty ---"
@@ -318,7 +331,7 @@ display "=============================================================="
 
 * --- 8.1 Summary statistics ---
 display _n "--- 8.1 Summary statistics pro tabulky ---"
-summarize salary_mid experience_min_llm edu_level skill_count has_ai is_remote
+summarize salary_mid experience_min_llm edu_cat skill_count has_ai is_remote
 
 * Export do CSV pro další zpracování (grafy v Excelu/R/Python)
 export delimited desc_tier_llm salary_mid experience_min_llm edulevel_llm state sector using "$outdir/summary_for_charts.csv" if salary_mid != ., delimiter(",") replace
@@ -353,7 +366,7 @@ histogram experience_min_llm if experience_min_llm < 15, ///
 graph export "$outdir/experience_histogram.png", replace width(1200)
 
 * --- 9.4 Vzdělání podle AI tier ---
-graph bar (count), over(edu_level) over(has_ai) ///
+graph bar (count), over(edu_cat) over(has_ai) ///
     title("Vzdelavaci pozadavky: AI vs non-AI pozice") ///
     ytitle("Pocet pozic") ///
     legend(label(1 "non-AI") label(2 "AI pozice"))
@@ -368,7 +381,7 @@ display _n "=============================================================="
 display "ANALYZA DOKONCENA"
 display "=============================================================="
 display "Vystupy ulozeny do: $outdir"
-display "Log soubor: $outdir/ai_skills_analysis.log"
+display "Log soubor: $outdir/ai_skills_analysis_`time_string'.log"
 
 * Ulož zpracovaný dataset pro další práci
 save "$outdir/ai_skills_processed.dta", replace
