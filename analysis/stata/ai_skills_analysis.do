@@ -109,14 +109,16 @@ destring experience_min_llm, replace force
 label variable experience_min_llm "Min. pozadovane roky zkusenosti"
 
 * Kategorie zkušeností
+* Missing = neuvedeno v inzerátu (samostatná kategorie, jako u vzdělání)
 gen exp_category = .
-replace exp_category = 1 if experience_min_llm == 0 | experience_min_llm == .
+replace exp_category = 0 if experience_min_llm == .
+replace exp_category = 1 if experience_min_llm == 0
 replace exp_category = 2 if experience_min_llm > 0 & experience_min_llm <= 2
 replace exp_category = 3 if experience_min_llm > 2 & experience_min_llm <= 5
 replace exp_category = 4 if experience_min_llm > 5 & experience_min_llm <= 10
 replace exp_category = 5 if experience_min_llm > 10 & experience_min_llm < .
 
-label define exp_lbl 1 "Entry (0)" 2 "Junior (1-2)" 3 "Mid (3-5)" 4 "Senior (6-10)" 5 "Expert (10+)"
+label define exp_lbl 0 "Missing" 1 "Entry (0)" 2 "Junior (1-2)" 3 "Mid (3-5)" 4 "Senior (6-10)" 5 "Expert (10+)"
 label values exp_category exp_lbl
 label variable exp_category "Kategorie seniority"
 
