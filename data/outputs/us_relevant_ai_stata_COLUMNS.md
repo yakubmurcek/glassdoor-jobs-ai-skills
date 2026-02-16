@@ -40,7 +40,7 @@ Vstup: Glassdoor job postings (`data/inputs/us_relevant.csv`). Pipeline přidáv
 | `website`           | Web firmy                                           |
 | `year_founded`      | Rok založení                                        |
 
-> Sloupce `educations`, `job_desc_text`, `job_desc_html` jsou ve vstupu ale **dropnuty** ve Stata verzi. Sloupec `skills` zůstává.
+> Sloupce `educations`, `job_desc_text`, `job_desc_html` jsou ve vstupu, ale ve Stata verzi **odstraněny**. Sloupec `skills` zůstává.
 
 ---
 
@@ -123,3 +123,52 @@ Zdroj: `_apply_stata_transformations()` + slovník `skills_dictionary.py` (`SKIL
 | `cluster_systems_programming`     | Systems Programming (C, C++, Rust…)                     |
 | `cluster_testing__qa___debugging` | Testing, QA & Debugging (JUnit, Selenium…)              |
 | `cluster_tools___editors`         | Nástroje & Editory (Git, VS Code…)                      |
+
+---
+
+## ⚙️ Stata pipeline (`clean-stata` → `ai_skills_analysis.do`)
+
+### Krok 1: `clean-stata` CLI (Python → Stata-optimized CSV)
+
+Příkaz `ai-skills clean-stata` odstraní objemné textové sloupce a vytvoří `*_stata_optimized.csv`:
+
+Odstraněné sloupce: `job_desc_text`, `job_desc_html`, `desc_rationale_llm`, `educations`
+
+### Krok 2: Stata do-file (`analysis/stata/ai_skills_analysis.do`)
+
+Importuje `*_stata_optimized.csv`. **Filtruje**: `keep if desc_conf_llm >= 0.7`.
+
+#### Proměnné vytvořené ve Statě (nejsou v CSV):
+
+| Proměnná          | Popis                                                                                                                   |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `has_ai_flag`     | **Přísnější než `is_real_ai`**: tier ≠ none **A ZÁROVEŇ** má specifické AI skills (po odstranění buzzwords AI/ML/GenAI) |
+| `has_ai`          | Alias pro `has_ai_flag`                                                                                                 |
+| `ai_tier_num`     | Encode `desc_tier_llm` → numerická kategorie                                                                            |
+| `edu_cat`         | Encode `education_hybrid` → numerická kategorie                                                                         |
+| `exp_category`    | Kategorie seniority: Entry (0), Junior (1–2), Mid (3–5), Senior (6–10), Expert (10+)                                    |
+| `is_remote`       | `0/1` – odvozeno z `remote_work_types` (hledá "home"/"remote")                                                          |
+| `skill_count`     | Počet hard skills na pozici (počet čárek v `hardskills` + 1)                                                            |
+| `sector_num`      | Encode `sector` → numerická kategorie                                                                                   |
+| `state_num`       | Encode `state` → numerická kategorie                                                                                    |
+| `skills_combined` | Pomocná: `skills_ai_det` + `desc_ai_llm` (lowered)                                                                      |
+| `skills_cleaned`  | Pomocná: `skills_combined` po odstranění buzzwords a interpunkce                                                        |
+
+> [!WARNING]
+> Stata do-file odkazuje na `skills_det_ai`, ale CSV sloupec se jmenuje `skills_ai_det` – potenciální bug v do-file.
+
+#### CSV sloupce **použité** v Stata analýze (14/72):
+
+`desc_tier_llm`, `desc_conf_llm`, `desc_ai_llm`, `education_hybrid`, `experience_min_llm`, `edulevel_llm`, `salary_min`, `salary_mid`, `salary_max`, `sector`, `industry`, `state`, `remote_work_types`, `hardskills`
+
+#### CSV sloupce **nepoužité** ve Stata do-file:
+
+Glassdoor metadata: `id`, `job_title`, `location`, `company_id`, `company`, `age_in_days`, `pay_currency`, `pay_period`, `rating`, `discover_date`, `job_types`, `city`, `country`, `latitude`, `longitude`, `ceo`, `headquarters`, `revenue`, `size`, `type`, `website`, `year_founded`
+
+Deterministické: `skills`, `skills_ai_det`, `skills_hasai_det`, `edu_level_det`, `desc_hard_det`, `desc_soft_det`
+
+LLM (prázdné): `desc_hard_llm`, `desc_soft_llm`
+
+Odvozené: `ai_confidence`, `ai_det_llm_match`, `is_real_ai`, `softskills`
+
+Cluster dummy (24×): všechny `cluster_*` sloupce – **připraveny pro regresi, ale v aktuálním do-file nepoužity**
