@@ -1,124 +1,127 @@
 job_title_normalized;count;percentage
-Software Engineer;2336;12.65
-Software Developer;1830;9.91
-Full Stack Developer;1184;6.41
-Other;986;5.34
-Senior Software Engineer;984;5.33
-Engineer;786;4.26
-Data Engineer;616;3.34
-Security Engineer;608;3.29
-Programmer;602;3.26
-DevOps Engineer;572;3.1
-Systems Engineer;536;2.9
-Site Reliability Engineer;437;2.37
-Frontend Developer;382;2.07
-Test Engineer;345;1.87
-QA Engineer;317;1.72
-Automation Engineer;313;1.7
-Security Analyst;311;1.68
+Software Engineer;2182;11.82
+Software Developer;1696;9.19
+Senior Software Engineer;1258;6.81
+Full Stack Developer;1143;6.19
+Engineer;708;3.83
+DevOps Engineer;677;3.67
+Security Engineer;654;3.54
+Data Engineer;619;3.35
+Programmer;592;3.21
+Systems Engineer;534;2.89
+Frontend Developer;450;2.44
+Cybersecurity Analyst;446;2.42
+Site Reliability Engineer;425;2.3
+QA Engineer;353;1.91
+Test Engineer;344;1.86
+Automation Engineer;314;1.7
+Other;308;1.67
 Embedded Software Engineer;305;1.65
-Web Developer;302;1.64
-Cybersecurity Analyst;289;1.57
-Backend Developer;259;1.4
-QA Tester;242;1.31
-Solutions Architect;234;1.27
-Cloud Engineer;203;1.1
-Staff Software Engineer;198;1.07
-Java Developer;180;0.97
-Software Development Engineer;160;0.87
+Web Developer;278;1.51
+Cloud Engineer;259;1.4
+Backend Developer;255;1.38
+Security Analyst;248;1.34
+QA Tester;247;1.34
+Solutions Architect;235;1.27
+Staff Software Engineer;201;1.09
+Java Developer;177;0.96
 Firmware Engineer;159;0.86
-Principal Software Engineer;126;0.68
-Database Developer;124;0.67
-SDET;107;0.58
-Mobile Developer;103;0.56
-Quality Engineer;93;0.5
+Software Development Engineer;158;0.86
+Software Architect;143;0.77
+Salesforce Admin/Developer;137;0.74
+Database Developer;131;0.71
+Principal Software Engineer;124;0.67
+Mobile Developer;105;0.57
+Quality Engineer;100;0.54
+SDET;97;0.53
+Junior Software Engineer;85;0.46
 .NET Developer;85;0.46
-Salesforce Admin/Developer;85;0.46
-Lead Software Engineer;74;0.4
-UI/UX Designer;73;0.4
-Infrastructure Engineer;67;0.36
+UI/UX Designer;83;0.45
+IT Analyst;79;0.43
+Lead Software Engineer;75;0.41
+Engineering Manager;65;0.35
+Database Administrator;64;0.35
 Platform Engineer;63;0.34
-Junior Software Engineer;62;0.34
-Software Architect;61;0.33
-Android Developer;56;0.3
+Tech Lead;62;0.34
 DevSecOps Engineer;56;0.3
-UI Developer;54;0.29
-Solutions Engineer;53;0.29
-Database Administrator;53;0.29
-AI/ML Engineer;50;0.27
+Android Developer;55;0.3
+AI/ML Engineer;53;0.29
+Infrastructure Engineer;53;0.29
 iOS Developer;50;0.27
-QA Analyst;48;0.26
+Solutions Engineer;49;0.27
+QA Analyst;49;0.27
+UI Developer;48;0.26
 Business Analyst;47;0.25
 Integration Engineer;46;0.25
+SOC Analyst;45;0.24
 Cloud Security Engineer;43;0.23
 Systems Analyst;42;0.23
-Application Engineer;41;0.22
-UI/UX Developer;40;0.22
-SOC Analyst;40;0.22
-Python Developer;36;0.19
-Tech Lead;36;0.19
+Game Designer;42;0.23
+IT Specialist;40;0.22
+Application Engineer;39;0.21
+UI/UX Developer;38;0.21
+Python Developer;35;0.19
+Web Designer;35;0.19
 Data Analyst;35;0.19
 Cloud Architect;35;0.19
-Game Designer;35;0.19
-Engineering Manager;32;0.17
 API Developer;32;0.17
 Design Engineer;32;0.17
-Web Designer;30;0.16
+3D Artist;30;0.16
 Security Operations Analyst;28;0.15
+Technical Consultant;27;0.15
 UX Designer;26;0.14
+CRM Developer;26;0.14
 AI Architect;25;0.14
+Game Developer;23;0.12
 Product Engineer;21;0.11
 Project Manager;21;0.11
 Business Systems Analyst;20;0.11
 Product Owner;20;0.11
-Game Developer;19;0.1
+Product Manager;18;0.1
 BI Developer;18;0.1
+Threat Intelligence Analyst;18;0.1
+Data Architect;17;0.09
 UI Designer;17;0.09
-Threat Intelligence Analyst;17;0.09
+Technical Artist;16;0.09
+Enterprise Architect;16;0.09
 PHP Developer;15;0.08
-Enterprise Architect;15;0.08
-Penetration Tester;14;0.08
-Systems Architect;14;0.08
+Technical Producer;15;0.08
 Product Designer;14;0.08
-Technical Artist;14;0.08
+Vulnerability Analyst;14;0.08
+Penetration Tester;13;0.07
+Systems Administrator;13;0.07
 C++ Developer;13;0.07
-Data Architect;13;0.07
+Systems Architect;13;0.07
 Software Development Manager;12;0.06
 Application Architect;12;0.06
 Technical Architect;12;0.06
 Forward Deployed Engineer;11;0.06
-Systems Administrator;11;0.06
-Vulnerability Analyst;11;0.06
-GRC Analyst;11;0.06
-Technical Consultant;10;0.05
+Game Producer;10;0.05
 Animator;10;0.05
 Founding Engineer;9;0.05
 Graphics Engineer;9;0.05
 Information Assurance Analyst;9;0.05
+GRC Analyst;9;0.05
 Go Developer;8;0.04
-3D Artist;8;0.04
+Director of Engineering;8;0.04
+Technical Support;7;0.04
 Performance Engineer;7;0.04
 Data Scientist;7;0.04
 Level Designer;7;0.04
-Security Compliance Analyst;7;0.04
-Technical Support;6;0.03
-Director of Engineering;6;0.03
 Scrum Master;6;0.03
 ETL Developer;6;0.03
 MLOps Engineer;6;0.03
-Game Producer;6;0.03
 Program Manager;5;0.03
 DevOps Architect;5;0.03
 Cloud Support Engineer;5;0.03
-Technical Producer;5;0.03
 IAM Analyst;5;0.03
 SAP Consultant;5;0.03
+Security Architect;4;0.02
 Application Security Engineer;4;0.02
-IT Analyst;4;0.02
 Analytics Engineer;4;0.02
 Hardware Engineer;4;0.02
 AEM Architect;4;0.02
-Security Architect;3;0.02
+Security Compliance Analyst;4;0.02
 Rust Developer;3;0.02
 Ruby Developer;3;0.02
 Game Artist;3;0.02
@@ -126,15 +129,11 @@ Information Architect;3;0.02
 Network Architect;3;0.02
 Mobile Architect;3;0.02
 Delivery Manager;3;0.02
-Security Consultant;2;0.01
-Build Engineer;2;0.01
-DevOps Consultant;2;0.01
 Blockchain Developer;2;0.01
 Information Security Engineer;2;0.01
-RMF Analyst;2;0.01
 Scala Developer;1;0.01
-IT Specialist;1;0.01
 CIO;1;0.01
 CTO;1;0.01
 Head of Engineering;1;0.01
 Computer Vision Engineer;1;0.01
+RMF Analyst;1;0.01
