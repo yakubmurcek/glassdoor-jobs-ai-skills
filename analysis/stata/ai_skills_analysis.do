@@ -31,6 +31,7 @@ display "Aktuální pracovní složka: " c(pwd)
 version 15.1                              
 clear all
 set more off                              
+set max_memory 8g, permanently            
 
 * Nastav cestu k datům - UPRAV PODLE SVÉ STRUKTURY
 global datadir "../../data/outputs"
@@ -97,12 +98,21 @@ label variable has_ai_flag "AI Job (Tier + Valid Skills, no buzzwords)"
 gen has_ai = has_ai_flag 
 
 * --- 3.3 Vzdělání (Hybridní) ---
-* Používáme předpřipravenou 'education_hybrid' proměnnou
-* Hodnoty v datech: "missing", "highschool", "high school", "associate", "bachelor", "master", "phd"
+* Vytvoříme 'education_hybrid' z edulevel_llm (primární) a edu_level_det (fallback)
+* Výsledné hodnoty: "missing", "highschool", "associate", "bachelor", "master", "phd"
 * POZOR: encode řadí abecedně, proto kódujeme manuálně (ordinální pořadí)
 
-* Sjednocení variant ("high school" -> "highschool")
+* Krok 1: Normalizujeme edulevel_llm na lowercase a sjednotíme hodnoty
+gen education_hybrid = lower(edulevel_llm)
+replace education_hybrid = subinstr(education_hybrid, "'s", "", .)
 replace education_hybrid = "highschool" if education_hybrid == "high school"
+replace education_hybrid = "missing" if education_hybrid == "-" | education_hybrid == ""
+
+* Krok 2: Fallback na edu_level_det pokud LLM chybí
+replace education_hybrid = edu_level_det if education_hybrid == "missing" & edu_level_det != ""
+
+* Krok 3: Finální missing pro prázdné
+replace education_hybrid = "missing" if education_hybrid == ""
 
 gen edu_cat = .
 replace edu_cat = 0 if education_hybrid == "missing" | education_hybrid == ""
