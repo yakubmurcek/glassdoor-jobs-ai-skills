@@ -1,7 +1,7 @@
 ********************************************************************************
 * AI SKILLS IN IT JOB POSTINGS - STATA ANALYSIS
 * ==============================================================================
-* Dataset: us_relevant_ai.csv
+* Dataset: us_relevant_ai_stata.csv
 * Autor: [Yakub Murcek]
 * Datum: Leden 2026
 * 
@@ -16,11 +16,11 @@
 * ==============================================================================
 * Vyčistíme paměť a nastavíme working directory
 * Toto je důležité pro reprodukovatelnost - každý běh začíná čistě
-* AUTO-SETUP: Pokus o automatické nastavení složky (Windows)
+* AUTO-SETUP: Pokus o automatické nastavení složky
 capture {
     local userprofile : environment USERPROFILE
     * Převod zpětných lomítek na dopředná pro jistotu
-    local userprofile = subinstr("`userprofile'", "\", "/", .)
+    local userprofile = subinstr("`userprofile'", "\\", "/", .)
     cd "`userprofile'/Projects/glassdoor-jobs-ai-skills/analysis/stata"
 }
 if _rc {
@@ -98,10 +98,23 @@ gen has_ai = has_ai_flag
 
 * --- 3.3 Vzdělání (Hybridní) ---
 * Používáme předpřipravenou 'education_hybrid' proměnnou
-* Normalizované hodnoty: "bachelor", "master", "highschool", "missing"
+* Hodnoty v datech: "missing", "highschool", "high school", "associate", "bachelor", "master", "phd"
+* POZOR: encode řadí abecedně, proto kódujeme manuálně (ordinální pořadí)
+
+* Sjednocení variant ("high school" -> "highschool")
 replace education_hybrid = "highschool" if education_hybrid == "high school"
-encode education_hybrid, generate(edu_cat)
-label variable edu_cat "Pozadovane vzdelani (kategoricke)"
+
+gen edu_cat = .
+replace edu_cat = 0 if education_hybrid == "missing" | education_hybrid == ""
+replace edu_cat = 1 if education_hybrid == "highschool"
+replace edu_cat = 2 if education_hybrid == "associate"
+replace edu_cat = 3 if education_hybrid == "bachelor"
+replace edu_cat = 4 if education_hybrid == "master"
+replace edu_cat = 5 if education_hybrid == "phd"
+
+label define edu_lbl 0 "Missing" 1 "Highschool" 2 "Associate" 3 "Bachelor" 4 "Master" 5 "PhD"
+label values edu_cat edu_lbl
+label variable edu_cat "Pozadovane vzdelani (ordinalni)"
 
 * --- 3.4 Zkušenosti ---
 * experience_min_llm by měl být již numerický, ale pro jistotu
@@ -123,7 +136,21 @@ label values exp_category exp_lbl
 label variable exp_category "Kategorie seniority"
 
 * --- 3.5 Plat ---
+* Převod na roční plat podle pay_period
+* US standard: 2080 hodin/rok (40h/týden × 52 týdnů), 12 měsíců/rok
 destring salary_min salary_mid salary_max, replace force
+
+* Přepočet hodinových mezd na roční (HOURLY × 2080)
+replace salary_min = salary_min * 2080 if pay_period == "HOURLY"
+replace salary_mid = salary_mid * 2080 if pay_period == "HOURLY"
+replace salary_max = salary_max * 2080 if pay_period == "HOURLY"
+
+* Přepočet měsíčních mezd na roční (MONTHLY × 12)
+replace salary_min = salary_min * 12 if pay_period == "MONTHLY"
+replace salary_mid = salary_mid * 12 if pay_period == "MONTHLY"
+replace salary_max = salary_max * 12 if pay_period == "MONTHLY"
+
+* Filtr outlierů (po přepočtu na roční bázi)
 replace salary_mid = . if salary_mid < 20000 | salary_mid > 500000
 label variable salary_mid "Rocni plat - stredni hodnota (USD)"
 
@@ -135,14 +162,77 @@ encode sector, generate(sector_num)
 replace state = "Unknown" if state == ""
 encode state, generate(state_num)
 
-* 3.7 Remote práce ---
-* Zde odstranime "capture confirm" abychom videli jestli promenna existuje
+* --- 3.8 Velikost firmy (ordinální) ---
+replace size = "Unknown" if size == ""
+gen size_cat = .
+replace size_cat = 0 if size == "Unknown"
+replace size_cat = 1 if size == "1 to 50 Employees"
+replace size_cat = 2 if size == "51 to 200 Employees"
+replace size_cat = 3 if size == "201 to 500 Employees"
+replace size_cat = 4 if size == "501 to 1000 Employees"
+replace size_cat = 5 if size == "1001 to 5000 Employees"
+replace size_cat = 6 if size == "5001 to 10000 Employees"
+replace size_cat = 7 if size == "10000+ Employees"
+
+label define size_lbl 0 "Unknown" 1 "1-50" 2 "51-200" 3 "201-500" ///
+    4 "501-1000" 5 "1001-5000" 6 "5001-10000" 7 "10000+"
+label values size_cat size_lbl
+label variable size_cat "Velikost firmy (ordinalni)"
+
+* --- 3.9 Typ firmy (nominální, sloučený) ---
+gen type_cat = .
+replace type_cat = 0 if type == "" | type == "Unknown"
+replace type_cat = 1 if type == "Company - Private"
+replace type_cat = 2 if type == "Company - Public"
+replace type_cat = 3 if type == "Subsidiary or Business Segment"
+replace type_cat = 4 if inlist(type, "Nonprofit Organization", "Government", ///
+    "College / University", "School / School District", "Hospital")
+replace type_cat = 5 if inlist(type, "Contract", "Self-employed", ///
+    "Private Practice / Firm", "Franchise")
+
+label define type_lbl 0 "Unknown" 1 "Private" 2 "Public" 3 "Subsidiary" ///
+    4 "Nonprofit/Gov/Edu" 5 "Other"
+label values type_cat type_lbl
+label variable type_cat "Typ firmy"
+
+* --- 3.10 NACE sektor (přichází z clean-stata CLI, jen encode) ---
+replace sector_nace = "Unknown" if sector_nace == ""
+encode sector_nace, generate(sector_nace_num)
+label variable sector_nace_num "NACE sektor"
+
+* --- 3.11 Rok založení firmy ---
+destring year_founded, replace force
+label variable year_founded "Rok zalozeni firmy"
+
+* --- 3.7 Remote práce ---
 gen is_remote = 0
 replace is_remote = 1 if strpos(lower(remote_work_types), "home") > 0
 replace is_remote = 1 if strpos(lower(remote_work_types), "remote") > 0
 
 label variable is_remote "Moznost remote prace (1=ano)"
 
+* --- 3.12 AI Level (multinomiální závislá proměnná) ---
+* Tříkategoriální proměnná pro multinomiální logit:
+*   0 = žádné AI požadavky (none)
+*   1 = používá AI nástroje (ai_integration)
+*   2 = vyvíjí/buduje AI (applied_ai, core_ai)
+gen ai_level = 0
+replace ai_level = 1 if desc_tier_llm == "ai_integration"
+replace ai_level = 2 if inlist(desc_tier_llm, "applied_ai", "core_ai")
+
+label define ailevel_lbl 0 "None" 1 "AI Integration" 2 "Applied/Core AI"
+label values ai_level ailevel_lbl
+label variable ai_level "Uroven AI pozadavku (0/1/2)"
+
+* --- 3.13 Census Region (přichází z clean-stata CLI, jen encode) ---
+replace region = "Unknown" if region == ""
+encode region, generate(region_num)
+label variable region_num "Census region"
+
+* --- 3.14 Job Family (přichází z clean-stata CLI, jen encode) ---
+replace job_family = "Unknown" if job_family == ""
+encode job_family, generate(job_family_num)
+label variable job_family_num "Rodina pozice"
 
 
 * ==============================================================================
@@ -198,6 +288,22 @@ tab sector if sector != "Unknown", sort
 display _n "--- 4.6 Remote prace ---"
 tab is_remote
 tab is_remote has_ai, chi2 row
+
+* --- 4.7 Velikost firmy ---
+display _n "--- 4.7 Velikost firmy ---"
+tab size_cat, missing
+
+* --- 4.8 Typ firmy ---
+display _n "--- 4.8 Typ firmy ---"
+tab type_cat, missing
+
+* --- 4.9 NACE sektor ---
+display _n "--- 4.9 NACE sektor ---"
+tab sector_nace if sector_nace != "Unknown", sort
+
+* --- 4.10 Rok zalozeni ---
+display _n "--- 4.10 Rok zalozeni firmy ---"
+summarize year_founded, detail
 
 
 * ==============================================================================
@@ -258,41 +364,166 @@ ranksum salary_mid, by(has_ai)
 
 
 * ==============================================================================
-* 6. REGRESNÍ ANALÝZA
+* 6. REGRESNÍ ANALÝZA — MODELY VEDOUCÍHO
 * ==============================================================================
-* Modelování faktorů ovlivňujících plat a AI požadavky
+* log(mzda) = skill clustery + AI tier + sektor + lokace + remote + typ + velikost
+*             + (vzdělání, zkušenosti, pozice)
+* Závorka = Model B (plný), bez závorky = Model A (base)
 
 display _n "=============================================================="
-display "6. REGRESNI ANALYZA"
+display "6. REGRESNI ANALYZA — MODELY VEDOUCIHO"
 display "=============================================================="
 
-* --- 6.1 OLS regrese: Co ovlivňuje plat? ---
-* Závislá proměnná: salary_mid
-* Nezávislé: has_ai, edu_level, experience_min_llm, is_remote
+* --- 6.0 Příprava: log transformace platu ---
+gen ln_salary = ln(salary_mid)
+label variable ln_salary "Prirozeny logaritmus platu"
 
-display _n "--- 6.1 OLS regrese: Determinanty platu ---"
+summarize ln_salary, detail
+display _n "Pozn: koeficient b v log modelu = (exp(b)-1)*100 % zmena platu"
 
-regress salary_mid has_ai i.edu_cat experience_min_llm is_remote
+* --- 6.1 Model A: Base model (bez individuálních charakteristik) ---
+* DV: ln(salary_mid)
+* IV: 24 skill clusterů + AI level + sektor NACE + region + remote + typ + velikost
 
-* Robustní standardní chyby (heteroskedasticita)
-display _n "--- 6.1b OLS s robustnimi standardnimi chybami ---"
-regress salary_mid has_ai i.edu_cat experience_min_llm is_remote, vce(robust)
+display _n "--- 6.1 Model A: Base model ---"
+display "ln(plat) = skill clustery + AI level + sektor + region + remote + typ + velikost"
 
-* --- 6.2 Rozšířený model s interakcemi ---
-* AI × vzdělání interakce - má AI větší vliv u vyššího vzdělání?
+regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    if ln_salary != ., vce(robust)
 
-display _n "--- 6.2 Model s interakcemi ---"
-regress salary_mid c.has_ai##i.edu_cat experience_min_llm is_remote, vce(robust)
+estimates store model_a
+display _n "Model A: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
 
-* --- 6.3 Logistická regrese: Co predikuje AI požadavky? ---
-* Které charakteristiky pozice souvisí s AI požadavky?
+* --- 6.1b VIF diagnostika (kolinearita) ---
+display _n "--- 6.1b VIF diagnostika Model A ---"
+quietly regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    if ln_salary != .
+vif
 
-display _n "--- 6.3 Logisticka regrese: Prediktory AI pozadavku ---"
-logit has_ai i.edu_cat experience_min_llm is_remote, or
+* --- 6.2 Model B: Plný model (+vzdělání, zkušenosti, pozice) ---
+display _n "--- 6.2 Model B: Plny model ---"
+display "ln(plat) = Model A + vzdelani + zkusenosti + pozice (job family)"
 
-* Marginální efekty (interpretovatelné jako procentní změny)
-display _n "--- 6.3b Marginalni efekty ---"
+regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    i.edu_cat ///
+    i.exp_category ///
+    i.job_family_num ///
+    if ln_salary != ., vce(robust)
+
+estimates store model_b
+display _n "Model B: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+
+* --- 6.2b VIF diagnostika Model B ---
+display _n "--- 6.2b VIF diagnostika Model B ---"
+quietly regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    i.edu_cat ///
+    i.exp_category ///
+    i.job_family_num ///
+    if ln_salary != .
+vif
+
+* --- 6.3 Srovnání modelů A vs B (F-test nested models) ---
+display _n "--- 6.3 Srovnani modelu A vs B ---"
+display "F-test: testuje zda edu + exp + job_family vyznamne zlepsuje model"
+
+quietly regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    if ln_salary != .
+estimates store model_a_lr
+
+quietly regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    i.edu_cat ///
+    i.exp_category ///
+    i.job_family_num ///
+    if ln_salary != .
+estimates store model_b_lr
+
+lrtest model_a_lr model_b_lr
+estimates drop model_a_lr model_b_lr
+
+* --- 6.4 Porovnávací tabulka modelů ---
+display _n "--- 6.4 Porovnani koeficientu Model A vs B ---"
+estimates table model_a model_b, star stats(N r2 r2_a)
+
+
+* ==============================================================================
+* 6B. JEDNODUCHÉ MODELY (původní — pro srovnání)
+* ==============================================================================
+
+display _n "=============================================================="
+display "6B. JEDNODUCHE MODELY (puvodni)"
+display "=============================================================="
+
+* --- 6B.1 OLS: plat ~ has_ai + edu + exp + remote ---
+display _n "--- 6B.1 OLS: Determinanty platu (jednoduchy model) ---"
+regress salary_mid has_ai i.edu_cat i.exp_category is_remote if edu_cat > 0 & exp_category > 0, vce(robust)
+
+* --- 6B.2 Logistická regrese: Prediktory AI požadavků ---
+display _n "--- 6B.2 Logisticka regrese: Prediktory AI pozadavku ---"
+logit has_ai i.edu_cat i.exp_category is_remote if edu_cat > 0 & exp_category > 0, or
+display _n "--- 6B.2b Marginalni efekty ---"
 margins, dydx(*) atmeans
+
+* --- 6B.3 Multinomiální logit ---
+display _n "--- 6B.3 Multinomialni logit: Uroven AI pozadavku ---"
+mlogit ai_level i.edu_cat i.exp_category is_remote if edu_cat > 0 & exp_category > 0, baseoutcome(0) rrr
+display _n "--- 6B.3b Marginalni efekty: P(AI Integration) ---"
+margins, dydx(*) predict(outcome(1)) atmeans
+display _n "--- 6B.3c Marginalni efekty: P(Applied/Core AI) ---"
+margins, dydx(*) predict(outcome(2)) atmeans
+
+* Hausman test IIA
+display _n "--- 6B.3d Hausman test IIA ---"
+quietly mlogit ai_level i.edu_cat i.exp_category is_remote if edu_cat > 0 & exp_category > 0, baseoutcome(0)
+estimates store full_model
+quietly mlogit ai_level i.edu_cat i.exp_category is_remote if edu_cat > 0 & exp_category > 0 & ai_level != 1, baseoutcome(0)
+estimates store reduced_model
+capture hausman reduced_model full_model, alleqs constant
+if _rc {
+    display "Hausman test nelze provest (typicke pro male vzorky v nekterych kategoriich)"
+}
+estimates drop full_model reduced_model
 
 
 * ==============================================================================
@@ -333,7 +564,7 @@ display "=============================================================="
 
 * --- 8.1 Summary statistics ---
 display _n "--- 8.1 Summary statistics pro tabulky ---"
-summarize salary_mid experience_min_llm edu_cat skill_count has_ai is_remote
+summarize salary_mid experience_min_llm edu_cat exp_category skill_count has_ai is_remote
 
 * Export do CSV pro další zpracování (grafy v Excelu/R/Python)
 export delimited desc_tier_llm salary_mid experience_min_llm edulevel_llm state sector using "$outdir/summary_for_charts.csv" if salary_mid != ., delimiter(",") replace

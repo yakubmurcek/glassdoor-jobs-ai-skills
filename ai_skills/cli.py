@@ -371,7 +371,135 @@ def _handle_clean_stata(args: argparse.Namespace) -> int:
     initial_rows = len(df)
     print(f"Loaded {initial_rows} rows. Columns: {len(df.columns)}")
     
-    # Columns to drop for Stata optimization
+    # =================================================================
+    # STATA-READY COLUMN CREATION (string processing best done in Python)
+    # =================================================================
+    
+    # --- 1. Census Region (from state) ---
+    _CENSUS_REGIONS = {
+        # Northeast
+        "Connecticut": "Northeast", "Maine": "Northeast",
+        "Massachusetts": "Northeast", "New Hampshire": "Northeast",
+        "Rhode Island": "Northeast", "Vermont": "Northeast",
+        "New Jersey": "Northeast", "New York": "Northeast",
+        "New York State": "Northeast", "Pennsylvania": "Northeast",
+        # Midwest
+        "Illinois": "Midwest", "Indiana": "Midwest",
+        "Michigan": "Midwest", "Ohio": "Midwest",
+        "Wisconsin": "Midwest", "Iowa": "Midwest",
+        "Kansas": "Midwest", "Minnesota": "Midwest",
+        "Missouri": "Midwest", "Nebraska": "Midwest",
+        "North Dakota": "Midwest", "South Dakota": "Midwest",
+        # South
+        "Delaware": "South", "Florida": "South",
+        "Georgia": "South", "Maryland": "South",
+        "North Carolina": "South", "South Carolina": "South",
+        "Virginia": "South", "District of Columbia": "South",
+        "West Virginia": "South", "Alabama": "South",
+        "Kentucky": "South", "Mississippi": "South",
+        "Tennessee": "South", "Arkansas": "South",
+        "Louisiana": "South", "Oklahoma": "South", "Texas": "South",
+        # West
+        "Arizona": "West", "Colorado": "West",
+        "Idaho": "West", "Montana": "West",
+        "Nevada": "West", "New Mexico": "West",
+        "Utah": "West", "Wyoming": "West",
+        "Alaska": "West", "California": "West",
+        "Hawaii": "West", "Oregon": "West",
+        "Washington": "West", "Washington State": "West",
+    }
+    if "state" in df.columns:
+        df["region"] = df["state"].map(_CENSUS_REGIONS).fillna("Unknown")
+        region_counts = df["region"].value_counts().to_dict()
+        print(f"Created 'region': {region_counts}")
+    
+    # --- 2. Job Family (from job_title via ordered regex) ---
+    # Order matters: specific patterns first, catch-all last
+    _JOB_FAMILY_PATTERNS = [
+        ("Management", r"(?i)manager|director|architect|tech\s*lead|vp\s|head\sof"),
+        ("Security", r"(?i)secur|cyber|\bsoc\b|\bsiem\b|penetration"),
+        ("QA & Testing", r"(?i)\bqa\b|test(?:er|ing)\b|test\s*(?:engineer|auto)|quality\s*(?:assurance|engineer|analyst)|sdet|\bqe\b"),
+        ("DevOps & Cloud", r"(?i)devops|devsecops|site\s*reliab|\bsre\b|cloud\s*eng|platform\s*eng|infrastructure\s*eng"),
+        ("Data & AI", r"(?i)data\s*eng|data\s*scien|machine\s*learn|\bai\b|\bml\b|data\s*analy|business\s*(?:intel|analyst|systems\s*analyst)"),
+        ("Systems & Embedded", r"(?i)system\w*\s*eng|embedded|firmware|mainframe"),
+        ("Frontend & Design", r"(?i)front[\s-]?end|frontend|\bui[\s/]ux\b|ux\s*design|ui\s*design|\bui\s*(?:develop|engineer)"),
+        ("Sr+ Software Engineer", r"(?i)(?:senior|staff|principal|lead)\s.*(?:software\s*eng|backend\s*eng|full[\s-]?stack\s*eng)"),
+        ("Software Developer", r"(?i)software\s*develop|full[\s-]?stack|fullstack|\.net\s*develop|java\s*develop|web\s*develop|back[\s-]?end\s*develop|programmer[\s/]*analyst|application\s*develop|react\s*(?:native\s*)?develop|php\s*develop|python\s*develop|ruby\s*develop|angular\s*develop|wordpress\s*develop|javascript\s*develop|flutter\s*develop|html\s*develop|coldfusion\s*develop|\bweb\s*app\w*\s*(?:develop|program)|(?:it|junior|senior)\s*develop|^develop"),
+        ("Software Engineer", r"(?i)software\s*eng|backend\s*eng|full[\s-]?stack\s*eng|integration\s*eng|product\s*eng|java\s*eng|validation\s*eng"),  # catch-all — must be last among SW roles
+    ]
+    if "job_title" in df.columns:
+        import re as _re
+        df["job_family"] = "Other"
+        for family_name, pattern in _JOB_FAMILY_PATTERNS:
+            mask = (
+                df["job_title"].str.contains(pattern, na=False, regex=True)
+                & (df["job_family"] == "Other")
+            )
+            df.loc[mask, "job_family"] = family_name
+        family_counts = df["job_family"].value_counts().to_dict()
+        coverage = (df["job_family"] != "Other").mean()
+        print(f"Created 'job_family' ({coverage:.0%} coverage): {family_counts}")
+    
+    # --- 3. NACE Sector (from sector) ---
+    _SECTOR_TO_NACE = {
+        "Information Technology": "J",
+        "Media & Communication": "J", "Telecommunications": "J", "Media": "J",
+        "Manufacturing": "C",
+        "Aerospace & Defense": "C", "Pharmaceutical & Biotechnology": "C",
+        "Financial Services": "K", "Insurance": "K",
+        "Management & Consulting": "M", "Legal": "M",
+        "Healthcare": "Q",
+        "Retail & Wholesale": "G",
+        "Education": "P",
+        "Human Resources & Staffing": "N",
+        "Government & Public Administration": "O",
+        "Transportation & Logistics": "H",
+        "Construction, Repair & Maintenance Services": "F",
+        "Real Estate": "L",
+        "Hotels & Travel Accommodation": "I", "Restaurants & Food Service": "I",
+        "Agriculture": "A",
+        "Arts, Entertainment & Recreation": "R",
+        "Nonprofit & NGO": "S", "Personal Consumer Services": "S",
+        "Energy, Mining & Utilities": "D",
+    }
+    if "sector" in df.columns:
+        df["sector_nace"] = df["sector"].map(_SECTOR_TO_NACE).fillna("Unknown")
+        nace_counts = df["sector_nace"].value_counts().to_dict()
+        print(f"Created 'sector_nace': {nace_counts}")
+    
+    # --- 4. Skill Cluster Dummies (from hardskills via SKILL_TO_FAMILY) ---
+    from .skills_dictionary import SKILL_TO_FAMILY
+    
+    # Get unique families and create safe column names
+    families = sorted(set(SKILL_TO_FAMILY.values()))
+    family_col_map = {}  # family_name -> column_name
+    for fam in families:
+        safe = fam.lower().replace(" ", "_").replace("&", "_").replace(",", "")
+        safe = safe.replace("__", "_").strip("_")
+        col = f"cluster_{safe}"
+        family_col_map[fam] = col
+        df[col] = 0
+    
+    if "hardskills" in df.columns:
+        for idx, skills_str in df["hardskills"].items():
+            if pd.isna(skills_str) or str(skills_str).strip() == "":
+                continue
+            row_skills = [s.strip().lower() for s in str(skills_str).split(",")]
+            seen_families = set()
+            for skill in row_skills:
+                fam = SKILL_TO_FAMILY.get(skill)
+                if fam and fam not in seen_families:
+                    seen_families.add(fam)
+                    df.at[idx, family_col_map[fam]] = 1
+        
+        # Print prevalence
+        cluster_cols = list(family_col_map.values())
+        prevalence = {col: f"{df[col].mean():.0%}" for col in sorted(cluster_cols) if df[col].sum() > 0}
+        print(f"Created {len(cluster_cols)} cluster dummies. Prevalence: {prevalence}")
+    
+    # =================================================================
+    # DROP BULKY COLUMNS
+    # =================================================================
     cols_to_drop = [
         'job_desc_text', 
         'job_desc_html', 
