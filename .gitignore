@@ -1,6 +1,8 @@
 
-# Large data files (Stata)
+# Stata
 *.dta
+analysis/stata/output/
+analysis/stata/*.pdf
 
 data/outputs/old
 data/outputs/backups
