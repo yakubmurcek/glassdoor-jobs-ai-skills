@@ -1,7 +1,7 @@
 
 # Stata
 *.dta
-analysis/stata/output/
+# analysis/stata/output/
 analysis/stata/*.pdf
 
 data/outputs/old

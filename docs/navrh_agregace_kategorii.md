@@ -56,9 +56,15 @@ Níže jsou uvedeny konkrétní problémy a návrhy na jejich řešení, rozděl
 * **Původní stav v Applied/Core AI:** `Subsidiary / Pobočky` (40), a `Other / Zbytek` (26). 
 * **Provedené řešení:** Množina kategoriálních hodnot se agreguje takto: Kategorie přidružených dceřiných společností (`Subsidiary`) bude včleněna do logicky vyššího a podobného nad-celku `Private` (Soukromé společnosti). Hodnota `Other` bude následně překlasifikována do odpovídající zbytkové kategorie `Unknown`.
 
-### F) Vyřazení dovednosti Legacy System (Mainframe)
-V datové sadě byl zachytáván i výskyt technologického parametru `cluster_legacy__mainframe`. Samotná proměnná vykazuje napříč všemi stupni v globále pouze 49 inzerátů, což ji činí pro modelování (mlogit, potažmo celou regresi) bezpředmětnou. 
-* **Provedené řešení:** Proměnná s ohledem na neschopnost provést relevantní statistický odhad kvůli 49 validním pozicím (z téměř 18 000) musí být kompletně vyřazena z navrhovaného modelu. 
+### F) Vyřazení neplatných vlastností a dovedností (Skill Clusters)
+V datové sadě byl zachytáván u každého inzerátu i výskyt desítek technologických parametrů / dovedností (proměnné `cluster_*`). Rozřazením do naší nejmenší skupiny "Applied/Core AI" (1 313 inzerátů) se bohužel ukázalo, že tři specifické dovednosti mají natolik zanedbatelný výskyt, že je nelze použít pro modelování multinomiální logistické regrese bez narušení předpokladů (a rizika tzv. *perfect prediction* erroru).
+
+Jedná se o:
+* `cluster_legacy__mainframe` (Tato zastaralá technologie se objevila u pouhých 49 inzerátů v celém datasetu 18 000 pozic).
+* `cluster_data_analysis__stats` (Pouhých 29 pozorování v rámci Applied/Core AI pozic).
+* `cluster_tools__editors` (Pouhých 47 pozorování v rámci Applied/Core AI pozic).
+
+* **Provedené řešení:** Tyto tři konkrétní proměnné musí být kompletně vyřazeny z navrhovaných matematických modelů (nelze je agregovat, tvoří binární Ano/Ne indikátor přítomnosti v textu inzerátu). Ostatních více než 20 zachycených skill-clusterů bezpečně limit 50 pozorování splňuje.
 
 ---
 

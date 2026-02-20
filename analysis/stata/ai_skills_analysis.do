@@ -119,16 +119,12 @@ replace education_hybrid = edu_level_det if education_hybrid == "missing" & edu_
 replace education_hybrid = "missing" if education_hybrid == ""
 
 gen edu_cat = .
-replace edu_cat = 0 if education_hybrid == "missing" | education_hybrid == ""
-replace edu_cat = 1 if education_hybrid == "highschool"
-replace edu_cat = 2 if education_hybrid == "associate"
-replace edu_cat = 3 if education_hybrid == "bachelor"
-replace edu_cat = 4 if education_hybrid == "master"
-replace edu_cat = 4 if education_hybrid == "phd"    /* Merge PhD (n=12) into Master+ */
+replace edu_cat = 0 if inlist(education_hybrid, "missing", "", "highschool", "associate")
+replace edu_cat = 1 if inlist(education_hybrid, "bachelor", "master", "phd")
 
-label define edu_lbl 0 "Missing" 1 "Highschool" 2 "Associate" 3 "Bachelor" 4 "Master+"
+label define edu_lbl 0 "No Degree / Missing" 1 "Bachelor or Higher"
 label values edu_cat edu_lbl
-label variable edu_cat "Pozadovane vzdelani (ordinalni)"
+label variable edu_cat "Pozadovane vzdelani (Binary)"
 
 * --- 3.4 Zkušenosti ---
 * experience_min_llm by měl být již numerický, ale pro jistotu
@@ -139,13 +135,12 @@ label variable experience_min_llm "Min. pozadovane roky zkusenosti"
 * Missing = neuvedeno v inzerátu (samostatná kategorie, jako u vzdělání)
 gen exp_category = .
 replace exp_category = 0 if experience_min_llm == .
-replace exp_category = 1 if experience_min_llm == 0
-replace exp_category = 2 if experience_min_llm > 0 & experience_min_llm <= 2
+* Slouceni Entry s Junior a Expert se Senior
+replace exp_category = 2 if experience_min_llm >= 0 & experience_min_llm <= 2
 replace exp_category = 3 if experience_min_llm > 2 & experience_min_llm <= 5
-replace exp_category = 4 if experience_min_llm > 5 & experience_min_llm <= 10
-replace exp_category = 5 if experience_min_llm > 10 & experience_min_llm < .
+replace exp_category = 4 if experience_min_llm > 5 & experience_min_llm < .
 
-label define exp_lbl 0 "Missing" 1 "Entry (0)" 2 "Junior (1-2)" 3 "Mid (3-5)" 4 "Senior (6-10)" 5 "Expert (10+)"
+label define exp_lbl 0 "Missing" 2 "Junior (0-2)" 3 "Mid (3-5)" 4 "Senior+ (6+)"
 label values exp_category exp_lbl
 label variable exp_category "Kategorie seniority"
 
@@ -195,25 +190,22 @@ label variable size_cat "Velikost firmy (ordinalni)"
 
 * --- 3.9 Typ firmy (nominální, sloučený) ---
 gen type_cat = .
-replace type_cat = 0 if type == "" | type == "Unknown"
-replace type_cat = 1 if type == "Company - Private"
+replace type_cat = 0 if inlist(type, "", "Unknown", "Contract", "Self-employed", "Private Practice / Firm", "Franchise") // Merge Other to Unknown
+replace type_cat = 1 if inlist(type, "Company - Private", "Subsidiary or Business Segment") // Merge Subsidiary to Private
 replace type_cat = 2 if type == "Company - Public"
-replace type_cat = 3 if type == "Subsidiary or Business Segment"
 replace type_cat = 4 if inlist(type, "Nonprofit Organization", "Government", ///
     "College / University", "School / School District", "Hospital")
-replace type_cat = 5 if inlist(type, "Contract", "Self-employed", ///
-    "Private Practice / Firm", "Franchise")
 
-label define type_lbl 0 "Unknown" 1 "Private" 2 "Public" 3 "Subsidiary" ///
-    4 "Nonprofit/Gov/Edu" 5 "Other"
+label define type_lbl 0 "Unknown/Other" 1 "Private/Subsidiary" 2 "Public" ///
+    4 "Nonprofit/Gov/Edu"
 label values type_cat type_lbl
 label variable type_cat "Typ firmy"
 
 * --- 3.10 NACE sektor (přichází z clean-stata CLI, jen encode) ---
 replace sector_nace = "Unknown" if sector_nace == ""
 
-* Merge Agriculture (A, n=30) into Unknown (below 50-obs threshold)
-replace sector_nace = "Unknown" if sector_nace == "A"
+* Zachovat top 5 sektorů + Unknown, vše ostatní sloučit do "Other" (kvůli < 50 obs v Applied AI)
+replace sector_nace = "Other" if !inlist(sector_nace, "J", "C", "K", "M", "Q", "Unknown")
 
 encode sector_nace, generate(sector_nace_num)
 label variable sector_nace_num "NACE sektor"
@@ -249,9 +241,19 @@ label variable region_num "Census region"
 
 * --- 3.14 Job Family (přichází z clean-stata CLI, jen encode) ---
 replace job_family = "Unknown" if job_family == ""
+
+* Sloučení řídkých technických rolí do "Other" (kvůli < 50 obs v Applied AI)
+replace job_family = "Other" if inlist(job_family, "Frontend & Design", "QA & Testing", "Security", "Systems & Embedded")
+
 encode job_family, generate(job_family_num)
 label variable job_family_num "Rodina pozice"
 
+* --- 3.15 Vyřazení neplatných skill clusterů ---
+* Tyto clustery mají v kategorii Applied/Core AI méně než 50 pozorování, což by narušilo model.
+* Proto je mažeme, aby je nezahrnoval wildcard cluster_* v regresních modelech.
+drop cluster_legacy__mainframe
+drop cluster_data_analysis__stats
+drop cluster_tools__editors
 
 * ==============================================================================
 * 4. DESKRIPTIVNÍ STATISTIKA
@@ -353,10 +355,6 @@ tab region ai_level, column
 display _n "Job Family x AI level:"
 tab job_family ai_level, column
 
-* TEMPORARY: Remove this line when ready to run full analysis
-display _n "=== EARLY EXIT: Check diagnostic tabs above, then remove this exit ==="
-log close
-exit
 
 * ==============================================================================
 * 5. ANALYTICKÉ TESTY - HYPOTÉZY
@@ -549,17 +547,17 @@ display "=============================================================="
 
 * --- 6B.1 OLS: plat ~ has_ai + edu + exp + remote ---
 display _n "--- 6B.1 OLS: Determinanty platu (jednoduchy model) ---"
-regress salary_mid has_ai ib3.edu_cat ib3.exp_category is_remote, vce(robust)
+regress salary_mid has_ai ib1.edu_cat ib3.exp_category is_remote, vce(robust)
 
 * --- 6B.2 Logistická regrese: Prediktory AI požadavků ---
 display _n "--- 6B.2 Logisticka regrese: Prediktory AI pozadavku ---"
-logit has_ai ib3.edu_cat ib3.exp_category is_remote, or
+logit has_ai ib1.edu_cat ib3.exp_category is_remote, or
 display _n "--- 6B.2b Marginalni efekty ---"
 margins, dydx(*) atmeans
 
 * --- 6B.3 Multinomiální logit ---
 display _n "--- 6B.3 Multinomialni logit: Uroven AI pozadavku ---"
-mlogit ai_level ib3.edu_cat ib3.exp_category is_remote, baseoutcome(0) rrr
+mlogit ai_level ib1.edu_cat ib3.exp_category is_remote, baseoutcome(0) rrr
 display _n "--- 6B.3b Marginalni efekty: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1)) atmeans
 display _n "--- 6B.3c Marginalni efekty: P(Applied/Core AI) ---"
@@ -567,9 +565,9 @@ margins, dydx(*) predict(outcome(2)) atmeans
 
 * Hausman test IIA
 display _n "--- 6B.3d Hausman test IIA ---"
-quietly mlogit ai_level ib3.edu_cat ib3.exp_category is_remote, baseoutcome(0)
+quietly mlogit ai_level ib1.edu_cat ib3.exp_category is_remote, baseoutcome(0)
 estimates store full_model
-quietly mlogit ai_level ib3.edu_cat ib3.exp_category is_remote if ai_level != 1, baseoutcome(0)
+quietly mlogit ai_level ib1.edu_cat ib3.exp_category is_remote if ai_level != 1, baseoutcome(0)
 estimates store reduced_model
 capture hausman reduced_model full_model, alleqs constant
 if _rc {
