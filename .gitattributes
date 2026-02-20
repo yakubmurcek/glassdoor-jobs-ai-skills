@@ -1,3 +1,4 @@
 data/outputs/us_relevant_ai.csv filter=lfs diff=lfs merge=lfs -text
 data/outputs/us_relevant_ai_deduped.csv filter=lfs diff=lfs merge=lfs -text
 data/inputs/us_relevant.csv filter=lfs diff=lfs merge=lfs -text
+data/outputs/us_relevant_ai_stata.csv filter=lfs diff=lfs merge=lfs -text

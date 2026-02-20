@@ -71,8 +71,12 @@ keep if desc_conf_llm >= 0.7
 display "Počet pozorování po filtrování confidence >= 0.7: " _N
 
 * --- 3.1 AI Tier klasifikace ---
-* desc_tier_llm obsahuje kategorie: "none", "ai_integration", "applied_ai"
+* desc_tier_llm obsahuje kategorie: "none", "ai_integration", "applied_ai", "core_ai"
 replace desc_tier_llm = "missing" if desc_tier_llm == ""
+
+* Merge core_ai into applied_ai (only 6 obs — below 50-obs threshold)
+replace desc_tier_llm = "applied_ai" if desc_tier_llm == "core_ai"
+
 encode desc_tier_llm, generate(ai_tier_num)
 
 * --- 3.2 AI Flag (Strict Intersection + Buzzword Filter) ---
@@ -120,9 +124,9 @@ replace edu_cat = 1 if education_hybrid == "highschool"
 replace edu_cat = 2 if education_hybrid == "associate"
 replace edu_cat = 3 if education_hybrid == "bachelor"
 replace edu_cat = 4 if education_hybrid == "master"
-replace edu_cat = 5 if education_hybrid == "phd"
+replace edu_cat = 4 if education_hybrid == "phd"    /* Merge PhD (n=12) into Master+ */
 
-label define edu_lbl 0 "Missing" 1 "Highschool" 2 "Associate" 3 "Bachelor" 4 "Master" 5 "PhD"
+label define edu_lbl 0 "Missing" 1 "Highschool" 2 "Associate" 3 "Bachelor" 4 "Master+"
 label values edu_cat edu_lbl
 label variable edu_cat "Pozadovane vzdelani (ordinalni)"
 
@@ -207,6 +211,10 @@ label variable type_cat "Typ firmy"
 
 * --- 3.10 NACE sektor (přichází z clean-stata CLI, jen encode) ---
 replace sector_nace = "Unknown" if sector_nace == ""
+
+* Merge Agriculture (A, n=30) into Unknown (below 50-obs threshold)
+replace sector_nace = "Unknown" if sector_nace == "A"
+
 encode sector_nace, generate(sector_nace_num)
 label variable sector_nace_num "NACE sektor"
 
@@ -225,10 +233,10 @@ label variable is_remote "Moznost remote prace (1=ano)"
 * Tříkategoriální proměnná pro multinomiální logit:
 *   0 = žádné AI požadavky (none)
 *   1 = používá AI nástroje (ai_integration)
-*   2 = vyvíjí/buduje AI (applied_ai, core_ai)
+*   2 = vyvíjí/buduje AI (applied_ai — core_ai already merged above)
 gen ai_level = 0
 replace ai_level = 1 if desc_tier_llm == "ai_integration"
-replace ai_level = 2 if inlist(desc_tier_llm, "applied_ai", "core_ai")
+replace ai_level = 2 if desc_tier_llm == "applied_ai"
 
 label define ailevel_lbl 0 "None" 1 "AI Integration" 2 "Applied/Core AI"
 label values ai_level ailevel_lbl
@@ -315,6 +323,40 @@ tab sector_nace if sector_nace != "Unknown", sort
 display _n "--- 4.10 Rok zalozeni firmy ---"
 summarize year_founded, detail
 
+* --- 4.11 Census Region ---
+display _n "--- 4.11 Census Region ---"
+tab region, missing
+tab region has_ai, chi2 column
+
+* --- 4.12 Job Family ---
+display _n "--- 4.12 Job Family ---"
+tab job_family, missing
+tab job_family has_ai, chi2 column
+
+* --- 4.13 Skill Cluster frequencies ---
+display _n "--- 4.13 Pocet pozic s danym skill clusterem ---"
+foreach var of varlist cluster_* {
+    quietly count if `var' == 1
+    display "`var': " r(N) " jobs (" %4.1f r(N)/_N*100 "%)"
+}
+
+* --- 4.14 Cross-tabs of model IVs with ai_level (check for empty cells) ---
+display _n "--- 4.14 Krizove tabulky pro kontrolu prazdnych bunek ---"
+display _n "NACE sektor x AI level:"
+tab sector_nace ai_level, column
+display _n "Typ firmy x AI level:"
+tab type_cat ai_level, column
+display _n "Velikost firmy x AI level:"
+tab size_cat ai_level, column
+display _n "Region x AI level:"
+tab region ai_level, column
+display _n "Job Family x AI level:"
+tab job_family ai_level, column
+
+* TEMPORARY: Remove this line when ready to run full analysis
+display _n "=== EARLY EXIT: Check diagnostic tabs above, then remove this exit ==="
+log close
+exit
 
 * ==============================================================================
 * 5. ANALYTICKÉ TESTY - HYPOTÉZY
@@ -507,17 +549,17 @@ display "=============================================================="
 
 * --- 6B.1 OLS: plat ~ has_ai + edu + exp + remote ---
 display _n "--- 6B.1 OLS: Determinanty platu (jednoduchy model) ---"
-regress salary_mid has_ai i.edu_cat i.exp_category is_remote if edu_cat > 0 & exp_category > 0, vce(robust)
+regress salary_mid has_ai ib3.edu_cat ib3.exp_category is_remote, vce(robust)
 
 * --- 6B.2 Logistická regrese: Prediktory AI požadavků ---
 display _n "--- 6B.2 Logisticka regrese: Prediktory AI pozadavku ---"
-logit has_ai i.edu_cat i.exp_category is_remote if edu_cat > 0 & exp_category > 0, or
+logit has_ai ib3.edu_cat ib3.exp_category is_remote, or
 display _n "--- 6B.2b Marginalni efekty ---"
 margins, dydx(*) atmeans
 
 * --- 6B.3 Multinomiální logit ---
 display _n "--- 6B.3 Multinomialni logit: Uroven AI pozadavku ---"
-mlogit ai_level i.edu_cat i.exp_category is_remote if edu_cat > 0 & exp_category > 0, baseoutcome(0) rrr
+mlogit ai_level ib3.edu_cat ib3.exp_category is_remote, baseoutcome(0) rrr
 display _n "--- 6B.3b Marginalni efekty: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1)) atmeans
 display _n "--- 6B.3c Marginalni efekty: P(Applied/Core AI) ---"
@@ -525,9 +567,9 @@ margins, dydx(*) predict(outcome(2)) atmeans
 
 * Hausman test IIA
 display _n "--- 6B.3d Hausman test IIA ---"
-quietly mlogit ai_level i.edu_cat i.exp_category is_remote if edu_cat > 0 & exp_category > 0, baseoutcome(0)
+quietly mlogit ai_level ib3.edu_cat ib3.exp_category is_remote, baseoutcome(0)
 estimates store full_model
-quietly mlogit ai_level i.edu_cat i.exp_category is_remote if edu_cat > 0 & exp_category > 0 & ai_level != 1, baseoutcome(0)
+quietly mlogit ai_level ib3.edu_cat ib3.exp_category is_remote if ai_level != 1, baseoutcome(0)
 estimates store reduced_model
 capture hausman reduced_model full_model, alleqs constant
 if _rc {
