@@ -258,100 +258,92 @@ _Reference: Engberg et al. (2025), Acemoglu et al. (2022)_
 ### 4.1.1 Primární datový zdroj
 
 - **Online Job Vacancies (OJV)** - pracovní inzeráty
-- Zdroj dat: [specifikovat - Lightcast/Burning Glass, LinkedIn, atd.]
-- Časové období: [specifikovat]
-- Geografické pokrytí: USA, Německo, Indie
+- Zdroj dat: Glassdoor (IT job postings)
+- Geografické pokrytí: Primárně USA (s možnostmi rozšíření dle datové dostupnosti)
 
 ### 4.1.2 Struktura datasetu
 
-_Dle vašeho CSV souboru s 131k záznamy:_
+_Základní dataset po zpracování a čištění pro analýzu (např. `us_relevant_ai_stata.csv` s cca 11 000 záznamy a 75 proměnnými):_
 
-- **Identifikační proměnné**: job_id, company_id, company
-- **Pozice**: job_title, location (city, state, country)
-- **Dovednosti**:
-  - `hardskills` - technické dovednosti
-  - `softskills` - měkké dovednosti
-  - `skill_cluster` - seskupení dovedností (Data & Cloud, Programming, Software Engineering, Integration, UI & Tools)
-- **AI klasifikace**:
-  - `desc_tier_llm` - úroveň AI (none, ai_integration, ai_adjacent, ai_focused)
-  - `desc_conf_llm` - confidence klasifikace
-  - `ai_confidence` - míra jistoty AI klasifikace
-  - `desc_ai_llm` - identifikované AI dovednosti
-  - `is_real_ai` - binární indikátor AI pozice
+- **Identifikační a kontextové proměnné**: `job_title`, `job_family` (agregované profesní rodiny, např. Software Engineer, Data Scientist), lokalita (město, stát, `region` - US Census), `remote_work_types`, `is_remote` (binární indikátor práce na dálku)
+- **Dovednosti (Deterministická extrakce)**:
+  - `hardskills`, `softskills` - extrahováno pomocí robustního slovníkového matchingu bez využití LLM
+  - `skill_count` - celkový počet požadovaných tvrdých dovedností (hard skills) na pozici
+  - `skills_ai_det` - specifické AI dovednosti
+  - `cluster_*` - 24 dummy proměnných reprezentujících rodiny dovedností (např. Data Science & ML, Generative AI, Cloud Computing)
+- **AI klasifikace (LLM a odvozené míry)**:
+  - `desc_tier_llm` (případně numericky jako `ai_tier_num`) - úroveň AI v inzerátu (`none`, `ai_integration`, `applied_ai`, `core_ai`)
+  - `desc_conf_llm` - míra jistoty (confidence) klasifikace z LLM
+  - `desc_ai_llm` - identifikované AI technologie v textu
+  - `has_ai` / `has_ai_flag` - binární indikátor reálné AI pozice vytvořený striktním spojením tieru a specifických dovedností a odfiltrováním "buzzwords"
+  - `ai_level` - zjednodušená úroveň klasifikace AI požadavků (0=None, 1=AI Integration, 2=Applied/Core AI)
 - **Vzdělání a zkušenosti**:
-  - `edu_level_det` - deterministic education level
-  - `edulevel_llm` - LLM extracted education level
-  - `experience_min_llm` - minimální požadované roky zkušeností
+  - `education_hybrid` / `edu_cat` - zjištěné nejnižší požadované vzdělání a jeho numerická kategorizace (0=Missing, přes Highschool, až po PhD)
+  - `experience_min_llm` / `exp_category` - minimální požadované roky praxe z textu a jejich kategorizace (0=Missing, 1=Entry, až 5=Expert)
 - **Mzdy**:
-  - `salary_min`, `salary_mid`, `salary_max`
-  - `pay_currency`, `pay_period`
+  - `pay_period` - informace o mzdovém období nezbytná pro roční přepočet
+  - `salary_min`, `salary_mid`, `salary_max` - roční mzdové rozpětí a střední platovaná hodnota
+  - `ln_salary` - logaritmovaný střední plat pro regresní modely
 - **Atributy společnosti**:
-  - `industry`, `sector`, `size`, `revenue`, `rating`
+  - `company`, `rating` - identifikace společnosti a Glassdoor hodnocení
+  - `industry`, `sector` - Glassdoor oborová a sektorová kategorizace
+  - `sector_nace` - mapování zaměstnaneckých sektorů na evropskou klasifikaci ekonomických činností NACE Rev. 2
+  - `size` / `size_cat` a `type` / `type_cat` - Glassdoor originální i pro modelování kategorizované proměnné o velikosti a typu firmy
+  - `year_founded`
 
 ## 4.2 Metodologie klasifikace AI pozic
 
-### 4.2.1 Deterministická extrakce
+### 4.2.1 Deterministická extrakce (Slovníkový matching)
 
-- Pattern matching pro identifikaci AI klíčových slov
-- Taxonomie AI dovedností (skills_dictionary)
-- Výhody a omezení
+- Pattern matching a regulární výrazy pro identifikaci technických (hard) i měkkých (soft) dovedností
+- Mapování dovedností (`skills_dictionary`) do 24 hlavních clusterů (redukce stovek skillů do širších rodin)
+- Explicitní detekce stovek AI termínů v datech (nezávisle na LLM)
 
-### 4.2.2 LLM-based klasifikace
+### 4.2.2 LLM-based klasifikace (Prompt Engineering)
 
-- Využití Large Language Models pro klasifikaci
-- Prompt engineering pro extrakci:
-  - AI tier (none/ai_adjacent/ai_integration/ai_focused)
-  - Vzdělání
-  - Roky zkušeností
-  - Hard skills / Soft skills
-- Validace LLM výstupů
+- Využití dedikovaného modelu (např. GPT-4o-mini) pro čtení plného textu inzerátu
+- Analýza zaměřená na klíčové složitější kontexty:
+  - Rozlišení stupně zapojení (**AI tier**): `none`, `ai_integration`, `applied_ai`, `core_ai`
+  - Porozumění popisu let praxe a úrovně dosaženého vzdělání
+- _Pozn.: LLM extrakce detailních hard a soft skills byla vypnuta kvůli úspoře a faktu, že deterministický model plní tento úkol lépe a konzistentněji._
+- Filtrování dle míry jistoty generovaného výstupu (typ. `desc_conf_llm` ≥ 0.70)
 
-### 4.2.3 Bottom-up přístup
+### 4.2.3 Bottom-up klasifikace a čistění dat
 
-_Reference: Bone et al. (2025), Vona et al. (2015)_
+_Reference: Bone et al. (2025)_
 
-- Definice AI pozice: alespoň jedna AI dovednost
-- Využití Lightcast Open Skill Taxonomy
-- Srovnání s alternativními přístupy (SOC kódy, sektorová klasifikace)
+- Spojení robustního výstupu LLM s reálně nalezenými AI dovednostmi (tzv. "bottom-up" skill match)
+- Regexové čištění výsledků pro eliminaci prázdných "buzzwords" termínů (samotné slovo "AI") pro zjištění reálné AI pozice (`has_ai_flag`)
+- Mapování oborových rodin (`job_family`) a ekonomických sektorů na globálně uznávané standardy (NACE)
 
-## 4.3 Analytické metody
+## 4.3 Analytické metody a modely (Software Stata)
 
-### 4.3.1 Deskriptivní statistika
+### 4.3.1 Deskriptivní statistiky a testování hypotéz
 
-- Frekvenční analýza AI dovedností
-- Distribuce podle zemí (USA, Německo, Indie)
-- Distribuce podle sektorů a velikosti firem
+- **T-test** a **Mann-Whitney U test**: Porovnání průměrů a rozdělení mezd u inzerátů s AI dovednostmi a bez nich
+- **ANOVA**: Analýza rozdílů průměrného platu v závislosti na explicitní úrovni umělé inteligence (`ai_tier_num`)
+- **Chí-kvadrát (χ²) testy o nezávislosti**: Testování statistické závislosti mezi AI orientací inzerátu a dalšími kategoriemi (např. úroveň požadovaného vzdělání `edu_cat` či praxe `exp_category`)
 
-### 4.3.2 Srovnávací analýza
+### 4.3.2 Vícenásobné regresní modelování
 
-- Mezinárodní srovnání: USA vs. Německo vs. Indie
-- Srovnání AI vs. non-AI pozice:
-  - Vzdělávací požadavky
-  - Zkušenostní požadavky
-  - Mzdové úrovně
+_Cílem je prozkoumání existence a izolace reálné "AI mzdové prémie"._
 
-### 4.3.3 Pokročilé analytické metody
+- **OLS modely (Ordinary Least Squares)** zaměřené na `ln_salary`:
+  - _Základní (base OLS) model_: Regrese vlivu úrovně AI za kontroly sektorů NACE, regionů USA, možnosti práce remote a firemních charakteristik. Model zahrnuje i skill clusters pro kontrolu vlivu jiných specifických IT znalostí.
+  - _Plný OLS model_: Rozšířený o kontrolu vlivu požadavků na formální vzdělání, roky praxe a typ rodiny pozice (`job_family`).
+  - **F-testy** pro srovnání kvality a přínosu rozšíření základního modelu o nové vysvětlující proměnné.
 
-_Reference: Agrawal et al._
+### 4.3.3 Logistické a multinomiální modely
 
-- Machine Learning pro predikci:
-  - Random Forest, Gradient Boosting, XGBoost
-  - Logistická regrese
-- Feature engineering z job descriptions
-- Klasifikace pozic a predikce mzdy
-
-### 4.3.4 Text mining a NLP
-
-- Extrakce dovedností z job descriptions
-- Kategorizace a clustering dovedností
-- Semantic embedding pro podobnost dovedností
+- **Binární logistická regrese**: Vyčíslení pravděpodobnosti, že je daná ICT role reálnou pracovní pozicí v oblasti AI (`has_ai = 1`) v návaznosti na různé faktory (vzdělání, praxe)
+- **Multinomiální logit**: Predikce odstupňované závislosti do kterého ze tří shluků zapojení AI inzerát spadá (`ai_level`: 0=None, 1=Integration, 2=Applied/Core)
 
 ## 4.4 Omezení metodologie
 
-- Selekční bias v OJV datech
-- Kvalita extrakce dovedností
-- Časová konzistence taxonomií
-- Mezinárodní srovnatelnost
+- Selekční bias v datech pocházejících výhradně z pracovních portálů (soustředění na Glassdoor), nadreprezentace velkých IT uzlů
+- Relativní ztráta informací při redukci popisu do 24 shluků dovedností
+- Riziko kolinearity: Některé shluky (např. ML & Data Science, Generative AI) přirozeně a dominantně silně korelují se samotnou kategorií hodnocení úrovně AI (`desc_tier_llm`), což může ovlivňovat regresní modely
+- Časová konzistence a rychlé zastarávání slovníků hardových dovedností v oblasti technologií
 
 ---
 
@@ -539,11 +531,9 @@ _Empirická část - výsledky analýzy_
 # Seznam literatury (povinné zdroje)
 
 1. **Bone, M., et al. (2025)**. "Rising demand for AI and green skills in the UK labor market." _Technological Forecasting & Social Change_, 214, 124042.
-
    - Klíčové pro: bottom-up přístup, AI/green skills taxonomy, Lightcast data
 
 2. **Engberg, E., et al. (2025)**. "AI unboxed and jobs: Evidence on skills, tasks and wages from Germany." _Research Policy_, 54, 105285.
-
    - Klíčové pro: task-based framework, BIBB-BAuA data, DAIOE index, wage effects
 
 3. **Agrawal, R., et al.** "Predicting AI job market dynamics: A data mining approach to machine learning career trends on Glassdoor." _International Journal on Smart Sensing and Intelligent Systems_.
