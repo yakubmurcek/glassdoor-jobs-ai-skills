@@ -70,6 +70,16 @@ display "Počet pozorování (job postů): " _N
 keep if desc_conf_llm >= 0.7
 display "Počet pozorování po filtrování confidence >= 0.7: " _N
 
+* Vyloučení starých okrajových inzerátů (roky 2022 a 2023)
+* Získání reálného data publikace odečtením stáří
+gen date_format_discover = date(substr(discover_date, 1, 10), "YMD")
+format date_format_discover %td
+gen real_post_date = date_format_discover - age_in_days
+format real_post_date %td
+gen post_year = year(real_post_date)
+drop if post_year <= 2023
+display "Počet pozorování po vyřazení inzerátů starých 3+ roky (2022, 2023): " _N
+
 * --- 3.1 AI Tier klasifikace ---
 * desc_tier_llm obsahuje kategorie: "none", "ai_integration", "applied_ai", "core_ai"
 replace desc_tier_llm = "missing" if desc_tier_llm == ""
