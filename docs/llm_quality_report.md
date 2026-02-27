@@ -1,135 +1,135 @@
-# LLM Output Quality Assessment Report
+# Zpráva o kvalitě výstupů LLM
 
-**Dataset:** US Job Postings Analysis  
-**Records Analyzed:** 1,500 (out of 18,464 total - processing stopped at ~8%)  
-**Date:** January 4, 2026  
+**Dataset:** Analýza pracovních inzerátů v USA  
+**Analyzované záznamy:** 1 500 (z celkových 18 464 – zpracování zastaveno na ~8 %)  
+**Datum:** 4. ledna 2026  
 **Model:** GPT-5-mini (OpenAI Flex Processing Tier)
 
 ---
 
-## Executive Summary
+## Shrnutí
 
-The LLM pipeline successfully processed 1,500 job postings from the `us_relevant.csv` dataset. Manual and automated validation shows the output quality is **acceptable for analysis purposes**, with high completeness rates across most columns and reasonable classification accuracy.
+LLM pipeline úspěšně zpracoval 1 500 pracovních inzerátů z datasetu `us_relevant.csv`. Manuální a automatická validace ukazuje, že kvalita výstupů je **akceptovatelná pro účely analýzy**, s vysokou mírou kompletnosti napříč většinou sloupců a přiměřenou přesností klasifikace.
 
-**Key findings:**
+**Klíčová zjištění:**
 
-- ✅ 100% of records have AI tier classifications
-- ✅ 99.8% of records have extracted skills
-- ✅ 83.7% high-confidence classifications (≥0.9)
-
----
-
-## 1. Data Completeness
-
-| Column               | Purpose                        | Completeness | Notes                                         |
-| -------------------- | ------------------------------ | ------------ | --------------------------------------------- |
-| `desc_tier_llm`      | AI job classification          | 100%         | none/ai_integration/applied_ai                |
-| `ai_confidence`      | Classification confidence      | 100%         | Mean: 0.89                                    |
-| `desc_ai_llm`        | Extracted AI-specific skills   | 30.4%        | Only populated for AI-related jobs (expected) |
-| `desc_rationale_llm` | Explanation for low-confidence | 4.5%         | Only for uncertain classifications (expected) |
-| `hardskills`         | Technical skills extracted     | 99.8%        | Excellent coverage                            |
-| `softskills`         | Soft skills extracted          | 94.9%        | Good coverage                                 |
-| `skill_cluster`      | Skills grouped by category     | 99.8%        | (e.g., "Programming: python, java")           |
-| `edulevel_llm`       | Education requirement          | 52.2%        | Many jobs don't specify requirements          |
-| `experience_min_llm` | Years of experience            | 83.5%        | Well extracted                                |
+- ✅ 100 % záznamů má AI tier klasifikaci
+- ✅ 99,8 % záznamů má extrahované skills
+- ✅ 83,7 % klasifikací s vysokou confidence (≥0,9)
 
 ---
 
-## 2. AI Tier Classification Accuracy
+## 1. Kompletnost dat
 
-### Distribution
+| Sloupec              | Účel                           | Kompletnost | Poznámky                                  |
+| -------------------- | ------------------------------ | ----------- | ----------------------------------------- |
+| `desc_tier_llm`      | AI klasifikace pozice          | 100 %       | none/ai_integration/applied_ai            |
+| `ai_confidence`      | Confidence klasifikace         | 100 %       | Průměr: 0,89                              |
+| `desc_ai_llm`        | Extrahované AI skills          | 30,4 %      | Vyplněno pouze pro AI pozice (očekávané)  |
+| `desc_rationale_llm` | Vysvětlení nízké confidence    | 4,5 %       | Pouze pro nejisté klasifikace (očekávané) |
+| `hardskills`         | Extrahované technické skills   | 99,8 %      | Výborné pokrytí                           |
+| `softskills`         | Extrahované soft skills        | 94,9 %      | Dobré pokrytí                             |
+| `skill_cluster`      | Skills seskupené dle kategorie | 99,8 %      | (např. "Programming: python, java")       |
+| `edulevel_llm`       | Požadované vzdělání            | 52,2 %      | Mnoho pozic nespecifikuje požadavky       |
+| `experience_min_llm` | Roky praxe                     | 83,5 %      | Dobře extrahováno                         |
 
-| Tier             | Count | Percentage | Description                             |
-| ---------------- | ----- | ---------- | --------------------------------------- |
-| `none`           | 1,137 | 75.8%      | No AI/ML responsibilities               |
-| `ai_integration` | 269   | 17.9%      | Uses AI tools/APIs (Copilot, GPT, etc.) |
-| `applied_ai`     | 94    | 6.3%       | Builds/trains ML models                 |
+---
 
-### Validation (Manual Review of 50 Samples)
+## 2. Přesnost AI Tier klasifikace
 
-I manually reviewed a stratified sample of 50 rows (20 none, 15 ai_integration, 15 applied_ai). I read each job description and evaluated whether the LLM classification matches the actual content.
+### Distribuce
 
-**Manual Validation Results:**
+| Tier             | Počet | Procento | Popis                                  |
+| ---------------- | ----- | -------- | -------------------------------------- |
+| `none`           | 1 137 | 75,8 %   | Žádné AI/ML odpovědnosti               |
+| `ai_integration` | 269   | 17,9 %   | Používá AI nástroje/API (Copilot, GPT) |
+| `applied_ai`     | 94    | 6,3 %    | Vytváří/trénuje ML modely              |
 
-| Tier             | Correct   | Incorrect | Accuracy |
-| ---------------- | --------- | --------- | -------- |
-| `none`           | 20/20     | 0         | **100%** |
-| `ai_integration` | 14/15     | 1         | **93%**  |
-| `applied_ai`     | 15/15     | 0         | **100%** |
-| **Total**        | **49/50** | **1**     | **98%**  |
+### Validace (manuální kontrola 50 vzorků)
 
-**Detailed Sample Evaluation:**
+Provedl jsem manuální kontrolu stratifikovaného vzorku 50 řádků (20 none, 15 ai_integration, 15 applied_ai). Každý popis pozice jsem přečetl a vyhodnotil, zda LLM klasifikace odpovídá skutečnému obsahu.
 
-#### Tier `none` (20/20 correct ✅)
+**Výsledky manuální validace:**
 
-All positions in this sample were genuinely standard developer roles without AI components:
+| Tier             | Správně   | Chybně | Přesnost  |
+| ---------------- | --------- | ------ | --------- |
+| `none`           | 20/20     | 0      | **100 %** |
+| `ai_integration` | 14/15     | 1      | **93 %**  |
+| `applied_ai`     | 15/15     | 0      | **100 %** |
+| **Celkem**       | **49/50** | **1**  | **98 %**  |
 
-- ID 6 (Putnam Recruiting): Healthtech consultant, full-stack without AI
-- ID 115 (Trellus): Same-day delivery platform, standard web development
-- ID 155 (Printify): E-commerce platform, React/Node.js without ML
-- ID 439 (Classavo): EdTech platform, textbook transformation – no AI
-- ID 525 (Index Analytics): RESTful APIs and AWS, pure data engineering
-- ID 541 (Seek Now): Insurance claims software, full-stack without AI
-- ID 972-1458: Security positions (IAM, cybersecurity) – correctly marked as non-AI
+**Detailní hodnocení vzorků:**
 
-#### Tier `ai_integration` (14/15 correct, 1 borderline)
+#### Tier `none` (20/20 správně ✅)
 
-Most positions correctly identified as "uses AI tools":
+Všechny pozice v tomto vzorku byly skutečně standardní vývojářské role bez AI komponent:
 
-- ID 91 (Firefly Lab): "data science foundation to train doctors" – ✅ correctly ai_integration (uses data science tools, doesn't train models)
-- ID 218 (Mattermost): "Claude Code, Cursor, GitHub Copilot, AI Tools" – ✅ clearly uses AI tools
-- ID 445 (Navigate AI): "AI/ML, AR, CV, computer vision" – ✅ AI integration into product
-- ID 648 (XBOW): "AI-powered system... autonomously discovers vulnerabilities" – ✅ uses AI, doesn't build it
-- ID 656 (Lyra Health): "AI, data science" in mental health context – ✅ uses AI services
-- ID 723 (Noonlight): "github copilot, chatgpt, ai-assisted coding tools" – ✅ clearly tools
+- ID 6 (Putnam Recruiting): Healthtech konzultant, full-stack bez AI
+- ID 115 (Trellus): Same-day delivery platforma, standardní web development
+- ID 155 (Printify): E-commerce platforma, React/Node.js bez ML
+- ID 439 (Classavo): EdTech platforma, transformace učebnic – žádné AI
+- ID 525 (Index Analytics): RESTful APIs a AWS, čistě data engineering
+- ID 541 (Seek Now): Insurance claims software, full-stack bez AI
+- ID 972-1458: Security pozice (IAM, cybersecurity) – správně označeny jako non-AI
 
-**Borderline case (ID 293, Runpod):** Company is "AI and machine learning cloud infrastructure" – description says they build infrastructure FOR AI, but don't work with ML models themselves. LLM gave ai_integration, which is borderline correct (could also be none).
+#### Tier `ai_integration` (14/15 správně, 1 sporná)
 
-#### Tier `applied_ai` (15/15 correct ✅)
+Většina pozic správně identifikována jako "využívá AI nástroje":
 
-All positions genuinely involve working with ML models:
+- ID 91 (Firefly Lab): "data science foundation to train doctors" – ✅ správně ai_integration (používají data science nástroje, netrénují modely)
+- ID 218 (Mattermost): "Claude Code, Cursor, GitHub Copilot, AI Tools" – ✅ jasně používá AI nástroje
+- ID 445 (Navigate AI): "AI/ML, AR, CV, computer vision" – ✅ integrace AI do produktu
+- ID 648 (XBOW): "AI-powered system... autonomously discovers vulnerabilities" – ✅ používá AI, nestaví ji
+- ID 656 (Lyra Health): "AI, data science" v kontextu mental health – ✅ používá AI služby
+- ID 723 (Noonlight): "github copilot, chatgpt, ai-assisted coding tools" – ✅ jasně nástroje
 
-- ID 29 (SimSpace): "GenAI, AgenticAI, model fine-tuning, machine learning" – ✅ clearly applied_ai
-- ID 72 (ProFocus): "NLP, generative AI, TensorFlow, PyTorch" – ✅ trains models
-- ID 236 (Knowmadics): "machine learning models, ML model inputs/outputs" – ✅ works with ML models
-- ID 273 (FinOps Blueprint): "LLMs, Azure OpenAI, LangChain, vector search, embeddings" – ✅ builds AI-native platform
-- ID 452 (SchoolAI): "machine learning, ML models, data science" – ✅ EdTech with own ML models
-- ID 480 (Alex AI): "ml, dl, fine-tune, inference at scale, llms" – ✅ AI recruiter with own models
-- ID 489 (Gather): "mcp, agents, llm provider apis, claude code" – ✅ builds AI product Grapevine
+**Sporný případ (ID 293, Runpod):** Firma je "AI and machine learning cloud infrastructure" – popis říká, že staví infrastrukturu PRO AI, ale sami nepracují s ML modely. LLM dal ai_integration, což je hraničně správné (mohlo by být i none).
+
+#### Tier `applied_ai` (15/15 správně ✅)
+
+Všechny pozice skutečně zahrnují práci s ML modely:
+
+- ID 29 (SimSpace): "GenAI, AgenticAI, model fine-tuning, machine learning" – ✅ jasně applied_ai
+- ID 72 (ProFocus): "NLP, generative AI, TensorFlow, PyTorch" – ✅ trénuje modely
+- ID 236 (Knowmadics): "machine learning models, ML model inputs/outputs" – ✅ práce s ML modely
+- ID 273 (FinOps Blueprint): "LLMs, Azure OpenAI, LangChain, vector search, embeddings" – ✅ staví AI-native platformu
+- ID 452 (SchoolAI): "machine learning, ML models, data science" – ✅ EdTech s vlastními ML modely
+- ID 480 (Alex AI): "ml, dl, fine-tune, inference at scale, llms" – ✅ AI recruiter s vlastními modely
+- ID 489 (Gather): "mcp, agents, llm provider apis, claude code" – ✅ staví AI produkt Grapevine
 - ID 524 (Archer): "generative AI, GenAI, LLMs, RAG, vector databases, prompt engineering" – ✅
 - ID 531 (Traba): "ML, AI agents, multi-agent AI workflows" – ✅ autonomous AI staffing
-- ID 722 (Chalk): "machine learning, applied machine learning, data scientist" – ✅ ML platform
-- ID 737 (Orum): "speech recognition, machine learning, ai-driven" – ✅ own AI for sales
-- ID 741 (Aleph): "ai-native, intelligent agents, machine learning" – ✅ FP&A with AI agents
-- ID 1396 (Oteemo): "ai/ml, llms, vulnerability prioritization" – ✅ AI for cybersecurity
+- ID 722 (Chalk): "machine learning, applied machine learning, data scientist" – ✅ ML platforma
+- ID 737 (Orum): "speech recognition, machine learning, ai-driven" – ✅ vlastní AI pro sales
+- ID 741 (Aleph): "ai-native, intelligent agents, machine learning" – ✅ FP&A s AI agenty
+- ID 1396 (Oteemo): "ai/ml, llms, vulnerability prioritization" – ✅ AI pro cybersecurity
 
-### Validation Conclusion
+### Závěr validace
 
-LLM classification is **highly accurate (98%)** based on manual review of 50 samples. The only borderline case (ID 293) sits between two categories, which is not an error but reflects genuine ambiguity in the job description.
+LLM klasifikace je **vysoce přesná (98 %)** na základě manuální kontroly 50 vzorků. Jediný sporný případ (ID 293) je na hranici mezi dvěma kategoriemi, což není chyba, ale odraz skutečné nejasnosti v popisu pozice
 
 ---
 
-## 3. Skills Extraction Quality
+## 3. Kvalita extrakce skills
 
-The pipeline extracts skills from both the original `skills` column (from the data source) and the full job description text.
+Pipeline extrahuje skills jak z původního sloupce `skills` (ze zdroje dat), tak z plného textu popisu pozice.
 
-### Example Comparison
+### Porovnání příkladů
 
 **ID 100: Programmer III - Full Stack (JT4)**
 
-Original skills column:
+Původní sloupec skills:
 
 > Jira, Rust, Go, Waterfall, .NET Core, C#, MongoDB, DoD experience, SQL, Docker...
 
-Extracted `hardskills`:
+Extrahované `hardskills`:
 
 > agile, angular, asp.net, c#, c++, ci/cd, confluence, continuous delivery, continuous integration, devsecops, django, docker, dotnet, frontend development, full stack, gitlab, golang, graphql, javascript, jira, kubernetes, mongodb, nosql, postgresql, python, react, restful api, rust, sql, test management, ui, vue, waterfall
 
-**Observation:** The LLM extracted **significantly more skills** from the job description than were in the original column - this is additive value.
+**Pozorování:** LLM extrahoval **výrazně více skills** z popisu pozice než bylo v původním sloupci – toto je přidaná hodnota.
 
-### Skills are properly categorized in `skill_cluster`:
+### Skills jsou správně kategorizovány v `skill_cluster`:
 
-Example output:
+Příklad výstupu:
 
 ```
 Programming: c#, python, javascript, react, typescript
@@ -140,172 +140,170 @@ Security: cybersecurity, firewall, networking
 
 ---
 
-## 4. Education & Experience Extraction
+## 4. Extrakce vzdělání a praxe
 
-### Education Level Distribution
+### Distribuce úrovně vzdělání
 
-| Level         | Count | %     |
-| ------------- | ----- | ----- |
-| Bachelor's    | 718   | 47.9% |
-| Not specified | 717   | 47.8% |
-| High School   | 33    | 2.2%  |
-| Associate     | 23    | 1.5%  |
-| Master's      | 8     | 0.5%  |
-| PhD           | 1     | 0.1%  |
+| Úroveň          | Počet | %      |
+| --------------- | ----- | ------ |
+| Bachelor's      | 718   | 47,9 % |
+| Nespecifikováno | 717   | 47,8 % |
+| High School     | 33    | 2,2 %  |
+| Associate       | 23    | 1,5 %  |
+| Master's        | 8     | 0,5 %  |
+| PhD             | 1     | 0,1 %  |
 
-### Experience Requirements
+### Požadavky na praxi
 
-- Records with experience specified: 1,252/1,500 (83.5%)
-- Mean: 4.3 years
-- Median: 4.0 years
-- Range: 0 to 20 years
+- Záznamy se specifikovanou praxí: 1 252/1 500 (83,5 %)
+- Průměr: 4,3 roků
+- Medián: 4,0 roků
+- Rozsah: 0 až 20 let
 
-**Manual validation (sample):**
+**Manuální validace (vzorek):**
 
-| ID   | Job Title                       | LLM Says | Actually in Job Desc         |
-| ---- | ------------------------------- | -------- | ---------------------------- |
-| 1386 | Sr. Software Engineer, Security | 6 years  | "6 years of experience" ✅   |
-| 1233 | Sr. Cloud Security Engineer     | 8 years  | "8+ years" in description ✅ |
-| 25   | Full Stack Software Engineer    | 5 years  | "5+ years" mentioned ✅      |
+| ID   | Název pozice                    | LLM říká | Skutečně v popisu pozice   |
+| ---- | ------------------------------- | -------- | -------------------------- |
+| 1386 | Sr. Software Engineer, Security | 6 let    | "6 years of experience" ✅ |
+| 1233 | Sr. Cloud Security Engineer     | 8 let    | "8+ years" v popisu ✅     |
+| 25   | Full Stack Software Engineer    | 5 let    | "5+ years" zmíněno ✅      |
 
 ---
 
-## 5. Confidence Calibration
+## 5. Kalibrace confidence
 
-The LLM provides confidence scores for its AI tier classifications:
+LLM poskytuje confidence score pro své AI tier klasifikace:
 
-| Confidence Range | Count | %     |
-| ---------------- | ----- | ----- |
-| ≥ 0.9 (High)     | 1,256 | 83.7% |
-| 0.8 - 0.89       | 177   | 11.8% |
-| < 0.8 (Low)      | 67    | 4.5%  |
+| Rozsah confidence | Počet | %      |
+| ----------------- | ----- | ------ |
+| ≥ 0,9 (Vysoká)    | 1 256 | 83,7 % |
+| 0,8 – 0,89        | 177   | 11,8 % |
+| < 0,8 (Nízká)     | 67    | 4,5 %  |
 
-**Low-confidence cases include helpful rationales:**
+**Případy s nízkou confidence obsahují užitečná vysvětlení:**
 
 > ID 4 (Nike): _"The posting lists 'Proficiency in AIML' but gives no concrete ML duties (training/fine-tuning/MLOps). It's ambiguous whether hands-on model work is required, so I assign ai_integration with moderate confidence."_
 
 > ID 1233 (Finch): _"Company name includes 'AI' but the listed duties focus on cloud security/automation and do not mention working with AI/ML models or services."_
 
-This is exactly the kind of nuanced reasoning we want.
+Toto je přesně ten typ nuancovaného uvažování, který chceme.
 
----
+## 6. Statistická analýza
 
-## 6. Statistical Analysis
+### 6.1 Přesnost klasifikace – interval spolehlivosti
 
-### 6.1 Classification Accuracy – Confidence Interval
+Na základě manuální validace 50 vzorků:
 
-Based on manual validation of 50 samples:
+| Metrika             | Hodnota          |
+| ------------------- | ---------------- |
+| Pozorovaná přesnost | 98,0 % (49/50)   |
+| 95% Wilson Score CI | [89,5 %, 99,6 %] |
 
-| Metric              | Value          |
-| ------------------- | -------------- |
-| Observed accuracy   | 98.0% (49/50)  |
-| 95% Wilson Score CI | [89.5%, 99.6%] |
+**Binomický test vs náhodná klasifikace (H₀: accuracy = 33,3 %):**
 
-**Binomial test vs random classification (H₀: accuracy = 33.3%):**
+- p-value = 1,34 × 10⁻²²
+- **Závěr:** Zamítáme H₀ při α = 0,05. Klasifikace je statisticky významně lepší než náhodná.
 
-- p-value = 1.34 × 10⁻²²
-- **Conclusion:** Reject H₀ at α = 0.05. Classification is statistically significantly better than random.
+### 6.2 Shoda mezi LLM a deterministickým klasifikátorem
 
-### 6.2 Agreement Between LLM and Deterministic Classifier
-
-Comparison of LLM classification with keyword-based deterministic detector on full dataset (n = 1,500):
+Porovnání LLM klasifikace s keyword-based deterministickým detektorem na celém datasetu (n = 1 500):
 
 **Confusion Matrix:**
 
 |                 | LLM: none | LLM: AI |
 | --------------- | --------- | ------- |
-| **Det: non-AI** | 1,114     | 101     |
+| **Det: non-AI** | 1 114     | 101     |
 | **Det: AI**     | 23        | 262     |
 
-| Metric              | Value | Interpretation        |
-| ------------------- | ----- | --------------------- |
-| Overall agreement   | 91.7% | -                     |
-| Cohen's κ (Kappa)   | 0.757 | Substantial agreement |
-| Cramér's V          | 0.764 | Large effect size     |
-| Phi coefficient (φ) | 0.766 | Strong association    |
+| Metrika            | Hodnota | Interpretace          |
+| ------------------ | ------- | --------------------- |
+| Celková shoda      | 91,7 %  | -                     |
+| Cohen's κ (Kappa)  | 0,757   | Substantial agreement |
+| Cramér's V         | 0,764   | Large effect size     |
+| Phi koeficient (φ) | 0,766   | Strong association    |
 
-**McNemar's test (are classifiers systematically different?):**
+**McNemar's test (jsou klasifikátory systematicky odlišné?):**
 
-- χ² = 47.81, p-value < 0.0001
-- LLM found AI where Det didn't: 101 cases
-- Det found AI where LLM didn't: 23 cases
-- **Conclusion:** LLM is systematically more sensitive to AI-related positions than keyword-based detector.
+- χ² = 47,81, p-value < 0,0001
+- LLM našel AI tam, kde Det ne: 101 případů
+- Det našel AI tam, kde LLM ne: 23 případů
+- **Závěr:** LLM je systematicky citlivější na AI-related pozice než keyword-based detektor.
 
-### 6.3 Confidence Score Distribution
+### 6.3 Distribuce confidence score
 
-| Metric                 | Value          |
-| ---------------------- | -------------- |
-| Mean (μ)               | 0.888          |
-| Standard deviation (σ) | 0.049          |
-| Median                 | 0.900          |
-| IQR                    | [0.900, 0.900] |
+| Metrika                 | Hodnota        |
+| ----------------------- | -------------- |
+| Průměr (μ)              | 0,888          |
+| Směrodatná odchylka (σ) | 0,049          |
+| Medián                  | 0,900          |
+| IQR                     | [0,900, 0,900] |
 
-**Shapiro-Wilk normality test (n = 500):**
+**Shapiro-Wilk test normality (n = 500):**
 
-- W = 0.561, p-value < 0.0001
-- **Conclusion:** Confidence distribution is not normal (concentrated around 0.9).
+- W = 0,561, p-value < 0,0001
+- **Závěr:** Distribuce confidence není normální (koncentrovaná kolem 0,9).
 
-### 6.4 Experience Years Extraction
+### 6.4 Extrakce let praxe
 
-| Metric             | Value               |
-| ------------------ | ------------------- |
-| Valid extractions  | 1,252/1,500 (83.5%) |
-| Mean               | 4.28 years          |
-| Standard deviation | 2.34 years          |
-| 95% CI for mean    | [4.15, 4.41] years  |
+| Metrika             | Hodnota              |
+| ------------------- | -------------------- |
+| Platné extrakce     | 1 252/1 500 (83,5 %) |
+| Průměr              | 4,28 let             |
+| Směrodatná odchylka | 2,34 let             |
+| 95% CI pro průměr   | [4,15, 4,41] let     |
 
-### 6.5 AI Tier Distribution – Chi-square Test
+### 6.5 Distribuce AI tier – Chi-square test
 
-**Observed frequencies:**
+**Pozorované frekvence:**
 
-- none: 1,137 (75.8%)
-- ai_integration: 269 (17.9%)
-- applied_ai: 94 (6.3%)
+- none: 1 137 (75,8 %)
+- ai_integration: 269 (17,9 %)
+- applied_ai: 94 (6,3 %)
 
-**Chi-square goodness of fit test vs uniform distribution:**
+**Chi-square goodness of fit test vs uniformní distribuce:**
 
-- χ² = 1,247.93, p-value ≈ 0
-- **Conclusion:** Distribution is significantly non-uniform (p < 0.001), which matches expectation – most positions are not AI-related.
-
----
-
-## 7. Conclusion
-
-**The LLM output quality is sufficient for thesis analysis.** Key points:
-
-1. **Data integrity verified** - All 1,500 rows match their source by ID, job title, and company
-2. **High completeness** - Core columns have 95-100% fill rates
-3. **Classification accuracy is reasonable** - The LLM makes nuanced decisions and provides explanations for uncertain cases
-4. **Skills extraction adds value** - Extracts more skills from description text than the original data source provided
-5. **Confidence calibration works** - Low-confidence cases genuinely are ambiguous
-
-**Recommendation:** Proceed with analysis. Manual review of 50 samples shows **98% classification accuracy**.
+- χ² = 1 247,93, p-value ≈ 0
+- **Závěr:** Distribuce je signifikantně neuniformní (p < 0,001), což odpovídá očekávání – většina pozic není AI-related.
 
 ---
 
-## Appendix: Sample Validated Rows
+## 7. Závěr
 
-### Applied AI Jobs (Real AI Work)
+**Kvalita výstupu LLM je dostatečná pro analýzu v rámci diplomové práce.** Klíčové body:
 
-| ID  | Company     | Title                                | AI Skills Detected                                                    |
+1. **Integrita dat ověřena** – Všech 1 500 řádků odpovídá zdroji podle ID, názvu pozice a firmy
+2. **Vysoká kompletnost** – Klíčové sloupce mají 95–100% míru vyplnění
+3. **Přesnost klasifikace je rozumná** – LLM dělá nuancovaná rozhodnutí a poskytuje vysvětlení pro nejisté případy
+4. **Extrakce skills přidává hodnotu** – Extrahuje více skills z textu popisu než původní zdroj dat poskytoval
+5. **Kalibrace confidence funguje** – Případy s nízkou confidence jsou skutečně nejednoznačné
+
+**Doporučení:** Pokračovat v analýze. Manuální kontrola 50 vzorků ukazuje **98% přesnost klasifikace**.
+
+---
+
+## Příloha: Vzorek validovaných řádků
+
+### Applied AI pozice (skutečná AI práce)
+
+| ID  | Firma       | Název pozice                         | Detekované AI skills                                                  |
 | --- | ----------- | ------------------------------------ | --------------------------------------------------------------------- |
 | 29  | SimSpace    | Senior Software Engineer - Fullstack | GenAI, AgenticAI, ChatGPT, Vertex AI, Hugging Face, model fine-tuning |
 | 32  | ManTech     | Full Stack Developer                 | machine learning, model deployment, PySpark, Docker, Kubernetes       |
 | 400 | Fusion Risk | Full Stack Engineer                  | LLMs, RAG, prompt engineering, Cursor, ChatGPT Pro, Azure OpenAI      |
 | 85  | Zoom        | Software Engineer – Java             | Deep learning, model training, TensorFlow                             |
 
-### AI Integration Jobs (Using AI Tools)
+### AI Integration pozice (používání AI nástrojů)
 
-| ID  | Company       | Title                                | AI Skills Detected                          |
+| ID  | Firma         | Název pozice                         | Detekované AI skills                        |
 | --- | ------------- | ------------------------------------ | ------------------------------------------- |
 | 2   | PrePass       | Software Engineer                    | GitHub Copilot, Cursor, AI pair programmers |
 | 8   | Diffit        | Fullstack Engineer                   | AI-powered platform, Python, Flask          |
 | 27  | Waltz Health  | Full Stack Developer                 | AI-driven, Azure Cognitive Services, OpenAI |
 | 600 | Monarch Money | Software Engineer, Internal Tools/AI | openai, langchain                           |
 
-### Non-AI Jobs (Correctly Classified)
+### Non-AI pozice (správně klasifikované)
 
-| ID  | Company   | Title                        | Tech Stack                    |
+| ID  | Firma     | Název pozice                 | Tech Stack                    |
 | --- | --------- | ---------------------------- | ----------------------------- |
 | 1   | Treinetic | Full Stack Software Engineer | Angular, Spring Boot, GraphQL |
 | 100 | JT4       | Programmer III               | C#, .NET, Docker, Kubernetes  |

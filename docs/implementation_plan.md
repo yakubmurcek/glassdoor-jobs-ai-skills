@@ -1,31 +1,31 @@
-# Python ↔ Stata Responsibility Split
+# Rozdělení odpovědnosti mezi Python a Statu
 
-Přesunout tvorbu nových sloupců (**string processing, pattern matching**) do Pythonu (`_apply_stata_transformations`).  
+Přesunout tvorbu nových sloupců (**zpracování textu, porovnávání vzorů**) do Pythonu (`_apply_stata_transformations`).  
 Stata si ponechá **analytická rozhodnutí** (encode, label, thresholds, kategorizace).
 
 ## Princip rozdělení
 
-| Odpovědnost                 | Python (`pipeline.py`)             | Stata (`ai_skills_analysis.do`)              |
-| --------------------------- | ---------------------------------- | -------------------------------------------- |
-| **String → string mapping** | ✅ region, job_family, sector_nace |                                              |
-| **Pattern matching**        | ✅ job_family (regex na job_title) |                                              |
-| **Ordinální kódování**      |                                    | ✅ edu_cat, exp_category, size_cat, type_cat |
-| **Analytické rozhodnutí**   |                                    | ✅ ai_level, has_ai_flag, outlier filtry     |
-| **Encode + label**          |                                    | ✅ vše                                       |
-| **Log transformace**        |                                    | ✅ log(salary_mid)                           |
+| Odpovědnost                | Python (`pipeline.py`)             | Stata (`ai_skills_analysis.do`)              |
+| -------------------------- | ---------------------------------- | -------------------------------------------- |
+| **Mapování textu na text** | ✅ region, job_family, sector_nace |                                              |
+| **Porovnávání vzorů**      | ✅ job_family (regex na job_title) |                                              |
+| **Ordinální kódování**     |                                    | ✅ edu_cat, exp_category, size_cat, type_cat |
+| **Analytické rozhodnutí**  |                                    | ✅ ai_level, has_ai_flag, outlier filtry     |
+| **Encode + label**         |                                    | ✅ vše                                       |
+| **Log transformace**       |                                    | ✅ log(salary_mid)                           |
 
 > [!IMPORTANT]
 > Python vytváří **textové sloupce** (region="South", job_family="DevOps & Cloud"). Stata je pak `encode`-uje do numerických proměnných. Díky tomu je mapování v Pythonu a analytická volba (co je base category, co sloučit) ve Statě.
 
-## Proposed Changes
+## Navrhované změny
 
 ### Python pipeline
 
-#### [MODIFY] [pipeline.py](file:///Users/yakub/Projects/glassdoor-jobs-ai-skills/ai_skills/pipeline.py)
+#### [UPRAVIT] [pipeline.py](file:///Users/yakub/Projects/glassdoor-jobs-ai-skills/ai_skills/pipeline.py)
 
 Rozšířit `_apply_stata_transformations()` o dvě nové sekce (za existující bod 3 — Type Conversion):
 
-**5. Region mapping** — dict lookup `state` → Census region string
+**5. Mapování regionů (Region mapping)** — dict lookup `state` → Census region string
 
 ```python
 CENSUS_REGIONS = {
@@ -37,7 +37,7 @@ CENSUS_REGIONS = {
 df["region"] = df["state"].map(CENSUS_REGIONS).fillna("Unknown")
 ```
 
-**6. Job family mapping** — regex pattern matching na `job_title`
+**6. Mapování rodiny profesí (Job family mapping)** — regex pattern matching na `job_title`
 
 ```python
 JOB_FAMILY_PATTERNS = [
@@ -49,14 +49,14 @@ JOB_FAMILY_PATTERNS = [
 # Apply in order, first match wins
 ```
 
-**7. NACE sector mapping** — přesunout dict lookup ze Staty do Pythonu  
+**7. Mapování sektorů NACE** — přesunout dict lookup ze Staty do Pythonu  
 _(Nyní je to 20+ `replace` řádků v do-file, v Pythonu je to 1 dict + `.map()`)_
 
 ---
 
 ### Stata do-file
 
-#### [MODIFY] [ai_skills_analysis.do](file:///Users/yakub/Projects/glassdoor-jobs-ai-skills/analysis/stata/ai_skills_analysis.do)
+#### [UPRAVIT] [ai_skills_analysis.do](file:///Users/yakub/Projects/glassdoor-jobs-ai-skills/analysis/stata/ai_skills_analysis.do)
 
 **Odebrat** z do-file:
 
@@ -80,16 +80,16 @@ _(Nyní je to 20+ `replace` řádků v do-file, v Pythonu je to 1 dict + `.map()
 
 ---
 
-### Documentation
+### Dokumentace
 
-#### [MODIFY] [us_relevant_ai_stata_DOCUMENTATION.md](file:///Users/yakub/Projects/glassdoor-jobs-ai-skills/data/outputs/us_relevant_ai_stata_DOCUMENTATION.md)
+#### [UPRAVIT] [us_relevant_ai_stata_DOCUMENTATION.md](file:///Users/yakub/Projects/glassdoor-jobs-ai-skills/data/outputs/us_relevant_ai_stata_DOCUMENTATION.md)
 
 - Přesunout `region`, `job_family`, `sector_nace` z tabulky "Proměnné vytvořené ve Statě" do sekce "Sloupce v CSV"
 - Aktualizovat popis zdrojů
 
-## Verification Plan
+## Plán ověření (Verification Plan)
 
-### Automated Tests
+### Automatizované testy
 
 Po úpravě `pipeline.py` spustit pipeline v hydration módu na malém vzorku a ověřit, že nové sloupce existují a mají korektní hodnoty:
 
@@ -120,6 +120,6 @@ print(f'Job families: {df[\"job_family\"].value_counts().to_dict()}')
 "
 ```
 
-### Manual Verification
+### Manuální ověření
 
 User spustí pipeline přes `uv run python -m ai_skills.cli analyze --input data/inputs/us_relevant_30.csv --skip-llm` a zkontroluje, že výstupní CSV obsahuje sloupce `region`, `job_family`, `sector_nace` s rozumnými hodnotami.

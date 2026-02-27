@@ -1,31 +1,31 @@
-# Impact Analysis of Job Description Truncation
+# Analýza dopadu zkrácení pracovních inzerátů
 
-## Context
+## Kontext
 
-The `_prepare_text` method in `openai_analyzer.py` truncates job descriptions exceeding `MAX_JOB_DESC_LENGTH` (configured to 6,000 characters) by applying a naive prefix cut (`text[:6000]`). This means that for longer descriptions, the latter portions — which frequently contain explicit skill requirements, education prerequisites, and experience expectations — may be partially or entirely lost before reaching the LLM.
+Metoda `_prepare_text` v souboru `openai_analyzer.py` zkracuje pracovní inzeráty přesahující `MAX_JOB_DESC_LENGTH` (nastaveno na 6 000 znaků) tím, že provede naivní uříznutí úvodu (`text[:6000]`). To znamená, že u delších inzerátů se pozdější části – které často obsahují explicitní požadavky na dovednosti, předpoklady pro vzdělání a očekávanou praxi – mohou částečně nebo úplně ztratit, než se dostanou do LLM.
 
-The output CSV retains the original, untruncated text. However, the LLM-derived columns (`desc_tier_llm`, `hardskills`, `softskills`, `edulevel_llm`, `experience_min_llm`) for affected records were produced from incomplete input.
+Výstupní CSV dokument zachovává původní, nezkrácený text. Nicméně sloupce odvozené pomocí LLM (`desc_tier_llm`, `hardskills`, `softskills`, `edulevel_llm`, `experience_min_llm`) u ovlivněných záznamů byly vytvořeny z neúplného vstupu.
 
-## Scope
+## Rozsah
 
-Out of 18,464 total job descriptions, **1,031 (5.6%)** exceeded the 6,000-character limit and were truncated during LLM inference. The dataset has a mean description length of 4,112 characters (median 3,939), with the 90th percentile at 6,941 and the 95th at 7,830 — confirming that the threshold affects the upper tail of the length distribution.
+Z celkových 18 464 pracovních inzerátů přesáhlo **1 031 (5,6 %)** limit 6 000 znaků a bylo zkráceno během inference pomocí LLM. Dataset má průměrně 4 112 znaků na popis pozice (medián 3 939), kde 90. percentil je na 6 941 a 95. percentil na 7 830 – což potvrzuje, že limit ovlivňuje horní odlehlou část u distribuce délek inzerátů.
 
-| Original Description Length | Affected Jobs | Approx. Text Visible to LLM |
-|-----------------------------|---------------|------------------------------|
-| 6,000 – 7,000 characters   | 290           | ~92%                         |
-| 7,000 – 8,000 characters   | 391           | ~80%                         |
-| 8,000 – 10,000 characters  | 258           | ~67%                         |
-| 10,000 – 15,000 characters | 84            | ~48%                         |
-| 15,000 – 25,000 characters | 8             | ~30%                         |
+| Původní délka inzerátu | Zasažených pozic | Přibližný text viditelný pro LLM |
+| ---------------------- | ---------------- | -------------------------------- |
+| 6 000 – 7 000 znaků    | 290              | ~92 %                            |
+| 7 000 – 8 000 znaků    | 391              | ~80 %                            |
+| 8 000 – 10 000 znaků   | 258              | ~67 %                            |
+| 10 000 – 15 000 znaků  | 84               | ~48 %                            |
+| 15 000 – 25 000 znaků  | 8                | ~30 %                            |
 
-On average, the LLM received **77.4%** of the original text across affected records. In the worst case, only **26.3%** was visible.
+Průměrně LLM obdržel v ovlivněných záznamech **77,4 %** původního textu. V nejhorším případě zbyla pouze **26,3 %** textu.
 
-## Risk by LLM Task
+## Riziko dle úlohy v LLM
 
-- **AI Tier Classification (Low Risk):** Diagnostic signals (company context, role summary) appear early in descriptions and are preserved by prefix truncation.
-- **Skills Extraction (Moderate Risk):** Technical requirements often appear in "Qualifications" sections in the latter half. Approximately 350 descriptions lost over 30% of their text, risking missed skills.
-- **Education & Experience (Moderate-to-High Risk):** These fields are typically stated near the end of descriptions and are most vulnerable to prefix truncation. The 92 descriptions exceeding 10,000 characters likely have unreliable education and experience values.
+- **Klasifikace úrovně AI (Nízké riziko):** Signály sloužící k rozhodování (firemní kontext, shrnutí pozice) se zpravidla objevují brzy v inzerátech a tak zůstávají zachovány.
+- **Extrakce dovedností (Střední riziko):** Technické požadavky se velmi často objevují v sekcích „Kvalifikace“ v druhé polovině dokumentu. Zhruba 350 inzerátů ztratilo přes 30 % své délky, což riskovalo nezachycení chybějících dovedností.
+- **Vzdělání a Zkušenosti (Střední až vysoké riziko):** Tato pole jsou obvykle vyjmenována ke konci pracovního popisu a stávají se tak nejvíce zranitelná vzhledem k úpravě délek. 92 inzerátů, které přesáhly 10 000 znaků, mají tyto položky pravděpodobně nespolehlivé.
 
-## Conclusion
+## Závěr
 
-The majority of affected records (681 of 1,031) lost less than 20% of their text, limiting the practical impact on classification accuracy. However, approximately 350 records experienced significant data loss (>30%), with consequences primarily for skills extraction and education/experience fields. For future iterations, increasing the limit to 12,000–15,000 characters would capture over 99% of descriptions without truncation.
+Velká většina ovlivněných záznamů (681 z 1 031) ztratila méně než 20 % svého celkového textu a do značné míry omezila praktický dopad přesnosti klasifikátorů. Oproti tomu zhruba 350 záznamů zažilo významnější ztrátu dat (> 30 %), převážně v oblastech požadavků na dovedností a očekávané vzdělání s praxí. Vzhledem na budoucnost může do budoucna implementace v rozmezí 12 000 – 15 000 znaků zabránit zkrácení textu u více jak 99 % dokumentů.

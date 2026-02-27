@@ -1,93 +1,102 @@
-# Pipeline Evaluation Report
+# Hodnotící zpráva pipeline
 
-**Generated**: 2025-12-26T09:41:33.476532
-**Baseline**: `us_relevant_30_ai.csv`
-**Candidate**: `us_relevant_30_ai_v1.csv`
+**Vygenerováno**: 2025-12-26T09:41:33.476532
+**Základní verze (Baseline)**: `us_relevant_30_ai.csv`
+**Kandidátní verze (Candidate)**: `us_relevant_30_ai_v1.csv`
 
-## Summary
+## Shrnutí
 
-| Metric | Value |
-|--------|-------|
-| Total Jobs | 30 |
-| Match Rate | **90.0%** (27/30) |
-| Confidence Change | -0.005 |
-| Agreement Change | +3.3% |
-| Avg Hardskills/Job | 4.7 |
-| Avg Softskills/Job | 2.1 |
+| Metrika                          | Hodnota            |
+| -------------------------------- | ------------------ |
+| Celkem pozic                     | 30                 |
+| Míra shody                       | **90,0 %** (27/30) |
+| Změna jistoty (Confidence)       | -0,005             |
+| Změna shody (Agreement)          | +3,3 %             |
+| Průměr tvrdých dovedností/pozice | 4,7                |
+| Průměr měkkých dovedností/pozice | 2,1                |
 
-## Tier Distribution
+## Distribuce úrovní (Tier)
 
-| Tier | Baseline | Candidate | Change |
-|------|----------|-----------|--------|
-| `none` | 24 | 25 | +1 |
-| `ai_integration` | 2 | 3 | +1 |
-| `applied_ai` | 3 | 1 | -2 |
-| `core_ai` | 1 | 1 | 0 |
+| Úroveň           | Baseline | Kandidát | Změna |
+| ---------------- | -------- | -------- | ----- |
+| `none`           | 24       | 25       | +1    |
+| `ai_integration` | 2        | 3        | +1    |
+| `applied_ai`     | 3        | 1        | -2    |
+| `core_ai`        | 1        | 1        | 0     |
 
-## Classification Changes (3)
+## Změny v klasifikaci (3)
 
-### 1. Job 4: Software Eningeer II - Innovation
+### 1. Pozice 4: Softwarový inženýr II - Inovace
 
-**Change**: `ai_integration` → `none`
+**Změna**: `ai_integration` → `none`
 
-| | Baseline | Candidate |
-|--|----------|-----------|
-| Confidence | 0.80 | 0.90 |
-| AI Skills | AIML | nan |
+|               | Baseline | Kandidát |
+| ------------- | -------- | -------- |
+| Jistota       | 0,80     | 0,90     |
+| AI dovednosti | AIML     | nan      |
 
-**Job Description Excerpt**:
-> WHO WE ARE LOOKING FOR
-We’re looking for a mid-level engineer who can independently deliver features, mentor junior engineers, and contribute to architectural decisions. You’re a strong communicator, a cross-functional collaborator, and someone who thrives in a dynamic environment.
-WHAT YOU WILL WORK ON
-Design and implement scalable services and user interfaces
-Lead feature development using React...
+**Úryvek popisu pozice**:
 
-**Baseline Rationale**:
-> The job mentions proficiency in AIML but does not indicate direct involvement in AI model development.
+> KOHO HLEDÁME
+> Hledáme mid-level inženýra, který dokáže nezávisle dodávat funkce, mentorovat juniorní inženýry a přispívat k architektonickým rozhodnutím. Jste silný komunikátor, spolupracovník napříč funkcemi a někdo, komu se daří v dynamickém prostředí.
+> NA ČEM BUDETE PRACOVAT
+> Navrhovat a implementovat škálovatelné služby a uživatelská rozhraní
+> Vést vývoj funkcí pomocí React...
 
-**Candidate Rationale**:
-> The position involves full-stack development without any AI-related tasks.
+**Odůvodnění (Baseline)**:
 
----
+> Pozice zmiňuje znalost AIML, ale nenaznačuje přímé zapojení do vývoje AI modelů.
 
-### 2. Job 8: Fullstack Engineer
+**Odůvodnění (Kandidát)**:
 
-**Change**: `applied_ai` → `ai_integration`
-
-| | Baseline | Candidate |
-|--|----------|-----------|
-| Confidence | 0.75 | 0.80 |
-| AI Skills | AI | nan |
-
-**Job Description Excerpt**:
-> About Diffit
-Diffit is an AI-powered instructional materials platform designed to help teachers do their best work more sustainably. Teachers use Diffit to get “just right” classroom activities, saving time and helping all students access grade-level content. Come join a growing remote-first and mission-focused AI edtech company to build quality, safe and affordable educational resources for teach...
-
-**Baseline Rationale**:
-> The role involves building features for an AI-powered platform, indicating some level of applied AI work.
-
-**Candidate Rationale**:
-> The role is in an AI-powered company but does not involve developing AI models; it focuses on full-stack development.
+> Pozice zahrnuje full-stack vývoj bez jakýchkoliv úloh spojených s AI.
 
 ---
 
-### 3. Job 25: Full Stack Software Engineer
+### 2. Pozice 8: Fullstack inženýr
 
-**Change**: `applied_ai` → `ai_integration`
+**Změna**: `applied_ai` → `ai_integration`
 
-| | Baseline | Candidate |
-|--|----------|-----------|
-| Confidence | 0.85 | 0.75 |
-| AI Skills | AI, NLP | AI-powered marketing, NLP |
+|               | Baseline | Kandidát |
+| ------------- | -------- | -------- |
+| Jistota       | 0,75     | 0,80     |
+| AI dovednosti | AI       | nan      |
 
-**Job Description Excerpt**:
-> About Us
-Tildei is an AI-powered marketing platform that creates intelligent brand agents for commerce and marketing conversations. We build comprehensive, custom Brand Knowledge Graphs from product catalog, marketing materials, FAQs, and brand guidelines. We then deploy agents across social and digital channels to engage customers 24/7 in any language. Our agents drive marketing and commerce outc...
+**Úryvek popisu pozice**:
 
-**Baseline Rationale**:
-> The role involves building AI-powered marketing agents, indicating a hands-on application of AI technologies.
+> O společnosti Diffit
+> Diffit je platforma pro výukové materiály poháněná umělou inteligencí, navržená tak, aby pomohla učitelům dělat jejich nejlepší práci udržitelněji. Učitelé používají Diffit k získání „přesně těch pravých“ aktivit pro třídu, což šetří čas a pomáhá všem studentům získat přístup k obsahu na úrovni jejich ročníku. Připojte se k rostoucí, oborově zaměřené AI edtech společnosti fungující plně remote a budujte kvalitní, bezpečné a dostupné vzdělávací zdroje pro učitele...
 
-**Candidate Rationale**:
-> The role involves building features for an AI-powered platform, but does not include direct AI model development.
+**Odůvodnění (Baseline)**:
+
+> Role zahrnuje budování funkcí pro platformu poháněnou AI, což naznačuje určitou úroveň práce s aplikovanou AI.
+
+**Odůvodnění (Kandidát)**:
+
+> Role je ve společnosti zaměřené na AI, ale nezahrnuje vývoj AI modelů; zaměřuje se na full-stack vývoj.
+
+---
+
+### 3. Pozice 25: Full Stack softwarový inženýr
+
+**Změna**: `applied_ai` → `ai_integration`
+
+|               | Baseline | Kandidát                  |
+| ------------- | -------- | ------------------------- |
+| Jistota       | 0,85     | 0,75                      |
+| AI dovednosti | AI, NLP  | AI-powered marketing, NLP |
+
+**Úryvek popisu pozice**:
+
+> O nás
+> Tildei je marketingová platforma poháněná AI, která vytváří inteligentní brand agenty pro obchodní a marketingové konverzace. Budujeme komplexní, vlastní Znalostní grafy značek z produktových katalogů, marketingových materiálů, FAQ a pravidel značky. Následně nasazujeme agenty napříč sociálními a digitálními kanály pro zapojení zákazníků 24/7 v jakémkoli jazyce. Naši agenti přinášejí marketingové a obchodní výsledky...
+
+**Odůvodnění (Baseline)**:
+
+> Role zahrnuje budování marketingových agentů poháněných AI, což naznačuje praktickou aplikaci AI technologií.
+
+**Odůvodnění (Kandidát)**:
+
+> Role zahrnuje budování funkcí pro platformu poháněnou AI, ale nezahrnuje přímý vývoj AI modelů.
 
 ---
