@@ -230,3 +230,6 @@ data/vectordb/
 .DS_Store
 *.pkg
 .claude/
+
+# Temporary Office files
+~$*.docx
