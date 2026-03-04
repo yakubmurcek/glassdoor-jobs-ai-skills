@@ -307,7 +307,6 @@ none,105000,3,Bachelor's,Louisiana,Information Technology
 applied_ai,65701,3,-,Kansas,Unknown
 ai_integration,100000,,-,Unknown,Unknown
 applied_ai,183598,7,Bachelor's,Connecticut,Healthcare
-none,88137,4,-,Illinois,Information Technology
 none,140000,14,Bachelor's,Maryland,Unknown
 none,110000,,-,California,Unknown
 none,117500,3,-,New York State,Retail & Wholesale
@@ -3626,7 +3625,6 @@ none,91500,4,Bachelor's,New York State,Government & Public Administration
 none,57295,4,Bachelor's,Pennsylvania,Unknown
 applied_ai,121900,6,Bachelor's,South Carolina,Financial Services
 none,156000,2,Bachelor's,California,Unknown
-none,75000,3,Bachelor's,Unknown,Unknown
 none,62026,,Bachelor's,Florida,Unknown
 none,85539,3,Bachelor's,Michigan,Manufacturing
 none,72800,,Bachelor's,North Carolina,Human Resources & Staffing
@@ -4259,7 +4257,6 @@ none,69819,5,-,Georgia,Government & Public Administration
 none,114128,2,Bachelor's,California,Information Technology
 ai_integration,145000,8,-,Illinois,Financial Services
 none,97204,8,Bachelor's,Colorado,Information Technology
-none,175000,5,-,Virginia,Information Technology
 none,120000,2,Bachelor's,New Jersey,Information Technology
 none,142500,5,Bachelor's,Virginia,Information Technology
 none,114400,10,-,Florida,Information Technology
@@ -4714,7 +4711,6 @@ none,180000,3,-,Unknown,Unknown
 none,81000,0,Bachelor's,California,Aerospace & Defense
 none,97500,,-,Unknown,Unknown
 none,70000,0,Bachelor's,Massachusetts,Information Technology
-none,112500,,Bachelor's,Texas,"Arts, Entertainment & Recreation"
 none,130000,,Bachelor's,South Carolina,Government & Public Administration
 none,110000,3,Bachelor's,Massachusetts,Information Technology
 none,95000,,-,New Mexico,Management & Consulting
@@ -10020,7 +10016,6 @@ none,135200,3,Bachelor's,New Jersey,Information Technology
 none,105388,5,-,Oklahoma,Nonprofit & NGO
 applied_ai,163500,10,Bachelor's,California,Manufacturing
 none,90000,0,-,California,Unknown
-none,94000,,Bachelor's,California,"Construction, Repair & Maintenance Services"
 none,235000,2,-,California,Management & Consulting
 none,138550,8,-,California,Media & Communication
 none,90227,3,-,California,Unknown
@@ -13327,7 +13322,6 @@ none,79250,,-,Missouri,Manufacturing
 none,96086,4,-,California,Information Technology
 none,120399,1,Associate,Oregon,Information Technology
 none,144650,3,-,Washington State,Information Technology
-none,105000,5,-,California,Unknown
 none,110000,5,Bachelor's,Texas,Retail & Wholesale
 none,185650,,-,California,Information Technology
 none,103829,1,Master's,Pennsylvania,Information Technology
