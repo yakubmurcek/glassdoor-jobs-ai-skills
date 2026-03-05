@@ -115,8 +115,8 @@ gen has_ai = has_ai_flag
 
 * --- 3.3 Vzdělání (Hybridní) ---
 * Vytvoříme 'education_hybrid' z edulevel_llm (primární) a edu_level_det (fallback)
-* Výsledné hodnoty: "missing", "highschool", "associate", "bachelor", "master", "phd"
-* POZOR: encode řadí abecedně, proto kódujeme manuálně (ordinální pořadí)
+* POZOR: OLS (mzdový) model požaduje GRANULÁRNÍ vzdělání (4 úrovně),
+*        Logit/Mlogit model požaduje BINÁRNÍ (sloučení HS+Associate kvůli malé n).
 
 * Krok 1: Normalizujeme edulevel_llm na lowercase a sjednotíme hodnoty
 gen education_hybrid = lower(edulevel_llm)
@@ -130,12 +130,37 @@ replace education_hybrid = edu_level_det if education_hybrid == "missing" & edu_
 * Krok 3: Finální missing pro prázdné
 replace education_hybrid = "missing" if education_hybrid == ""
 
-gen edu_cat = .
-replace edu_cat = 0 if inlist(education_hybrid, "missing", "", "highschool", "associate")
-replace edu_cat = 1 if inlist(education_hybrid, "bachelor", "master", "phd")
+* Krok 4: Globální sloučení PhD → Master (dle požadavku vedoucího)
+replace education_hybrid = "master" if education_hybrid == "phd"
 
-label define edu_lbl 0 "No Degree / Missing" 1 "Bachelor or Higher"
-label values edu_cat edu_lbl
+* --- 3.3a edu_ols: Granulární proměnná pro OLS (mzdovou) regresi ---
+* Úrovně: 0=Missing, 1=High School, 2=Associate, 3=Bachelor, 4=Master(+PhD)
+* Vedoucí: "NESLUČUJ — nech detaily, sloučením bys model zhoršil"
+gen edu_ols = .
+replace edu_ols = 0 if education_hybrid == "missing"
+replace edu_ols = 1 if education_hybrid == "highschool"
+replace edu_ols = 2 if education_hybrid == "associate"
+replace edu_ols = 3 if education_hybrid == "bachelor"
+replace edu_ols = 4 if education_hybrid == "master"
+
+label define edu_ols_lbl 0 "Missing" 1 "High School" 2 "Associate" 3 "Bachelor" 4 "Master+"
+label values edu_ols edu_ols_lbl
+label variable edu_ols "Vzdelani (granularni pro OLS)"
+
+* --- 3.3b edu_logit: Binární proměnná pro Logit/Mlogit ---
+* Úrovně: 0=Missing/HS/Associate, 1=Bachelor+
+* Vedoucí: "SLOUČ Associate+HS — jinak málo pozorování v AI buňce"
+gen edu_logit = .
+replace edu_logit = 0 if inlist(education_hybrid, "missing", "", "highschool", "associate")
+replace edu_logit = 1 if inlist(education_hybrid, "bachelor", "master")
+
+label define edu_logit_lbl 0 "No Degree / Missing" 1 "Bachelor or Higher"
+label values edu_logit edu_logit_lbl
+label variable edu_logit "Vzdelani (binarni pro Logit)"
+
+* Zpětná kompatibilita: edu_cat = edu_logit (pro staré deskriptivní tabulky)
+gen edu_cat = edu_logit
+label values edu_cat edu_logit_lbl
 label variable edu_cat "Pozadovane vzdelani (Binary)"
 
 * --- 3.4 Zkušenosti ---
@@ -428,12 +453,11 @@ ranksum salary_mid, by(has_ai)
 * ==============================================================================
 * 6. REGRESNÍ ANALÝZA — MODELY VEDOUCÍHO
 * ==============================================================================
-* log(mzda) = skill clustery + AI tier + sektor + lokace + remote + typ + velikost
-*             + (vzdělání, zkušenosti, pozice)
-* Závorka = Model B (plný), bez závorky = Model A (base)
+* Závěsná rovnice: log(mzda)
+* Závorka = Model B (plný s lidským kapitálem), bez závorky = Model A (firemní základ)
 
 display _n "=============================================================="
-display "6. REGRESNI ANALYZA — MODELY VEDOUCIHO"
+display "6. REGRESNI ANALYZA — OLS MODELY"
 display "=============================================================="
 
 * --- 6.0 Příprava: log transformace platu ---
@@ -443,12 +467,12 @@ label variable ln_salary "Prirozeny logaritmus platu"
 summarize ln_salary, detail
 display _n "Pozn: koeficient b v log modelu = (exp(b)-1)*100 % zmena platu"
 
-* --- 6.1 Model A: Base model (bez individuálních charakteristik) ---
-* DV: ln(salary_mid)
-* IV: 24 skill clusterů + AI level + sektor NACE + region + remote + typ + velikost
+* --- 6.1 Model A: Základní OLS (Firemní a technologický profil) ---
+* DV: ln_salary
+* IV: cluster_* (soft/hard skills bločky), i.ai_level, i.sector_nace_num, i.region_num, is_remote, i.type_cat, i.size_cat
 
-display _n "--- 6.1 Model A: Base model ---"
-display "ln(plat) = skill clustery + AI level + sektor + region + remote + typ + velikost"
+display _n "--- 6.1 Model A: Zakladni OLS ---"
+display "ln(plat) ~ cluster_* + AI_level + sektor + region + remote + typ_firmy + velikost_firmy"
 
 regress ln_salary ///
     cluster_* ///
@@ -463,7 +487,7 @@ regress ln_salary ///
 estimates store model_a
 display _n "Model A: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
 
-* --- 6.1b VIF diagnostika (kolinearita) ---
+* --- 6.1b VIF diagnostika Model A ---
 display _n "--- 6.1b VIF diagnostika Model A ---"
 quietly regress ln_salary ///
     cluster_* ///
@@ -476,9 +500,9 @@ quietly regress ln_salary ///
     if ln_salary != .
 vif
 
-* --- 6.2 Model B: Plný model (+vzdělání, zkušenosti, pozice) ---
-display _n "--- 6.2 Model B: Plny model ---"
-display "ln(plat) = Model A + vzdelani + zkusenosti + pozice (job family)"
+* --- 6.2 Model B: Rozšířený OLS (Lidský kapitál a přesná pozice) ---
+display _n "--- 6.2 Model B: Rozsireny OLS (Profil uchazece) ---"
+display "ln(plat) ~ Model A + job_family_num + edu_ols + exp_category"
 
 regress ln_salary ///
     cluster_* ///
@@ -488,9 +512,9 @@ regress ln_salary ///
     is_remote ///
     i.type_cat ///
     i.size_cat ///
-    i.edu_cat ///
-    i.exp_category ///
     i.job_family_num ///
+    i.edu_ols ///
+    ib3.exp_category ///
     if ln_salary != ., vce(robust)
 
 estimates store model_b
@@ -506,15 +530,15 @@ quietly regress ln_salary ///
     is_remote ///
     i.type_cat ///
     i.size_cat ///
-    i.edu_cat ///
-    i.exp_category ///
     i.job_family_num ///
+    i.edu_ols ///
+    ib3.exp_category ///
     if ln_salary != .
 vif
 
 * --- 6.3 Srovnání modelů A vs B (F-test nested models) ---
-display _n "--- 6.3 Srovnani modelu A vs B ---"
-display "F-test: testuje zda edu + exp + job_family vyznamne zlepsuje model"
+display _n "--- 6.3 Srovnani OLS modelu A vs B ---"
+display "F-test (na standardnich chybach): testuje zda edu + exp + job_family vyznamne zlepsuje model"
 
 quietly regress ln_salary ///
     cluster_* ///
@@ -535,57 +559,145 @@ quietly regress ln_salary ///
     is_remote ///
     i.type_cat ///
     i.size_cat ///
-    i.edu_cat ///
-    i.exp_category ///
     i.job_family_num ///
+    i.edu_ols ///
+    ib3.exp_category ///
     if ln_salary != .
 estimates store model_b_lr
 
 lrtest model_a_lr model_b_lr
 estimates drop model_a_lr model_b_lr
 
-* --- 6.4 Porovnávací tabulka modelů ---
-display _n "--- 6.4 Porovnani koeficientu Model A vs B ---"
+* --- 6.4 Porovnávací tabulka OLS modelů ---
+display _n "--- 6.4 Porovnani koeficientu OLS Model A vs B ---"
 estimates table model_a model_b, star stats(N r2 r2_a)
 
 
 * ==============================================================================
-* 6B. JEDNODUCHÉ MODELY (původní — pro srovnání)
+* 6B. PRAVDĚPODOBNOSTNÍ MODELY (Logit + Multinomiální Logit)
 * ==============================================================================
+* DV: has_ai (binární) a ai_level (multinomiální: 0=None, 1=AI Integration, 2=Applied/Core AI)
+* Cíl: Zjistit, jaké firmy a na jaké pozice nejčastěji vyžadují AI dovednosti?
+* DŮLEŽITÉ: Proměnná is_remote zde NENÍ zahrnuta dle požadavku vedoucího.
 
 display _n "=============================================================="
-display "6B. JEDNODUCHE MODELY (puvodni)"
+display "6B. PRAVDEPODOBNOSTNI MODELY — LOGIT / MLOGIT"
 display "=============================================================="
 
-* --- 6B.1 OLS: plat ~ has_ai + edu + exp + remote ---
-display _n "--- 6B.1 OLS: Determinanty platu (jednoduchy model) ---"
-regress salary_mid has_ai ib1.edu_cat ib3.exp_category is_remote, vce(robust)
+* -----------------------------------------------------------------------
+* MODEL 1: Základní profil firmy (Sektor, Typ, Velikost, Lokace)
+* -----------------------------------------------------------------------
+* Cíl: Jaký typ firmy, v jakém sektoru a lokalitě požaduje AI?
 
-* --- 6B.2 Logistická regrese: Prediktory AI požadavků ---
-display _n "--- 6B.2 Logisticka regrese: Prediktory AI pozadavku ---"
-logit has_ai ib1.edu_cat ib3.exp_category is_remote, or
-display _n "--- 6B.2b Marginalni efekty ---"
+display _n "--- 6B.1a Logit Model 1: Profil firmy ---"
+logit has_ai ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num, or
+estimates store logit_m1
+display _n "--- 6B.1b Marginalni efekty Model 1 ---"
 margins, dydx(*) atmeans
 
-* --- 6B.3 Multinomiální logit ---
-display _n "--- 6B.3 Multinomialni logit: Uroven AI pozadavku ---"
-mlogit ai_level ib1.edu_cat ib3.exp_category is_remote, baseoutcome(0) rrr
-display _n "--- 6B.3b Marginalni efekty: P(AI Integration) ---"
+display _n "--- 6B.1c Mlogit Model 1: Profil firmy ---"
+mlogit ai_level ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num, baseoutcome(0) rrr
+estimates store mlogit_m1
+display _n "--- 6B.1d Marginalni efekty Mlogit M1: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1)) atmeans
-display _n "--- 6B.3c Marginalni efekty: P(Applied/Core AI) ---"
+display _n "--- 6B.1e Marginalni efekty Mlogit M1: P(Applied/Core AI) ---"
 margins, dydx(*) predict(outcome(2)) atmeans
 
-* Hausman test IIA
-display _n "--- 6B.3d Hausman test IIA ---"
-quietly mlogit ai_level ib1.edu_cat ib3.exp_category is_remote, baseoutcome(0)
-estimates store full_model
-quietly mlogit ai_level ib1.edu_cat ib3.exp_category is_remote if ai_level != 1, baseoutcome(0)
-estimates store reduced_model
-capture hausman reduced_model full_model, alleqs constant
+* -----------------------------------------------------------------------
+* MODEL 2: Profil role a člověka (Skills, Pozice, Vzdělání, Praxe)
+* -----------------------------------------------------------------------
+* Cíl: Souvisí požadavek na AI s typem dovedností a profilem uchazeče?
+
+display _n "--- 6B.2a Logit Model 2: Profil role a cloveka ---"
+logit has_ai ///
+    cluster_* ///
+    i.job_family_num ///
+    ib1.edu_logit ///
+    ib3.exp_category, or
+estimates store logit_m2
+display _n "--- 6B.2b Marginalni efekty Model 2 ---"
+margins, dydx(*) atmeans
+
+display _n "--- 6B.2c Mlogit Model 2: Profil role a cloveka ---"
+mlogit ai_level ///
+    cluster_* ///
+    i.job_family_num ///
+    ib1.edu_logit ///
+    ib3.exp_category, baseoutcome(0) rrr
+estimates store mlogit_m2
+display _n "--- 6B.2d Marginalni efekty Mlogit M2: P(AI Integration) ---"
+margins, dydx(*) predict(outcome(1)) atmeans
+display _n "--- 6B.2e Marginalni efekty Mlogit M2: P(Applied/Core AI) ---"
+margins, dydx(*) predict(outcome(2)) atmeans
+
+* -----------------------------------------------------------------------
+* MODEL 3: Kompletní (Model 1 + Model 2)
+* -----------------------------------------------------------------------
+* Cíl: Kompletní pohled — jak firemní profil, tak profil role a člověka
+
+display _n "--- 6B.3a Logit Model 3: Kompletni ---"
+logit has_ai ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib1.edu_logit ///
+    ib3.exp_category, or
+estimates store logit_m3
+display _n "--- 6B.3b Marginalni efekty Model 3 ---"
+margins, dydx(*) atmeans
+
+display _n "--- 6B.3c Mlogit Model 3: Kompletni ---"
+mlogit ai_level ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib1.edu_logit ///
+    ib3.exp_category, baseoutcome(0) rrr
+estimates store mlogit_m3
+display _n "--- 6B.3d Marginalni efekty Mlogit M3: P(AI Integration) ---"
+margins, dydx(*) predict(outcome(1)) atmeans
+display _n "--- 6B.3e Marginalni efekty Mlogit M3: P(Applied/Core AI) ---"
+margins, dydx(*) predict(outcome(2)) atmeans
+
+* -----------------------------------------------------------------------
+* Srovnávací tabulky Logit a Mlogit modelů
+* -----------------------------------------------------------------------
+display _n "--- 6B.4 Porovnani Logit modelu 1, 2, 3 ---"
+estimates table logit_m1 logit_m2 logit_m3, star stats(N ll chi2)
+
+display _n "--- 6B.5 Porovnani Mlogit modelu 1, 2, 3 ---"
+estimates table mlogit_m1 mlogit_m2 mlogit_m3, star stats(N ll chi2)
+
+* Hausman test IIA (na kompletním modelu 3)
+display _n "--- 6B.6 Hausman test IIA (Model 3) ---"
+quietly mlogit ai_level ///
+    i.sector_nace_num i.type_cat i.size_cat i.region_num ///
+    cluster_* i.job_family_num ib1.edu_logit ib3.exp_category, baseoutcome(0)
+estimates store hausman_full
+quietly mlogit ai_level ///
+    i.sector_nace_num i.type_cat i.size_cat i.region_num ///
+    cluster_* i.job_family_num ib1.edu_logit ib3.exp_category ///
+    if ai_level != 1, baseoutcome(0)
+estimates store hausman_reduced
+capture hausman hausman_reduced hausman_full, alleqs constant
 if _rc {
     display "Hausman test nelze provest (typicke pro male vzorky v nekterych kategoriich)"
 }
-estimates drop full_model reduced_model
+estimates drop hausman_full hausman_reduced
 
 
 * ==============================================================================
