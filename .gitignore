@@ -1,9 +1,5 @@
-
 # Stata
 *.dta
-# analysis/stata/output/
-analysis/stata/*.pdf
-
 data/outputs/old
 data/outputs/backups
 data/processed/
@@ -67,7 +63,6 @@ cover/
 *.pot
 
 # Django stuff:
-*.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal

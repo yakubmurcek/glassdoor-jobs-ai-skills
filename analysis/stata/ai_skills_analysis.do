@@ -33,21 +33,23 @@ clear all
 set more off                              
 set max_memory 8g, permanently            
 
-* Nastav cestu k datům - UPRAV PODLE SVÉ STRUKTURY
-global datadir "../../data/outputs"
-global outdir "./output"
-
-* Vytvoř output složku pokud neexistuje
-capture mkdir "$outdir"
-
-* Log file - zaznamenává veškerý výstup pro pozdější kontrolu
-capture log close
-* Generovani casoveho razitka pro unikatni nazev log souboru
+* Generovani casoveho razitka pro unikatni nazev slozky
 local c_date = c(current_date)
 local c_time = c(current_time)
 local time_string = subinstr("`c_date'_`c_time'", " ", "_", .)
 local time_string = subinstr("`time_string'", ":", "-", .)
-log using "$outdir/ai_skills_analysis_`time_string'.log", replace text
+
+* Nastav cestu k datům - UPRAV PODLE SVÉ STRUKTURY
+global datadir "../../data/outputs"
+global outdir "./output/run_`time_string'"
+
+* Vytvoř output složku pokud neexistuje
+capture mkdir "./output"
+capture mkdir "$outdir"
+
+* Log file - zaznamenává veškerý výstup pro pozdější kontrolu
+capture log close
+log using "$outdir/ai_skills_analysis.log", replace text
 
 
 * ==============================================================================
