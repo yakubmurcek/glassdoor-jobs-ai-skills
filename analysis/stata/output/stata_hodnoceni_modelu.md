@@ -75,7 +75,15 @@ Při analýze dat je naprosto klíčové věnovat pozornost i premenným, u kter
 
 ### ⚠️ Co vzít v potaz / Drobné nuance pro obhajobu
 
-1. 🔍 **LR Test po robustních odhadech:** `lrtest` matematicky neumožňuje testování robustních odhadů. Výsledek je i tak validní, jen je to důvod, proč byl přepočítán model bez `vce(robust)`. *(Není chyba, spíše technická nutnost Staty)* 🆗.
+#### 1. Implementace požadavků dle checklistu (Soulad se zadáním)
+Modelování a čištění dat bylo provedeno v striktním souladu s dohodnutým metodologickým checklistem:
+* 🛠️ **Příprava proměnných:** Úspěšně byla zavedena závislá proměnná logaritmu platu `ln_salary`, byl vytvořen index počtu dovedností `skill_count` (0-80) a do binární podoby byla zredukována přítomnost AI požadavků `has_ai`.
+* 🔄 **Slučování řídkých kategorií (Sparse data):** Aby multinomiální modely nevykazovaly chyby konvergence (např. *perfect separation*), byly striktně dodrženy limity počtu pozorování (min. 50 na buňku). Z toho důvodu došlo v rámci přípravy k agregaci specifických technických clusterů (vyřazeno např. `cluster_legacy__mainframe`), drobných sektorů i edukace (sloučení High School a Associate Degree).
+* 🎯 **Rozlišení specifikace pro Logit a OLS:** V rámci OLS (mzdového) modelu dává smysl měřit vliv **Remote práce**, nicméně v modelech predikujících *požadavek zaměstnavatele na AI* je tato proměnná (dle checklistu) brána s odstupem – remote status statisticky nevysvětluje primární potřebu firmy zavádět umělou inteligenci, reflektuje to spíše celkový firemní provoz, ačkoliv v mzdové regresi je plně přítomen.
+* 📈 **Inkrementální 3-stupňová struktura:** Práce plně těží z domluvené sekvence modelů (Základní ➡️ doplněný o Lidský kapitál ➡️ doplněný o konkrétní technologické skilly/úrovně). Výsledný Model B a rozpad vlivů přesně zrcadlí tuto strategickou posloupnost.
+
+#### 2. LR Test po robustních odhadech
+V logu je vidět použití `lrtest`:
 2. 📉 **Nízké Pseudo $R^2$ u logitu (1.4 %):** To **NENÍ CHYBA** modelů. Znamená to jen, že o tom, zda pozice nabízí AI nebo ne, rozhoduje primárně specifický byznys firmy, nikoliv věci jako "má člověk bakaláře". ℹ️ Lokální proměnné jsou pro to zkrátka přirozeně slabí prediktoři.
 3. 🏛️ **Ukázková konvergence dat:** Žádné "not concave" ani "perfect separation" chyby ✅! Toto **zdůrazněte při obhajobě** jako důkaz strukturálně čisté databáze.
 
@@ -131,9 +139,11 @@ Všechny hodnoty byly vizuálně zkontrolovány proti zdrojovému logu. 🟢 = O
 > 💡 **PROČ SE VSOKÉ P-HODNOTY NEMAŽOU Z MODELU:**
 > Často panuje zjednodušená představa, že proměnná s $p > 0.05$ je "špatná" a model se bez ní musí přepsít a spustit znovu. V seriózní ekonometrii se ale takové proměnné modelům zachovávají jako tzv. **kontrolní proměnné (control variables)**.  Jejich úkolem není vyhrát soutěž na signifikanci, ale "podržet" a zafixovat strukturu firmy (např. sektorové zařazení nebo konkrétní velikost firmy) na nějakém pozadí. Jakmile bychom tyto "neúspěšné vlivy" z analýzy prostě vymazali (např. celý sektor školství), mohly by reálně začít zkreslovat chování onoho mzdového benefitu u "AI vlivu". Tím, že tam ty parametry v modelu zůstaly jako nezúčastněné stabilizátory na nule, je očištěná "AI Prémie" tou 100% nejopravdovější hodnotou!
 
-### 🎲 Logistické a Multinomiální modely
+### 🎲 Logistické a Multinomiální modely (Predikce výskytu AI)
+Dle dohodnuté specifikace tyto modely určují, *proč vůbec pozice vyžaduje AI* (Base úroveň = None). Zde je provedena verifikace konvergence – úspěšně jsme zamezili riziku zhroucení modelu vlivem nedostatku dat v subkategoriích.
+
 | Modely | Status indikátory konvergence a spolehlivosti |
 |---|---|
-| **Logit (Logistická regrese)** | 🟢 $p < 0.0000$ \| 🟢 Konvexe OK \| ℹ️ Pseudo $R^2$ = 1.4% (Očekáváno) |
-| **Mlogit (Multinomiální logit)** | 🟢 $p < 0.0000$ \| 🟢 Konvexe OK \| ℹ️ Pseudo $R^2$ = 1.2% (Očekáváno) |
+| **Logit (Binární: AI vs. None)** | 🟢 $p < 0.0000$ \| 🟢 Konvexe OK \| ℹ️ Pseudo $R^2$ = 1.4% (Očekáváno) |
+| **Mlogit (None vs. AI Int. vs. Core AI)** | 🟢 $p < 0.0000$ \| 🟢 Konvexe OK \| ℹ️ Pseudo $R^2$ = 1.2% (Očekáváno) |
 | **Metodika (okrajové efekty)** | 🟢 `margins, dydx(*)` zavoláno úspěšně oba případy |
