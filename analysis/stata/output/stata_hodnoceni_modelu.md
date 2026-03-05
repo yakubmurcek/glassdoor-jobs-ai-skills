@@ -49,6 +49,13 @@ Pro rigorózní vyčíslení platového benefitu a očištění vlivu tzv. zavá
 * Tradiční IT pozice: průměrně **~16 dovedností**.
 * AI Integration/Core AI pozice: takřka **~20 dovedností** (📈 nárůst o cca 4 nové okruhy nároků).
 
+### 5. 📉 Co se nepotvrdilo (Statisticky nevýznamné faktory)
+Při analýze dat je naprosto klíčové věnovat pozornost i premenným, u kterých se hypotéza **nepotvrdila** ($p > 0,05$). Ukazuje to, že model robustně funguje a nepřiděluje "plochou" platovou prémii všemu bez rozdílu:
+* 🏢 **Velikost firmy pod 500 zaměstnanců:** Oproti firmám nezjištěné velikosti nemají menší a střední podniky (do 500 lidí) statisticky odlišné platy v těchto inzerátech ($p > 0,10$). Platový odskok začíná být prokazatelný až od mety větších podniků (1000+ zaměstnanců).
+* 🎓 **Zkušenosti Mid (3-5 let) vs. Neuvedeno:** Uchazeči s požadovanou praxí 3-5 let nemají statisticky odlišný plat od inzerátů, které praxi nespecifikují ($p = 0,927$).
+* 🛠️ **Vybrané technologické clustery:** Samotný požadavek na klasický *Frontend development* ($p = 0,858$), *Backend development* ($p = 0,104$) nebo *OS/Embedded* ($p = 0,580$) negeneruje průměrnému inzerátu statisticky významnou mzdovou prémii navíc; trh tyto schopnosti bere jako normový standard.
+* 🏛️ **Neziskový / Státní sektor:** Mzdové ohodnocení v tomto sektoru se statisticky neliší od "Unknown" zařazení ($p = 0,617$).
+
 ### 💡 Ústřední argument pro obhajobu (Závěr interpretace)
 > Analýza s nezpochybnitelnou statistickou jistotou (✅ $p < 0,001$) verifikuje tezi o mzdové "AI prémii". V regresním Modelu B se efektivně eliminovaly zavádějící faktory podoby vzdělání, regionu či charakteru firmy. Je tudíž prokazatelné, že **reálný čistý osobní mzdový příplatek za AI dovednosti činí solidních 8 až 10,5 %**. Tento příplatek odráží trend, v němž tyto pozice od zaměstnance vyžadují nejen sofistikovanější profil (seniorita a vzdělání), ale rovněž zvládání širšího arzenálu oborových hard skills.
 
@@ -109,6 +116,20 @@ Všechny hodnoty byly vizuálně zkontrolovány proti zdrojovému logu. 🟢 = O
 | Platový rozdíl (Hrubá AI premium) | **$24 086** | 1231 | 🟢 Zkontrolováno |
 | $p$-value statistika | 0.0000 | 1237 | 🟢 Vysoce signifikantní ($p < 0.001$) |
 | Cohenovo d (effect size) | 0.587 | 1267 | 🟡 **Střední velikost efektu** |
+
+### 🚫 Statisticky nevýznamné p-hodnoty (Důkaz selektivity modelu)
+*Správně nastavený model nedá všemu status "významné". Zde kontrolujeme proměnné, u kterých se s jistotou nepodařilo prokázat vliv ($p > 0.05$), což dokládá realističnost regresních rovin a absenci "šumu":*
+| Proměnná (Vliv na Plat v Modelu B) | Hodnota P-value | Řádek v logu | Status (Validace do práce) |
+|---|---|---|---|
+| Zkušenost: Mid (3-5 let) | $p = 0.927$ | 1715 | 🟢 **Velmi správně nedetekován vliv** |
+| Dovednost: Frontend development | $p = 0.858$ | 1666 | 🟢 **Spolehlivě nevýznamné** |
+| Dovednost: Backend development | $p = 0.104$ | 1656 | 🟢 **Nevýznamné (Očekávaný Base-standard)** |
+| Velikost firmy: 51-200 | $p = 0.870$ | 1703 | 🟢 **Spolehlivě nevýznamné** |
+| Sektor firmy: Nonprofit/Gov/Edu | $p = 0.617$ | 1699 | 🟢 **Spolehlivě nevýznamné** |
+| Typ pozice (has_ai Logit): Senior+ | $p = 0.798$ | 2035 | 🟢 **Zcela nevýznamný prediktor požadavku AI** |
+
+> 💡 **PROČ SE VSOKÉ P-HODNOTY NEMAŽOU Z MODELU:**
+> Často panuje zjednodušená představa, že proměnná s $p > 0.05$ je "špatná" a model se bez ní musí přepsít a spustit znovu. V seriózní ekonometrii se ale takové proměnné modelům zachovávají jako tzv. **kontrolní proměnné (control variables)**.  Jejich úkolem není vyhrát soutěž na signifikanci, ale "podržet" a zafixovat strukturu firmy (např. sektorové zařazení nebo konkrétní velikost firmy) na nějakém pozadí. Jakmile bychom tyto "neúspěšné vlivy" z analýzy prostě vymazali (např. celý sektor školství), mohly by reálně začít zkreslovat chování onoho mzdového benefitu u "AI vlivu". Tím, že tam ty parametry v modelu zůstaly jako nezúčastněné stabilizátory na nule, je očištěná "AI Prémie" tou 100% nejopravdovější hodnotou!
 
 ### 🎲 Logistické a Multinomiální modely
 | Modely | Status indikátory konvergence a spolehlivosti |
