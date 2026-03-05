@@ -1,0 +1,2445 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata\output/run__5_Mar_2026_13-50-35/ai_skills_analysis.log
+  log type:  text
+ opened on:   5 Mar 2026, 13:50:36
+
+. 
+. 
+. * ==============================================================================
+. * 2. IMPORT DAT
+. * ==============================================================================
+. * Používáme soubor 'us_relevant_ai_stata.csv'
+. import delimited "$datadir/us_relevant_ai_stata.csv", delimiter(";") clear varnames(1) encoding(utf8)
+(75 vars, 18,464 obs)
+
+. 
+. * Základní kontrola úspěšného importu
+. describe
+
+Contains data
+  obs:        18,464                          
+ vars:            75                          
+ size:   111,448,704                          
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+              storage   display    value
+variable name   type    format     label      variable label
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+skills          str576  %576s                 
+skills_ai_det   str98   %98s                  
+skills_hasai_~t byte    %8.0g                 
+desc_tier_llm   str14   %14s                  
+desc_conf_llm   float   %9.0g                 
+ai_confidence   float   %9.0g                 
+desc_ai_llm     str400  %400s                 
+is_real_ai      byte    %8.0g                 
+hardskills      str934  %934s                 
+softskills      str452  %452s                 
+skill_cluster   str1217 %1217s                
+edu_level_det   str10   %10s                  
+edulevel_llm    str11   %11s                  
+experience_mi~m str5    %9s                   
+ai_det_llm_ma~h byte    %8.0g                 
+desc_hard_det   str934  %934s                 
+desc_soft_det   str452  %452s                 
+desc_hard_llm   byte    %8.0g                 
+desc_soft_llm   byte    %8.0g                 
+id              int     %8.0g                 
+job_title       str131  %131s                 
+location        str32   %32s                  
+company_id      long    %12.0g                
+company         str81   %81s                  
+age_in_days     int     %8.0g                 
+pay_currency    str3    %9s                   
+pay_period      str7    %9s                   
+salary_min      float   %9.0g                 
+salary_mid      float   %9.0g                 
+salary_max      float   %9.0g                 
+rating          float   %9.0g                 
+discover_date   str19   %19s                  
+job_types       str73   %73s                  
+remote_work_t~s str14   %14s                  
+city            str32   %32s                  
+state           str24   %24s                  
+country         str13   %13s                  
+latitude        float   %9.0g                 
+longitude       float   %9.0g                 
+ceo             str64   %64s                  
+headquarters    str37   %37s                  
+industry        str40   %40s                  
+sector          str43   %43s                  
+revenue         str32   %32s                  
+size            str23   %23s                  
+type            str30   %30s                  
+website         str127  %127s                 
+year_founded    int     %8.0g                 
+region          str9    %9s                   
+job_family      str21   %21s                  
+sector_nace     str7    %9s                   
+cluster_archi~s byte    %8.0g                 
+cluster_bi__a~s byte    %8.0g                 
+cluster_backe~t byte    %8.0g                 
+cluster_certi~s byte    %8.0g                 
+cluster_cloud~g byte    %8.0g                 
+cluster_data_~s byte    %8.0g                 
+cluster_data_~g byte    %8.0g                 
+cluster_data_~l byte    %8.0g                 
+cluster_datab~e byte    %8.0g                 
+cluster_devop~s byte    %8.0g                 
+cluster_dynam~b byte    %8.0g                 
+cluster_enter~d byte    %8.0g                 
+cluster_enter~s byte    %8.0g                 
+cluster_front~t byte    %8.0g                 
+cluster_gener~i byte    %8.0g                 
+cluster_legac~e byte    %8.0g                 
+cluster_mobil~p byte    %8.0g                 
+cluster_netwo~g byte    %8.0g                 
+cluster_os__e~d byte    %8.0g                 
+cluster_scrip~l byte    %8.0g                 
+cluster_secur~y byte    %8.0g                 
+cluster_syste~g byte    %8.0g                 
+cluster_testi~g byte    %8.0g                 
+cluster_tools~s byte    %8.0g                 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Sorted by: 
+     Note: Dataset has changed since last saved.
+
+. display "Počet pozorování (job postů): " _N
+Počet pozorování (job postů): 18464
+
+. 
+. 
+. * ==============================================================================
+. * 3. ČIŠTĚNÍ A PŘÍPRAVA DAT
+. * ==============================================================================
+. 
+. * --- 3.0 Filtrování (podle požadavku uživatele) ---
+. * Ponecháme pouze pozice s vysokou confidencí modelu
+. keep if desc_conf_llm >= 0.7
+(607 observations deleted)
+
+. display "Počet pozorování po filtrování confidence >= 0.7: " _N
+Počet pozorování po filtrování confidence >= 0.7: 17857
+
+. 
+. * Vyloučení starých okrajových inzerátů (roky 2022 a 2023)
+. * Získání reálného data publikace odečtením stáří
+. gen date_format_discover = date(substr(discover_date, 1, 10), "YMD")
+
+. format date_format_discover %td
+
+. gen real_post_date = date_format_discover - age_in_days
+
+. format real_post_date %td
+
+. gen post_year = year(real_post_date)
+
+. drop if post_year <= 2023
+(9 observations deleted)
+
+. display "Počet pozorování po vyřazení inzerátů starých 3+ roky (2022, 2023): " _N
+Počet pozorování po vyřazení inzerátů starých 3+ roky (2022, 2023): 17848
+
+. 
+. * --- 3.1 AI Tier klasifikace ---
+. * desc_tier_llm obsahuje kategorie: "none", "ai_integration", "applied_ai", "core_ai"
+. replace desc_tier_llm = "missing" if desc_tier_llm == ""
+(0 real changes made)
+
+. 
+. * Merge core_ai into applied_ai (only 6 obs — below 50-obs threshold)
+. replace desc_tier_llm = "applied_ai" if desc_tier_llm == "core_ai"
+(6 real changes made)
+
+. 
+. encode desc_tier_llm, generate(ai_tier_num)
+
+. 
+. * --- 3.2 AI Flag (Strict Intersection + Buzzword Filter) ---
+. * 1. Sloučime zdroje skills do jednoho retezce pro kontrolu
+. gen skills_combined = lower(skills_ai_det + " " + desc_ai_llm)
+
+. 
+. * 2. Odstranime obecne buzzwords (AI, ML, Artificial Intelligence atd.)
+. * Pouzivame regex s word boundaries \b aby se smazalo jen "AI" a ne "OpenAI"
+. gen skills_no_buzz = ustrregexra(skills_combined, "(?i)\b(ai|ml|artificial intelligence|machine learning|genai)\b", "")
+
+. 
+. * 3. Odstranime interpunkci (carky, mezery), abychom zarucili ze zbyva neco realneho
+. gen skills_cleaned = subinstr(skills_no_buzz, ",", "", .)
+
+. replace skills_cleaned = subinstr(skills_cleaned, " ", "", .)
+(17,848 real changes made)
+
+. replace skills_cleaned = subinstr(skills_cleaned, ";", "", .)
+(0 real changes made)
+
+. 
+. * 4. Definice has_ai_flag
+. * Tier != None A ZAROVEN zbyly nejake specificke skills (delka > 1 znaku)
+. gen has_ai_flag = ((desc_tier_llm != "none" & desc_tier_llm != "missing") & length(skills_cleaned) > 1)
+
+. 
+. label variable has_ai_flag "AI Job (Tier + Valid Skills, no buzzwords)"
+
+. 
+. * Kompatibilita pro starší skripty (volitelné)
+. gen has_ai = has_ai_flag 
+
+. 
+. * --- 3.3 Vzdělání (Hybridní) ---
+. * Vytvoříme 'education_hybrid' z edulevel_llm (primární) a edu_level_det (fallback)
+. * Výsledné hodnoty: "missing", "highschool", "associate", "bachelor", "master", "phd"
+. * POZOR: encode řadí abecedně, proto kódujeme manuálně (ordinální pořadí)
+. 
+. * Krok 1: Normalizujeme edulevel_llm na lowercase a sjednotíme hodnoty
+. gen education_hybrid = lower(edulevel_llm)
+
+. replace education_hybrid = subinstr(education_hybrid, "'s", "", .)
+(9,186 real changes made)
+
+. replace education_hybrid = "highschool" if education_hybrid == "high school"
+(312 real changes made)
+
+. replace education_hybrid = "missing" if education_hybrid == "-" | education_hybrid == ""
+(8,071 real changes made)
+
+. 
+. * Krok 2: Fallback na edu_level_det pokud LLM chybí
+. replace education_hybrid = edu_level_det if education_hybrid == "missing" & edu_level_det != ""
+(1,707 real changes made)
+
+. 
+. * Krok 3: Finální missing pro prázdné
+. replace education_hybrid = "missing" if education_hybrid == ""
+(0 real changes made)
+
+. 
+. gen edu_cat = .
+(17,848 missing values generated)
+
+. replace edu_cat = 0 if inlist(education_hybrid, "missing", "", "highschool", "associate")
+(7,077 real changes made)
+
+. replace edu_cat = 1 if inlist(education_hybrid, "bachelor", "master", "phd")
+(10,771 real changes made)
+
+. 
+. label define edu_lbl 0 "No Degree / Missing" 1 "Bachelor or Higher"
+
+. label values edu_cat edu_lbl
+
+. label variable edu_cat "Pozadovane vzdelani (Binary)"
+
+. 
+. * --- 3.4 Zkušenosti ---
+. * experience_min_llm by měl být již numerický, ale pro jistotu
+. destring experience_min_llm, replace force
+experience_min_llm: contains nonnumeric characters; replaced as double
+(2591 missing values generated)
+
+. label variable experience_min_llm "Min. pozadovane roky zkusenosti"
+
+. 
+. * Kategorie zkušeností
+. * Missing = neuvedeno v inzerátu (samostatná kategorie, jako u vzdělání)
+. gen exp_category = .
+(17,848 missing values generated)
+
+. replace exp_category = 0 if experience_min_llm == .
+(2,591 real changes made)
+
+. * Slouceni Entry s Junior a Expert se Senior
+. replace exp_category = 2 if experience_min_llm >= 0 & experience_min_llm <= 2
+(3,213 real changes made)
+
+. replace exp_category = 3 if experience_min_llm > 2 & experience_min_llm <= 5
+(8,406 real changes made)
+
+. replace exp_category = 4 if experience_min_llm > 5 & experience_min_llm < .
+(3,638 real changes made)
+
+. 
+. label define exp_lbl 0 "Missing" 2 "Junior (0-2)" 3 "Mid (3-5)" 4 "Senior+ (6+)"
+
+. label values exp_category exp_lbl
+
+. label variable exp_category "Kategorie seniority"
+
+. 
+. * --- 3.5 Plat ---
+. * Převod na roční plat podle pay_period
+. * US standard: 2080 hodin/rok (40h/týden × 52 týdnů), 12 měsíců/rok
+. destring salary_min salary_mid salary_max, replace force
+salary_min already numeric; no replace
+salary_mid already numeric; no replace
+salary_max already numeric; no replace
+
+. 
+. * Přepočet hodinových mezd na roční (HOURLY × 2080)
+. replace salary_min = salary_min * 2080 if pay_period == "HOURLY"
+(840 real changes made)
+
+. replace salary_mid = salary_mid * 2080 if pay_period == "HOURLY"
+(840 real changes made)
+
+. replace salary_max = salary_max * 2080 if pay_period == "HOURLY"
+(840 real changes made)
+
+. 
+. * Přepočet měsíčních mezd na roční (MONTHLY × 12)
+. replace salary_min = salary_min * 12 if pay_period == "MONTHLY"
+(67 real changes made)
+
+. replace salary_mid = salary_mid * 12 if pay_period == "MONTHLY"
+(67 real changes made)
+
+. replace salary_max = salary_max * 12 if pay_period == "MONTHLY"
+(67 real changes made)
+
+. 
+. * Filtr outlierů (po přepočtu na roční bázi)
+. replace salary_mid = . if salary_mid < 20000 | salary_mid > 500000
+(5 real changes made, 5 to missing)
+
+. label variable salary_mid "Rocni plat - stredni hodnota (USD)"
+
+. 
+. * --- 3.6 Sektor a Lokace ---
+. replace sector = "Unknown" if sector == ""
+(3,500 real changes made)
+
+. replace industry = "Unknown" if industry == ""
+(3,501 real changes made)
+
+. encode sector, generate(sector_num)
+
+. 
+. replace state = "Unknown" if state == ""
+(4,547 real changes made)
+
+. encode state, generate(state_num)
+
+. 
+. * --- 3.8 Velikost firmy (ordinální) ---
+. replace size = "Unknown" if size == ""
+(860 real changes made)
+
+. gen size_cat = .
+(17,848 missing values generated)
+
+. replace size_cat = 0 if size == "Unknown"
+(2,703 real changes made)
+
+. replace size_cat = 1 if size == "1 to 50 Employees"
+(3,152 real changes made)
+
+. replace size_cat = 2 if size == "51 to 200 Employees"
+(2,324 real changes made)
+
+. replace size_cat = 3 if size == "201 to 500 Employees"
+(1,580 real changes made)
+
+. replace size_cat = 4 if size == "501 to 1000 Employees"
+(1,051 real changes made)
+
+. replace size_cat = 5 if size == "1001 to 5000 Employees"
+(2,237 real changes made)
+
+. replace size_cat = 6 if size == "5001 to 10000 Employees"
+(1,074 real changes made)
+
+. replace size_cat = 7 if size == "10000+ Employees"
+(3,727 real changes made)
+
+. 
+. label define size_lbl 0 "Unknown" 1 "1-50" 2 "51-200" 3 "201-500" ///
+>     4 "501-1000" 5 "1001-5000" 6 "5001-10000" 7 "10000+"
+
+. label values size_cat size_lbl
+
+. label variable size_cat "Velikost firmy (ordinalni)"
+
+. 
+. * --- 3.9 Typ firmy (nominální, sloučený) ---
+. gen type_cat = .
+(17,848 missing values generated)
+
+. replace type_cat = 0 if inlist(type, "", "Unknown", "Contract", "Self-employed", "Private Practice / Firm", "Franchise") // Merge Other to Unknown
+(1,504 real changes made)
+
+. replace type_cat = 1 if inlist(type, "Company - Private", "Subsidiary or Business Segment") // Merge Subsidiary to Private
+(9,733 real changes made)
+
+. replace type_cat = 2 if type == "Company - Public"
+(5,707 real changes made)
+
+. replace type_cat = 4 if inlist(type, "Nonprofit Organization", "Government", ///
+>     "College / University", "School / School District", "Hospital")
+(904 real changes made)
+
+. 
+. label define type_lbl 0 "Unknown/Other" 1 "Private/Subsidiary" 2 "Public" ///
+>     4 "Nonprofit/Gov/Edu"
+
+. label values type_cat type_lbl
+
+. label variable type_cat "Typ firmy"
+
+. 
+. * --- 3.10 NACE sektor (přichází z clean-stata CLI, jen encode) ---
+. replace sector_nace = "Unknown" if sector_nace == ""
+(0 real changes made)
+
+. 
+. * Zachovat top 5 sektorů + Unknown, vše ostatní sloučit do "Other" (kvůli < 50 obs v Applied AI)
+. replace sector_nace = "Other" if !inlist(sector_nace, "J", "C", "K", "M", "Q", "Unknown")
+(2,281 real changes made)
+
+. 
+. encode sector_nace, generate(sector_nace_num)
+
+. label variable sector_nace_num "NACE sektor"
+
+. 
+. * --- 3.11 Rok založení firmy ---
+. destring year_founded, replace force
+year_founded already numeric; no replace
+
+. label variable year_founded "Rok zalozeni firmy"
+
+. 
+. * --- 3.7 Remote práce ---
+. gen is_remote = 0
+
+. replace is_remote = 1 if strpos(lower(remote_work_types), "home") > 0
+(5,067 real changes made)
+
+. replace is_remote = 1 if strpos(lower(remote_work_types), "remote") > 0
+(0 real changes made)
+
+. 
+. label variable is_remote "Moznost remote prace (1=ano)"
+
+. 
+. * --- 3.12 AI Level (multinomiální závislá proměnná) ---
+. * Tříkategoriální proměnná pro multinomiální logit:
+. *   0 = žádné AI požadavky (none)
+. *   1 = používá AI nástroje (ai_integration)
+. *   2 = vyvíjí/buduje AI (applied_ai — core_ai already merged above)
+. gen ai_level = 0
+
+. replace ai_level = 1 if desc_tier_llm == "ai_integration"
+(2,354 real changes made)
+
+. replace ai_level = 2 if desc_tier_llm == "applied_ai"
+(1,313 real changes made)
+
+. 
+. label define ailevel_lbl 0 "None" 1 "AI Integration" 2 "Applied/Core AI"
+
+. label values ai_level ailevel_lbl
+
+. label variable ai_level "Uroven AI pozadavku (0/1/2)"
+
+. 
+. * --- 3.13 Census Region (přichází z clean-stata CLI, jen encode) ---
+. replace region = "Unknown" if region == ""
+(0 real changes made)
+
+. encode region, generate(region_num)
+
+. label variable region_num "Census region"
+
+. 
+. * --- 3.14 Job Family (přichází z clean-stata CLI, jen encode) ---
+. replace job_family = "Unknown" if job_family == ""
+(0 real changes made)
+
+. 
+. * Sloučení řídkých technických rolí do "Other" (kvůli < 50 obs v Applied AI)
+. replace job_family = "Other" if inlist(job_family, "Frontend & Design", "QA & Testing", "Security", "Systems & Embedded")
+(5,005 real changes made)
+
+. 
+. encode job_family, generate(job_family_num)
+
+. label variable job_family_num "Rodina pozice"
+
+. 
+. * --- 3.15 Vyřazení neplatných skill clusterů ---
+. * Tyto clustery mají v kategorii Applied/Core AI méně než 50 pozorování, což by narušilo model.
+. * Proto je mažeme, aby je nezahrnoval wildcard cluster_* v regresních modelech.
+. drop cluster_legacy__mainframe
+
+. drop cluster_data_analysis__stats
+
+. drop cluster_tools__editors
+
+. 
+. * ==============================================================================
+. * 4. DESKRIPTIVNÍ STATISTIKA
+. * ==============================================================================
+. * Základní přehled datasetu - toto jde typicky do první tabulky v diplomce
+. 
+. display _n "=============================================================="
+
+==============================================================
+
+. display "4. DESKRIPTIVNI STATISTIKA"
+4. DESKRIPTIVNI STATISTIKA
+
+. display "=============================================================="
+==============================================================
+
+. 
+. * --- 4.1 Frekvence AI tier klasifikace ---
+. * KLÍČOVÁ TABULKA: Kolik % pozic vyžaduje AI dovednosti?
+. display _n "--- 4.1 Distribuce AI pozadavku v IT pozicich ---"
+
+--- 4.1 Distribuce AI pozadavku v IT pozicich ---
+
+. tab desc_tier_llm, missing
+
+ desc_tier_llm |      Freq.     Percent        Cum.
+---------------+-----------------------------------
+ai_integration |      2,354       13.19       13.19
+    applied_ai |      1,313        7.36       20.55
+          none |     14,181       79.45      100.00
+---------------+-----------------------------------
+         Total |     17,848      100.00
+
+. tab desc_tier_llm if desc_tier_llm != "missing", sort
+
+ desc_tier_llm |      Freq.     Percent        Cum.
+---------------+-----------------------------------
+          none |     14,181       79.45       79.45
+ai_integration |      2,354       13.19       92.64
+    applied_ai |      1,313        7.36      100.00
+---------------+-----------------------------------
+         Total |     17,848      100.00
+
+. 
+. * Procentuální rozdělení (pro text diplomky)
+. count if has_ai == 1
+  3,477
+
+. local n_ai = r(N)
+
+. count
+  17,848
+
+. local n_total = r(N)
+
+. display _n "Podil pozic s AI pozadavky: " %5.2f (`n_ai'/`n_total')*100 "%"
+
+Podil pozic s AI pozadavky: 19.48%
+
+. 
+. * --- 4.2 Požadované vzdělání ---
+. display _n "--- 4.2 Distribuce vzdelavacich pozadavku ---"
+
+--- 4.2 Distribuce vzdelavacich pozadavku ---
+
+. tab edu_cat, missing
+
+Pozadovane vzdelani |
+           (Binary) |      Freq.     Percent        Cum.
+--------------------+-----------------------------------
+No Degree / Missing |      7,077       39.65       39.65
+ Bachelor or Higher |     10,771       60.35      100.00
+--------------------+-----------------------------------
+              Total |     17,848      100.00
+
+. tab edu_cat if edu_cat > 0
+
+Pozadovane vzdelani |
+           (Binary) |      Freq.     Percent        Cum.
+--------------------+-----------------------------------
+ Bachelor or Higher |     10,771      100.00      100.00
+--------------------+-----------------------------------
+              Total |     10,771      100.00
+
+. 
+. * Porovnání vzdělání podle AI tier
+. display _n "Vzdelani x AI tier (kontingencni tabulka):"
+
+Vzdelani x AI tier (kontingencni tabulka):
+
+. tab edu_cat ai_tier_num if edu_cat > 0, chi2 column
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+Pozadovane vzdelani |           ai_tier_num
+           (Binary) | ai_integr  applied_a       none |     Total
+--------------------+---------------------------------+----------
+ Bachelor or Higher |     1,243        756      8,772 |    10,771 
+                    |    100.00     100.00     100.00 |    100.00 
+--------------------+---------------------------------+----------
+              Total |     1,243        756      8,772 |    10,771 
+                    |    100.00     100.00     100.00 |    100.00 
+
+. 
+. * --- 4.3 Požadované zkušenosti ---
+. display _n "--- 4.3 Distribuce pozadavku na zkusenosti ---"
+
+--- 4.3 Distribuce pozadavku na zkusenosti ---
+
+. summarize experience_min_llm, detail
+
+               Min. pozadovane roky zkusenosti
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%            0              0
+ 5%           .5              0
+10%            1              0       Obs              15,257
+25%            3              0       Sum of Wgt.      15,257
+
+50%            5                      Mean           4.520433
+                        Largest       Std. Dev.      2.625669
+75%            5             20
+90%            8             25       Variance       6.894137
+95%           10             25       Skewness       .9726134
+99%           12             35       Kurtosis        6.37971
+
+. 
+. tab exp_category, missing
+
+   Kategorie |
+   seniority |      Freq.     Percent        Cum.
+-------------+-----------------------------------
+     Missing |      2,591       14.52       14.52
+Junior (0-2) |      3,213       18.00       32.52
+   Mid (3-5) |      8,406       47.10       79.62
+Senior+ (6+) |      3,638       20.38      100.00
+-------------+-----------------------------------
+       Total |     17,848      100.00
+
+. tab exp_category ai_tier_num, chi2 column
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+   Kategorie |           ai_tier_num
+   seniority | ai_integr  applied_a       none |     Total
+-------------+---------------------------------+----------
+     Missing |       265        177      2,149 |     2,591 
+             |     11.26      13.48      15.15 |     14.52 
+-------------+---------------------------------+----------
+Junior (0-2) |       352        200      2,661 |     3,213 
+             |     14.95      15.23      18.76 |     18.00 
+-------------+---------------------------------+----------
+   Mid (3-5) |     1,238        620      6,548 |     8,406 
+             |     52.59      47.22      46.17 |     47.10 
+-------------+---------------------------------+----------
+Senior+ (6+) |       499        316      2,823 |     3,638 
+             |     21.20      24.07      19.91 |     20.38 
+-------------+---------------------------------+----------
+       Total |     2,354      1,313     14,181 |    17,848 
+             |    100.00     100.00     100.00 |    100.00 
+
+          Pearson chi2(6) =  73.2360   Pr = 0.000
+
+. 
+. * --- 4.4 Platy ---
+. display _n "--- 4.4 Distribuce platu ---"
+
+--- 4.4 Distribuce platu ---
+
+. summarize salary_mid, detail
+
+             Rocni plat - stredni hodnota (USD)
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%        55000          20000
+ 5%        70000          29120
+10%        78944          30000       Obs              14,640
+25%        95000          30000       Sum of Wgt.      14,640
+
+50%     117884.5                      Mean           124631.6
+                        Largest       Std. Dev.      42133.04
+75%     147736.5         445000
+90%       180000         445000       Variance       1.78e+09
+95%       200000         445000       Skewness       1.338601
+99%       244250         450000       Kurtosis       7.674263
+
+. 
+. * Platy podle AI tier - DŮLEŽITÉ pro argument o "AI premium"
+. display _n "Plat podle AI tier:"
+
+Plat podle AI tier:
+
+. tabstat salary_mid, by(desc_tier_llm) statistics(count mean sd min p25 p50 p75 max)
+
+Summary for variables: salary_mid
+     by categories of: desc_tier_llm 
+
+ desc_tier_llm |         N      mean        sd       min       p25       p50       p75       max
+---------------+--------------------------------------------------------------------------------
+ai_integration |      1946  140487.2  46483.01     31200    106500    135000    168000    410000
+    applied_ai |      1094  150497.5   48356.8     46532    115403    148495    179000    445000
+          none |     11600  119532.3  39070.47     20000     92406    114000    140000    450000
+---------------+--------------------------------------------------------------------------------
+         Total |     14640  124631.6  42133.04     20000     95000  117884.5  147736.5    450000
+------------------------------------------------------------------------------------------------
+
+. 
+. * --- 4.5 Sektory a industrie ---
+. display _n "--- 4.5 Top 10 sektoru ---"
+
+--- 4.5 Top 10 sektoru ---
+
+. tab sector if sector != "Unknown", sort
+
+                                 sector |      Freq.     Percent        Cum.
+----------------------------------------+-----------------------------------
+                 Information Technology |      6,071       42.31       42.31
+                          Manufacturing |      1,219        8.50       50.81
+                     Financial Services |      1,081        7.53       58.34
+                    Aerospace & Defense |        981        6.84       65.18
+                Management & Consulting |        707        4.93       70.11
+                             Healthcare |        692        4.82       74.93
+                  Media & Communication |        546        3.81       78.74
+                     Retail & Wholesale |        405        2.82       81.56
+                              Education |        375        2.61       84.17
+                              Insurance |        321        2.24       86.41
+             Human Resources & Staffing |        294        2.05       88.46
+     Government & Public Administration |        271        1.89       90.35
+         Pharmaceutical & Biotechnology |        229        1.60       91.94
+             Energy, Mining & Utilities |        184        1.28       93.23
+                     Telecommunications |        175        1.22       94.45
+Construction, Repair & Maintenance Se.. |        170        1.18       95.63
+             Transportation & Logistics |        143        1.00       96.63
+       Arts, Entertainment & Recreation |        102        0.71       97.34
+                            Real Estate |         94        0.66       97.99
+                        Nonprofit & NGO |         76        0.53       98.52
+             Personal Consumer Services |         56        0.39       98.91
+             Restaurants & Food Service |         48        0.33       99.25
+                                  Legal |         44        0.31       99.55
+          Hotels & Travel Accommodation |         33        0.23       99.78
+                            Agriculture |         30        0.21       99.99
+                                  Media |          1        0.01      100.00
+----------------------------------------+-----------------------------------
+                                  Total |     14,348      100.00
+
+. 
+. display _n "--- 4.6 Remote prace ---"
+
+--- 4.6 Remote prace ---
+
+. tab is_remote
+
+    Moznost |
+     remote |
+      prace |
+    (1=ano) |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |     12,781       71.61       71.61
+          1 |      5,067       28.39      100.00
+------------+-----------------------------------
+      Total |     17,848      100.00
+
+. tab is_remote has_ai, chi2 row
+
++----------------+
+| Key            |
+|----------------|
+|   frequency    |
+| row percentage |
++----------------+
+
+   Moznost |
+    remote |
+     prace |        has_ai
+   (1=ano) |         0          1 |     Total
+-----------+----------------------+----------
+         0 |    10,612      2,169 |    12,781 
+           |     83.03      16.97 |    100.00 
+-----------+----------------------+----------
+         1 |     3,759      1,308 |     5,067 
+           |     74.19      25.81 |    100.00 
+-----------+----------------------+----------
+     Total |    14,371      3,477 |    17,848 
+           |     80.52      19.48 |    100.00 
+
+          Pearson chi2(1) = 180.9134   Pr = 0.000
+
+. 
+. * --- 4.7 Velikost firmy ---
+. display _n "--- 4.7 Velikost firmy ---"
+
+--- 4.7 Velikost firmy ---
+
+. tab size_cat, missing
+
+   Velikost |
+      firmy |
+(ordinalni) |      Freq.     Percent        Cum.
+------------+-----------------------------------
+    Unknown |      2,703       15.14       15.14
+       1-50 |      3,152       17.66       32.80
+     51-200 |      2,324       13.02       45.83
+    201-500 |      1,580        8.85       54.68
+   501-1000 |      1,051        5.89       60.57
+  1001-5000 |      2,237       12.53       73.10
+ 5001-10000 |      1,074        6.02       79.12
+     10000+ |      3,727       20.88      100.00
+------------+-----------------------------------
+      Total |     17,848      100.00
+
+. 
+. * --- 4.8 Typ firmy ---
+. display _n "--- 4.8 Typ firmy ---"
+
+--- 4.8 Typ firmy ---
+
+. tab type_cat, missing
+
+         Typ firmy |      Freq.     Percent        Cum.
+-------------------+-----------------------------------
+     Unknown/Other |      1,504        8.43        8.43
+Private/Subsidiary |      9,733       54.53       62.96
+            Public |      5,707       31.98       94.94
+ Nonprofit/Gov/Edu |        904        5.06      100.00
+-------------------+-----------------------------------
+             Total |     17,848      100.00
+
+. 
+. * --- 4.9 NACE sektor ---
+. display _n "--- 4.9 NACE sektor ---"
+
+--- 4.9 NACE sektor ---
+
+. tab sector_nace if sector_nace != "Unknown", sort
+
+sector_nace |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          J |      6,793       47.34       47.34
+          C |      2,429       16.93       64.27
+      Other |      2,281       15.90       80.17
+          K |      1,402        9.77       89.94
+          M |        751        5.23       95.18
+          Q |        692        4.82      100.00
+------------+-----------------------------------
+      Total |     14,348      100.00
+
+. 
+. * --- 4.10 Rok zalozeni ---
+. display _n "--- 4.10 Rok zalozeni firmy ---"
+
+--- 4.10 Rok zalozeni firmy ---
+
+. summarize year_founded, detail
+
+                     Rok zalozeni firmy
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%         1812           1625
+ 5%         1885           1630
+10%         1918           1636       Obs              11,719
+25%         1972           1636       Sum of Wgt.      11,719
+
+50%         1998                      Mean           1981.815
+                        Largest       Std. Dev.      44.89752
+75%         2010           2025
+90%         2016           2025       Variance       2015.787
+95%         2019           2025       Skewness      -2.326764
+99%         2022           2025       Kurtosis       10.05919
+
+. 
+. * --- 4.11 Census Region ---
+. display _n "--- 4.11 Census Region ---"
+
+--- 4.11 Census Region ---
+
+. tab region, missing
+
+     region |      Freq.     Percent        Cum.
+------------+-----------------------------------
+    Midwest |      1,932       10.82       10.82
+  Northeast |      2,116       11.86       22.68
+      South |      5,145       28.83       51.51
+    Unknown |      4,601       25.78       77.29
+       West |      4,054       22.71      100.00
+------------+-----------------------------------
+      Total |     17,848      100.00
+
+. tab region has_ai, chi2 column
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+           |        has_ai
+    region |         0          1 |     Total
+-----------+----------------------+----------
+   Midwest |     1,659        273 |     1,932 
+           |     11.54       7.85 |     10.82 
+-----------+----------------------+----------
+ Northeast |     1,735        381 |     2,116 
+           |     12.07      10.96 |     11.86 
+-----------+----------------------+----------
+     South |     4,454        691 |     5,145 
+           |     30.99      19.87 |     28.83 
+-----------+----------------------+----------
+   Unknown |     3,459      1,142 |     4,601 
+           |     24.07      32.84 |     25.78 
+-----------+----------------------+----------
+      West |     3,064        990 |     4,054 
+           |     21.32      28.47 |     22.71 
+-----------+----------------------+----------
+     Total |    14,371      3,477 |    17,848 
+           |    100.00     100.00 |    100.00 
+
+          Pearson chi2(4) = 304.9573   Pr = 0.000
+
+. 
+. * --- 4.12 Job Family ---
+. display _n "--- 4.12 Job Family ---"
+
+--- 4.12 Job Family ---
+
+. tab job_family, missing
+
+           job_family |      Freq.     Percent        Cum.
+----------------------+-----------------------------------
+            Data & AI |        944        5.29        5.29
+       DevOps & Cloud |      1,497        8.39       13.68
+           Management |        786        4.40       18.08
+                Other |      8,078       45.26       63.34
+   Software Developer |      3,284       18.40       81.74
+    Software Engineer |      2,039       11.42       93.16
+Sr+ Software Engineer |      1,220        6.84      100.00
+----------------------+-----------------------------------
+                Total |     17,848      100.00
+
+. tab job_family has_ai, chi2 column
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+                      |        has_ai
+           job_family |         0          1 |     Total
+----------------------+----------------------+----------
+            Data & AI |       430        514 |       944 
+                      |      2.99      14.78 |      5.29 
+----------------------+----------------------+----------
+       DevOps & Cloud |     1,265        232 |     1,497 
+                      |      8.80       6.67 |      8.39 
+----------------------+----------------------+----------
+           Management |       543        243 |       786 
+                      |      3.78       6.99 |      4.40 
+----------------------+----------------------+----------
+                Other |     6,998      1,080 |     8,078 
+                      |     48.70      31.06 |     45.26 
+----------------------+----------------------+----------
+   Software Developer |     2,790        494 |     3,284 
+                      |     19.41      14.21 |     18.40 
+----------------------+----------------------+----------
+    Software Engineer |     1,514        525 |     2,039 
+                      |     10.54      15.10 |     11.42 
+----------------------+----------------------+----------
+Sr+ Software Engineer |       831        389 |     1,220 
+                      |      5.78      11.19 |      6.84 
+----------------------+----------------------+----------
+                Total |    14,371      3,477 |    17,848 
+                      |    100.00     100.00 |    100.00 
+
+          Pearson chi2(6) =  1.2e+03   Pr = 0.000
+
+. 
+. * --- 4.13 Skill Cluster frequencies ---
+. display _n "--- 4.13 Pocet pozic s danym skill clusterem ---"
+
+--- 4.13 Pocet pozic s danym skill clusterem ---
+
+. foreach var of varlist cluster_* {
+  2.     quietly count if `var' == 1
+  3.     display "`var': " r(N) " jobs (" %4.1f r(N)/_N*100 "%)"
+  4. }
+cluster_architecture__methods: 14528 jobs (81.4%)
+cluster_bi__analytics: 6131 jobs (34.4%)
+cluster_backend_development: 9770 jobs (54.7%)
+cluster_certifications: 1034 jobs ( 5.8%)
+cluster_cloud_computing: 7714 jobs (43.2%)
+cluster_data_engineering: 5543 jobs (31.1%)
+cluster_data_science__ml: 2153 jobs (12.1%)
+cluster_databases__storage: 8025 jobs (45.0%)
+cluster_devops__containers: 8534 jobs (47.8%)
+cluster_dynamic__web: 9942 jobs (55.7%)
+cluster_enterprise__managed: 6339 jobs (35.5%)
+cluster_enterprise_platforms: 830 jobs ( 4.7%)
+cluster_frontend_development: 10759 jobs (60.3%)
+cluster_generative_ai: 1224 jobs ( 6.9%)
+cluster_mobile__desktop: 2962 jobs (16.6%)
+cluster_networking: 4951 jobs (27.7%)
+cluster_os__embedded: 3769 jobs (21.1%)
+cluster_scripting__shell: 1983 jobs (11.1%)
+cluster_security__identity: 5853 jobs (32.8%)
+cluster_systems_programming: 2822 jobs (15.8%)
+cluster_testing_qa__debugging: 9837 jobs (55.1%)
+
+. 
+. * --- 4.14 Cross-tabs of model IVs with ai_level (check for empty cells) ---
+. display _n "--- 4.14 Krizove tabulky pro kontrolu prazdnych bunek ---"
+
+--- 4.14 Krizove tabulky pro kontrolu prazdnych bunek ---
+
+. display _n "NACE sektor x AI level:"
+
+NACE sektor x AI level:
+
+. tab sector_nace ai_level, column
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+sector_nac |   Uroven AI pozadavku (0/1/2)
+         e |      None  AI Integr  Applied/C |     Total
+-----------+---------------------------------+----------
+         C |     2,054        224        151 |     2,429 
+           |     14.48       9.52      11.50 |     13.61 
+-----------+---------------------------------+----------
+         J |     5,258        971        564 |     6,793 
+           |     37.08      41.25      42.96 |     38.06 
+-----------+---------------------------------+----------
+         K |     1,118        190         94 |     1,402 
+           |      7.88       8.07       7.16 |      7.86 
+-----------+---------------------------------+----------
+         M |       586        107         58 |       751 
+           |      4.13       4.55       4.42 |      4.21 
+-----------+---------------------------------+----------
+     Other |     1,894        261        126 |     2,281 
+           |     13.36      11.09       9.60 |     12.78 
+-----------+---------------------------------+----------
+         Q |       528        113         51 |       692 
+           |      3.72       4.80       3.88 |      3.88 
+-----------+---------------------------------+----------
+   Unknown |     2,743        488        269 |     3,500 
+           |     19.34      20.73      20.49 |     19.61 
+-----------+---------------------------------+----------
+     Total |    14,181      2,354      1,313 |    17,848 
+           |    100.00     100.00     100.00 |    100.00 
+
+. display _n "Typ firmy x AI level:"
+
+Typ firmy x AI level:
+
+. tab type_cat ai_level, column
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+                   |   Uroven AI pozadavku (0/1/2)
+         Typ firmy |      None  AI Integr  Applied/C |     Total
+-------------------+---------------------------------+----------
+     Unknown/Other |     1,184        211        109 |     1,504 
+                   |      8.35       8.96       8.30 |      8.43 
+-------------------+---------------------------------+----------
+Private/Subsidiary |     7,721      1,291        721 |     9,733 
+                   |     54.45      54.84      54.91 |     54.53 
+-------------------+---------------------------------+----------
+            Public |     4,534        743        430 |     5,707 
+                   |     31.97      31.56      32.75 |     31.98 
+-------------------+---------------------------------+----------
+ Nonprofit/Gov/Edu |       742        109         53 |       904 
+                   |      5.23       4.63       4.04 |      5.06 
+-------------------+---------------------------------+----------
+             Total |    14,181      2,354      1,313 |    17,848 
+                   |    100.00     100.00     100.00 |    100.00 
+
+. display _n "Velikost firmy x AI level:"
+
+Velikost firmy x AI level:
+
+. tab size_cat ai_level, column
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+  Velikost |
+     firmy |
+(ordinalni |   Uroven AI pozadavku (0/1/2)
+         ) |      None  AI Integr  Applied/C |     Total
+-----------+---------------------------------+----------
+   Unknown |     2,180        345        178 |     2,703 
+           |     15.37      14.66      13.56 |     15.14 
+-----------+---------------------------------+----------
+      1-50 |     2,590        353        209 |     3,152 
+           |     18.26      15.00      15.92 |     17.66 
+-----------+---------------------------------+----------
+    51-200 |     1,807        331        186 |     2,324 
+           |     12.74      14.06      14.17 |     13.02 
+-----------+---------------------------------+----------
+   201-500 |     1,234        237        109 |     1,580 
+           |      8.70      10.07       8.30 |      8.85 
+-----------+---------------------------------+----------
+  501-1000 |       828        155         68 |     1,051 
+           |      5.84       6.58       5.18 |      5.89 
+-----------+---------------------------------+----------
+ 1001-5000 |     1,728        340        169 |     2,237 
+           |     12.19      14.44      12.87 |     12.53 
+-----------+---------------------------------+----------
+5001-10000 |       883        122         69 |     1,074 
+           |      6.23       5.18       5.26 |      6.02 
+-----------+---------------------------------+----------
+    10000+ |     2,931        471        325 |     3,727 
+           |     20.67      20.01      24.75 |     20.88 
+-----------+---------------------------------+----------
+     Total |    14,181      2,354      1,313 |    17,848 
+           |    100.00     100.00     100.00 |    100.00 
+
+. display _n "Region x AI level:"
+
+Region x AI level:
+
+. tab region ai_level, column
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+           |   Uroven AI pozadavku (0/1/2)
+    region |      None  AI Integr  Applied/C |     Total
+-----------+---------------------------------+----------
+   Midwest |     1,648        196         88 |     1,932 
+           |     11.62       8.33       6.70 |     10.82 
+-----------+---------------------------------+----------
+ Northeast |     1,712        260        144 |     2,116 
+           |     12.07      11.05      10.97 |     11.86 
+-----------+---------------------------------+----------
+     South |     4,411        481        253 |     5,145 
+           |     31.10      20.43      19.27 |     28.83 
+-----------+---------------------------------+----------
+   Unknown |     3,412        757        432 |     4,601 
+           |     24.06      32.16      32.90 |     25.78 
+-----------+---------------------------------+----------
+      West |     2,998        660        396 |     4,054 
+           |     21.14      28.04      30.16 |     22.71 
+-----------+---------------------------------+----------
+     Total |    14,181      2,354      1,313 |    17,848 
+           |    100.00     100.00     100.00 |    100.00 
+
+. display _n "Job Family x AI level:"
+
+Job Family x AI level:
+
+. tab job_family ai_level, column
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+                      |   Uroven AI pozadavku (0/1/2)
+           job_family |      None  AI Integr  Applied/C |     Total
+----------------------+---------------------------------+----------
+            Data & AI |       418        185        341 |       944 
+                      |      2.95       7.86      25.97 |      5.29 
+----------------------+---------------------------------+----------
+       DevOps & Cloud |     1,230        183         84 |     1,497 
+                      |      8.67       7.77       6.40 |      8.39 
+----------------------+---------------------------------+----------
+           Management |       536        136        114 |       786 
+                      |      3.78       5.78       8.68 |      4.40 
+----------------------+---------------------------------+----------
+                Other |     6,927        901        250 |     8,078 
+                      |     48.85      38.28      19.04 |     45.26 
+----------------------+---------------------------------+----------
+   Software Developer |     2,763        373        148 |     3,284 
+                      |     19.48      15.85      11.27 |     18.40 
+----------------------+---------------------------------+----------
+    Software Engineer |     1,493        327        219 |     2,039 
+                      |     10.53      13.89      16.68 |     11.42 
+----------------------+---------------------------------+----------
+Sr+ Software Engineer |       814        249        157 |     1,220 
+                      |      5.74      10.58      11.96 |      6.84 
+----------------------+---------------------------------+----------
+                Total |    14,181      2,354      1,313 |    17,848 
+                      |    100.00     100.00     100.00 |    100.00 
+
+. 
+. 
+. * ==============================================================================
+. * 5. ANALYTICKÉ TESTY - HYPOTÉZY
+. * ==============================================================================
+. * Statistické testy pro ověření hypotéz diplomové práce
+. 
+. display _n "=============================================================="
+
+==============================================================
+
+. display "5. STATISTICKE TESTY"
+5. STATISTICKE TESTY
+
+. display "=============================================================="
+==============================================================
+
+. 
+. * --- 5.1 T-test: Liší se platy AI vs non-AI pozic? ---
+. * H0: Průměrný plat AI pozic = průměrný plat non-AI pozic
+. * H1: Průměrné platy se liší
+. 
+. display _n "--- 5.1 T-test: Plat AI vs non-AI pozic ---"
+
+--- 5.1 T-test: Plat AI vs non-AI pozic ---
+
+. ttest salary_mid, by(has_ai)
+
+Two-sample t test with equal variances
+------------------------------------------------------------------------------
+   Group |     Obs        Mean    Std. Err.   Std. Dev.   [95% Conf. Interval]
+---------+--------------------------------------------------------------------
+       0 |  11,765    119901.6    363.3237    39408.48    119189.5    120613.8
+       1 |   2,875    143987.6    878.5001    47104.32      142265    145710.1
+---------+--------------------------------------------------------------------
+combined |  14,640    124631.6    348.2188    42133.04    123949.1    125314.2
+---------+--------------------------------------------------------------------
+    diff |           -24085.93    853.6782               -25759.24   -22412.61
+------------------------------------------------------------------------------
+    diff = mean(0) - mean(1)                                      t = -28.2143
+Ho: diff = 0                                     degrees of freedom =    14638
+
+    Ha: diff < 0                 Ha: diff != 0                 Ha: diff > 0
+ Pr(T < t) = 0.0000         Pr(|T| > |t|) = 0.0000          Pr(T > t) = 1.0000
+
+. 
+. * Efekt size (Cohenovo d) - důležité pro interpretaci praktické významnosti
+. quietly summarize salary_mid if has_ai == 0
+
+. local mean_no_ai = r(mean)
+
+. local sd_no_ai = r(sd)
+
+. local n_no_ai = r(N)
+
+. 
+. quietly summarize salary_mid if has_ai == 1  
+
+. local mean_ai = r(mean)
+
+. local sd_ai = r(sd)
+
+. local n_ai = r(N)
+
+. 
+. * Pooled standard deviation
+. local sd_pooled = sqrt(((`n_no_ai'-1)*`sd_no_ai'^2 + (`n_ai'-1)*`sd_ai'^2) / (`n_no_ai'+`n_ai'-2))
+
+. local cohens_d = (`mean_ai' - `mean_no_ai') / `sd_pooled'
+
+. 
+. display _n "Cohenovo d (effect size): " %5.3f `cohens_d'
+
+Cohenovo d (effect size): 0.587
+
+. display "Interpretace: |d| < 0.2 = maly, 0.2-0.8 = stredni, > 0.8 = velky efekt"
+Interpretace: |d| < 0.2 = maly, 0.2-0.8 = stredni, > 0.8 = velky efekt
+
+. 
+. * --- 5.2 ANOVA: Liší se platy mezi AI tiers? ---
+. * Testuje rozdíly mezi none, ai_integration, ai_focused
+. 
+. display _n "--- 5.2 ANOVA: Plat podle AI tier ---"
+
+--- 5.2 ANOVA: Plat podle AI tier ---
+
+. oneway salary_mid ai_tier_num, tabulate bonferroni
+
+            |   Summary of Rocni plat - stredni
+            |            hodnota (USD)
+ai_tier_num |        Mean   Std. Dev.       Freq.
+------------+------------------------------------
+  ai_integr |   140487.23   46483.006       1,946
+  applied_a |   150497.53   48356.795       1,094
+       none |   119532.29   39070.474      11,600
+------------+------------------------------------
+      Total |   124631.62   42133.036      14,640
+
+                        Analysis of Variance
+    Source              SS         df      MS            F     Prob > F
+------------------------------------------------------------------------
+Between groups      1.5228e+12      2   7.6140e+11    455.55     0.0000
+ Within groups      2.4464e+13  14637   1.6714e+09
+------------------------------------------------------------------------
+    Total           2.5987e+13  14639   1.7752e+09
+
+Bartlett's test for equal variances:  chi2(2) = 185.3472  Prob>chi2 = 0.000
+
+       Comparison of Rocni plat - stredni hodnota (USD) by ai_tier_num
+                                (Bonferroni)
+Row Mean-|
+Col Mean |   ai_integ   applied_
+---------+----------------------
+applied_ |    10010.3
+         |      0.000
+         |
+    none |   -20954.9   -30965.2
+         |      0.000      0.000
+
+. 
+. * --- 5.3 Chi-square: Vzdělání a AI požadavky ---
+. * Jsou AI pozice náročnější na vzdělání?
+. 
+. display _n "--- 5.3 Chi-square: Vzdelani x AI tier ---"
+
+--- 5.3 Chi-square: Vzdelani x AI tier ---
+
+. tab edu_cat has_ai if edu_cat > 0, chi2 expected
+
++--------------------+
+| Key                |
+|--------------------|
+|     frequency      |
+| expected frequency |
++--------------------+
+
+Pozadovane vzdelani |        has_ai
+           (Binary) |         0          1 |     Total
+--------------------+----------------------+----------
+ Bachelor or Higher |     8,876      1,895 |    10,771 
+                    |   8,876.0    1,895.0 |  10,771.0 
+--------------------+----------------------+----------
+              Total |     8,876      1,895 |    10,771 
+                    |   8,876.0    1,895.0 |  10,771.0 
+
+. 
+. * --- 5.4 Chi-square: Zkušenosti a AI požadavky ---
+. display _n "--- 5.4 Chi-square: Zkusenosti x AI tier ---"
+
+--- 5.4 Chi-square: Zkusenosti x AI tier ---
+
+. tab exp_category has_ai, chi2 expected
+
++--------------------+
+| Key                |
+|--------------------|
+|     frequency      |
+| expected frequency |
++--------------------+
+
+   Kategorie |        has_ai
+   seniority |         0          1 |     Total
+-------------+----------------------+----------
+     Missing |     2,169        422 |     2,591 
+             |   2,086.2      504.8 |   2,591.0 
+-------------+----------------------+----------
+Junior (0-2) |     2,688        525 |     3,213 
+             |   2,587.1      625.9 |   3,213.0 
+-------------+----------------------+----------
+   Mid (3-5) |     6,650      1,756 |     8,406 
+             |   6,768.4    1,637.6 |   8,406.0 
+-------------+----------------------+----------
+Senior+ (6+) |     2,864        774 |     3,638 
+             |   2,929.3      708.7 |   3,638.0 
+-------------+----------------------+----------
+       Total |    14,371      3,477 |    17,848 
+             |  14,371.0    3,477.0 |  17,848.0 
+
+          Pearson chi2(3) =  55.1641   Pr = 0.000
+
+. 
+. * --- 5.5 Mann-Whitney U test (neparametrický) ---
+. * Pro případ, že platy nemají normální rozdělení
+. 
+. display _n "--- 5.5 Mann-Whitney U test: Plat AI vs non-AI ---"
+
+--- 5.5 Mann-Whitney U test: Plat AI vs non-AI ---
+
+. ranksum salary_mid, by(has_ai)
+
+Two-sample Wilcoxon rank-sum (Mann-Whitney) test
+
+      has_ai |      obs    rank sum    expected
+-------------+---------------------------------
+           0 |    11765    80679688    86125683
+           1 |     2875    26492432    21046438
+-------------+---------------------------------
+    combined |    14640   1.072e+08   1.072e+08
+
+unadjusted variance   4.127e+10
+adjustment for ties  -619148.58
+                     ----------
+adjusted variance     4.127e+10
+
+Ho: salary~d(has_ai==0) = salary~d(has_ai==1)
+             z = -26.808
+    Prob > |z| =   0.0000
+
+. 
+. 
+. * ==============================================================================
+. * 6. REGRESNÍ ANALÝZA — MODELY VEDOUCÍHO
+. * ==============================================================================
+. * log(mzda) = skill clustery + AI tier + sektor + lokace + remote + typ + velikost
+. *             + (vzdělání, zkušenosti, pozice)
+. * Závorka = Model B (plný), bez závorky = Model A (base)
+. 
+. display _n "=============================================================="
+
+==============================================================
+
+. display "6. REGRESNI ANALYZA — MODELY VEDOUCIHO"
+6. REGRESNI ANALYZA — MODELY VEDOUCIHO
+
+. display "=============================================================="
+==============================================================
+
+. 
+. * --- 6.0 Příprava: log transformace platu ---
+. gen ln_salary = ln(salary_mid)
+(3,208 missing values generated)
+
+. label variable ln_salary "Prirozeny logaritmus platu"
+
+. 
+. summarize ln_salary, detail
+
+                 Prirozeny logaritmus platu
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%     10.91509       9.903487
+ 5%     11.15625       10.27918
+10%     11.27649       10.30895       Obs              14,640
+25%     11.46163       10.30895       Sum of Wgt.      14,640
+
+50%     11.67746                      Mean           11.68007
+                        Largest       Std. Dev.      .3253692
+75%     11.90319       13.00583
+90%     12.10071       13.00583       Variance       .1058651
+95%     12.20607       13.00583       Skewness      -.0110062
+99%     12.40595         13.017       Kurtosis       3.390068
+
+. display _n "Pozn: koeficient b v log modelu = (exp(b)-1)*100 % zmena platu"
+
+Pozn: koeficient b v log modelu = (exp(b)-1)*100 % zmena platu
+
+. 
+. * --- 6.1 Model A: Base model (bez individuálních charakteristik) ---
+. * DV: ln(salary_mid)
+. * IV: 24 skill clusterů + AI level + sektor NACE + region + remote + typ + velikost
+. 
+. display _n "--- 6.1 Model A: Base model ---"
+
+--- 6.1 Model A: Base model ---
+
+. display "ln(plat) = skill clustery + AI level + sektor + region + remote + typ + velikost"
+ln(plat) = skill clustery + AI level + sektor + region + remote + typ + velikost
+
+. 
+. regress ln_salary ///
+>     cluster_* ///
+>     i.ai_level ///
+>     i.sector_nace_num ///
+>     i.region_num ///
+>     is_remote ///
+>     i.type_cat ///
+>     i.size_cat ///
+>     if ln_salary != ., vce(robust)
+
+Linear regression                               Number of obs     =     14,640
+                                                F(44, 14595)      =     121.38
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2469
+                                                Root MSE          =     .28279
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                    ln_salary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+cluster_architecture__methods |    .043874   .0069074     6.35   0.000     .0303346    .0574134
+        cluster_bi__analytics |  -.0336277   .0050524    -6.66   0.000    -.0435311   -.0237243
+  cluster_backend_development |   .0047283   .0057624     0.82   0.412    -.0065667    .0160233
+       cluster_certifications |   .0058569   .0094537     0.62   0.536    -.0126736    .0243875
+      cluster_cloud_computing |   .0552608   .0057825     9.56   0.000     .0439265    .0665952
+     cluster_data_engineering |   .0220469    .005558     3.97   0.000     .0111524    .0329414
+     cluster_data_science__ml |   .0104008   .0091764     1.13   0.257    -.0075862    .0283877
+   cluster_databases__storage |  -.0373652   .0054673    -6.83   0.000    -.0480819   -.0266486
+   cluster_devops__containers |   .0558644   .0055636    10.04   0.000     .0449591    .0667698
+         cluster_dynamic__web |   .0136521   .0054104     2.52   0.012      .003047    .0242572
+  cluster_enterprise__managed |  -.0208548   .0053904    -3.87   0.000    -.0314207   -.0102888
+ cluster_enterprise_platforms |  -.0069907    .011099    -0.63   0.529     -.028746    .0147647
+ cluster_frontend_development |   .0019515   .0055518     0.35   0.725    -.0089307    .0128336
+        cluster_generative_ai |   .0408929   .0112935     3.62   0.000     .0187562    .0630296
+      cluster_mobile__desktop |  -.0098489   .0068441    -1.44   0.150    -.0232643    .0035664
+           cluster_networking |    .006598   .0055028     1.20   0.231    -.0041882    .0173841
+         cluster_os__embedded |  -.0019257    .006348    -0.30   0.762    -.0143686    .0105173
+     cluster_scripting__shell |  -.0108479   .0078752    -1.38   0.168    -.0262843    .0045884
+   cluster_security__identity |   .0249826   .0053246     4.69   0.000     .0145458    .0354194
+  cluster_systems_programming |   .0901649   .0069446    12.98   0.000     .0765525    .1037772
+cluster_testing_qa__debugging |  -.0177983   .0049824    -3.57   0.000    -.0275645   -.0080322
+                              |
+                     ai_level |
+              AI Integration  |   .0899703   .0084123    10.70   0.000     .0734812    .1064594
+             Applied/Core AI  |   .1276297   .0118683    10.75   0.000     .1043665     .150893
+                              |
+              sector_nace_num |
+                           J  |   .0517087   .0071508     7.23   0.000     .0376921    .0657252
+                           K  |   .0201018   .0092324     2.18   0.029      .002005    .0381985
+                           M  |   .0549893   .0130778     4.20   0.000     .0293551    .0806234
+                       Other  |  -.0413269    .008934    -4.63   0.000    -.0588387    -.023815
+                           Q  |   .0102256   .0130206     0.79   0.432    -.0152964    .0357475
+                     Unknown  |   .0223882    .010034     2.23   0.026     .0027204    .0420561
+                              |
+                   region_num |
+                   Northeast  |   .1075579   .0087335    12.32   0.000     .0904392    .1246766
+                       South  |   .0666334   .0072231     9.22   0.000     .0524751    .0807917
+                     Unknown  |   .1939568   .0100235    19.35   0.000     .1743096    .2136041
+                        West  |   .2406722   .0077666    30.99   0.000     .2254487    .2558956
+                              |
+                    is_remote |   .0672041   .0070535     9.53   0.000     .0533783    .0810299
+                              |
+                     type_cat |
+          Private/Subsidiary  |    .032117   .0112727     2.85   0.004      .010021     .054213
+                      Public  |   .0433775   .0116631     3.72   0.000     .0205163    .0662387
+           Nonprofit/Gov/Edu  |   -.039119   .0159748    -2.45   0.014    -.0704317   -.0078064
+                              |
+                     size_cat |
+                        1-50  |  -.0047936   .0094284    -0.51   0.611    -.0232745    .0136873
+                      51-200  |    .006199   .0104961     0.59   0.555    -.0143747    .0267727
+                     201-500  |   .0046206   .0111613     0.41   0.679     -.017257    .0264982
+                    501-1000  |   .0391504   .0125224     3.13   0.002     .0146049    .0636959
+                   1001-5000  |   .0641218   .0104837     6.12   0.000     .0435724    .0846712
+                  5001-10000  |    .090369   .0131435     6.88   0.000     .0646062    .1161319
+                      10000+  |   .1207694   .0101091    11.95   0.000     .1009543    .1405844
+                              |
+                        _cons |   11.33169   .0154997   731.09   0.000     11.30131    11.36207
+-----------------------------------------------------------------------------------------------
+
+. 
+. estimates store model_a
+
+. display _n "Model A: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+
+Model A: R2 = .24688373, Adj R2 = .24461329, N = 14640
+
+. 
+. * --- 6.1b VIF diagnostika (kolinearita) ---
+. display _n "--- 6.1b VIF diagnostika Model A ---"
+
+--- 6.1b VIF diagnostika Model A ---
+
+. quietly regress ln_salary ///
+>     cluster_* ///
+>     i.ai_level ///
+>     i.sector_nace_num ///
+>     i.region_num ///
+>     is_remote ///
+>     i.type_cat ///
+>     i.size_cat ///
+>     if ln_salary != .
+
+. vif
+
+    Variable |       VIF       1/VIF  
+-------------+----------------------
+cluster_ar~s |      1.17    0.853898
+cluster_bi~s |      1.08    0.927379
+cluster_ba~t |      1.44    0.696803
+cluster_ce~s |      1.09    0.920250
+cluster_cl~g |      1.47    0.679847
+cluster_da~g |      1.23    0.811149
+cluster_da~l |      1.53    0.651484
+cluster_da~e |      1.35    0.739426
+cluster_de~s |      1.42    0.704143
+cluster_dy~b |      1.30    0.768172
+cluster_en~d |      1.26    0.792424
+cluster_en~s |      1.03    0.970279
+cluster_fr~t |      1.35    0.741251
+cluster_ge~i |      1.28    0.780858
+cluster_mo~p |      1.14    0.874584
+cluster_ne~g |      1.13    0.884530
+cluster_os~d |      1.38    0.726264
+cluster_sc~l |      1.31    0.761808
+cluster_se~y |      1.22    0.822830
+cluster_sy~g |      1.22    0.818938
+cluster_te~g |      1.11    0.904606
+    ai_level |
+          1  |      1.31    0.762462
+          2  |      1.70    0.587763
+sector_nac~m |
+          2  |      2.45    0.407443
+          3  |      1.55    0.643940
+          4  |      1.29    0.775334
+          5  |      1.90    0.524993
+          6  |      1.33    0.751854
+          7  |      2.91    0.343261
+  region_num |
+          2  |      1.84    0.543625
+          3  |      2.52    0.397183
+          4  |      2.62    0.381998
+          5  |      2.43    0.411986
+   is_remote |      1.63    0.612834
+    type_cat |
+          1  |      5.09    0.196532
+          2  |      4.82    0.207481
+          4  |      2.12    0.472729
+    size_cat |
+          1  |      2.07    0.482771
+          2  |      2.06    0.486466
+          3  |      1.78    0.561146
+          4  |      1.60    0.626809
+          5  |      2.20    0.455061
+          6  |      1.67    0.597703
+          7  |      3.14    0.318308
+-------------+----------------------
+    Mean VIF |      1.79
+
+. 
+. * --- 6.2 Model B: Plný model (+vzdělání, zkušenosti, pozice) ---
+. display _n "--- 6.2 Model B: Plny model ---"
+
+--- 6.2 Model B: Plny model ---
+
+. display "ln(plat) = Model A + vzdelani + zkusenosti + pozice (job family)"
+ln(plat) = Model A + vzdelani + zkusenosti + pozice (job family)
+
+. 
+. regress ln_salary ///
+>     cluster_* ///
+>     i.ai_level ///
+>     i.sector_nace_num ///
+>     i.region_num ///
+>     is_remote ///
+>     i.type_cat ///
+>     i.size_cat ///
+>     i.edu_cat ///
+>     i.exp_category ///
+>     i.job_family_num ///
+>     if ln_salary != ., vce(robust)
+
+Linear regression                               Number of obs     =     14,640
+                                                F(54, 14585)      =     195.85
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.3762
+                                                Root MSE          =     .25745
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                    ln_salary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+cluster_architecture__methods |   .0182767   .0063822     2.86   0.004     .0057667    .0307866
+        cluster_bi__analytics |  -.0245583   .0046442    -5.29   0.000    -.0336616    -.015455
+  cluster_backend_development |  -.0086889   .0053437    -1.63   0.104    -.0191633    .0017855
+       cluster_certifications |  -.0200132   .0086134    -2.32   0.020    -.0368965   -.0031299
+      cluster_cloud_computing |   .0258901   .0053521     4.84   0.000     .0153993    .0363809
+     cluster_data_engineering |   .0153715   .0051162     3.00   0.003     .0053431       .0254
+     cluster_data_science__ml |   .0166477   .0085328     1.95   0.051    -.0000777    .0333731
+   cluster_databases__storage |  -.0359948   .0050603    -7.11   0.000    -.0459138   -.0260759
+   cluster_devops__containers |    .025118   .0051685     4.86   0.000      .014987     .035249
+         cluster_dynamic__web |   .0267062   .0049901     5.35   0.000      .016925    .0364873
+  cluster_enterprise__managed |   -.018417   .0050056    -3.68   0.000    -.0282286   -.0086054
+ cluster_enterprise_platforms |  -.0116828   .0097758    -1.20   0.232    -.0308446     .007479
+ cluster_frontend_development |    .000914   .0051075     0.18   0.858    -.0090973    .0109253
+        cluster_generative_ai |    .026495   .0103596     2.56   0.011      .006189    .0468011
+      cluster_mobile__desktop |  -.0067986   .0062776    -1.08   0.279    -.0191036    .0055063
+           cluster_networking |   .0101547   .0050489     2.01   0.044     .0002582    .0200512
+         cluster_os__embedded |   .0032115   .0058095     0.55   0.580    -.0081758    .0145988
+     cluster_scripting__shell |  -.0144299   .0073313    -1.97   0.049    -.0288002   -.0000595
+   cluster_security__identity |   .0228614   .0049397     4.63   0.000      .013179    .0325438
+  cluster_systems_programming |   .0735347   .0065292    11.26   0.000     .0607366    .0863328
+cluster_testing_qa__debugging |  -.0177245    .004559    -3.89   0.000    -.0266608   -.0087882
+                              |
+                     ai_level |
+              AI Integration  |   .0772525    .007672    10.07   0.000     .0622145    .0922905
+             Applied/Core AI  |   .0987976   .0111026     8.90   0.000     .0770351      .12056
+                              |
+              sector_nace_num |
+                           J  |   .0442937   .0064729     6.84   0.000      .031606    .0569813
+                           K  |    .011515    .008302     1.39   0.165    -.0047579    .0277879
+                           M  |   .0622706   .0120566     5.16   0.000     .0386382    .0859029
+                       Other  |  -.0440756   .0082282    -5.36   0.000    -.0602038   -.0279474
+                           Q  |   .0006889   .0112156     0.06   0.951    -.0212951    .0226729
+                     Unknown  |   .0162056   .0092557     1.75   0.080    -.0019367    .0343479
+                              |
+                   region_num |
+                   Northeast  |   .1020685   .0078468    13.01   0.000     .0866878    .1174492
+                       South  |   .0555782   .0064622     8.60   0.000     .0429114    .0682449
+                     Unknown  |   .1675965   .0091078    18.40   0.000      .149744     .185449
+                        West  |    .225656   .0069962    32.25   0.000     .2119426    .2393694
+                              |
+                    is_remote |   .0353068   .0064487     5.48   0.000     .0226666     .047947
+                              |
+                     type_cat |
+          Private/Subsidiary  |   .0389782   .0102758     3.79   0.000     .0188364      .05912
+                      Public  |   .0480561   .0106697     4.50   0.000     .0271421      .06897
+           Nonprofit/Gov/Edu  |  -.0075057   .0150237    -0.50   0.617     -.036954    .0219426
+                              |
+                     size_cat |
+                        1-50  |  -.0116666   .0086453    -1.35   0.177    -.0286125    .0052794
+                      51-200  |  -.0015768   .0096148    -0.16   0.870     -.020423    .0172694
+                     201-500  |  -.0071054   .0101763    -0.70   0.485    -.0270522    .0128413
+                    501-1000  |   .0211831   .0111515     1.90   0.058    -.0006752    .0430415
+                   1001-5000  |   .0426998   .0096786     4.41   0.000     .0237285    .0616712
+                  5001-10000  |   .0752297   .0121559     6.19   0.000     .0514025    .0990569
+                      10000+  |   .1122612   .0093831    11.96   0.000     .0938691    .1306532
+                              |
+                      edu_cat |
+          Bachelor or Higher  |  -.0181339   .0047531    -3.82   0.000    -.0274506   -.0088172
+                              |
+                 exp_category |
+                Junior (0-2)  |  -.1776444    .008284   -21.44   0.000    -.1938821   -.1614066
+                   Mid (3-5)  |  -.0006716   .0073433    -0.09   0.927    -.0150654    .0137223
+                Senior+ (6+)  |   .1206672   .0082501    14.63   0.000      .104496    .1368383
+                              |
+               job_family_num |
+              DevOps & Cloud  |   .0694456   .0127847     5.43   0.000     .0443859    .0945053
+                  Management  |   .0922822   .0136606     6.76   0.000     .0655057    .1190586
+                       Other  |  -.0445414   .0110483    -4.03   0.000    -.0661975   -.0228854
+          Software Developer  |   -.058153   .0115376    -5.04   0.000    -.0807681   -.0355378
+           Software Engineer  |   .0699598   .0122118     5.73   0.000     .0460231    .0938965
+       Sr+ Software Engineer  |   .1712239      .0123    13.92   0.000     .1471144    .1953333
+                              |
+                        _cons |   11.43486   .0185508   616.41   0.000      11.3985    11.47122
+-----------------------------------------------------------------------------------------------
+
+. 
+. estimates store model_b
+
+. display _n "Model B: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+
+Model B: R2 = .37623628, Adj R2 = .37392684, N = 14640
+
+. 
+. * --- 6.2b VIF diagnostika Model B ---
+. display _n "--- 6.2b VIF diagnostika Model B ---"
+
+--- 6.2b VIF diagnostika Model B ---
+
+. quietly regress ln_salary ///
+>     cluster_* ///
+>     i.ai_level ///
+>     i.sector_nace_num ///
+>     i.region_num ///
+>     is_remote ///
+>     i.type_cat ///
+>     i.size_cat ///
+>     i.edu_cat ///
+>     i.exp_category ///
+>     i.job_family_num ///
+>     if ln_salary != .
+
+. vif
+
+    Variable |       VIF       1/VIF  
+-------------+----------------------
+cluster_ar~s |      1.19    0.837683
+cluster_bi~s |      1.10    0.908104
+cluster_ba~t |      1.49    0.671303
+cluster_ce~s |      1.10    0.906538
+cluster_cl~g |      1.51    0.662101
+cluster_da~g |      1.27    0.788284
+cluster_da~l |      1.55    0.645821
+cluster_da~e |      1.40    0.712630
+cluster_de~s |      1.49    0.672416
+cluster_dy~b |      1.33    0.754659
+cluster_en~d |      1.29    0.775647
+cluster_en~s |      1.03    0.966434
+cluster_fr~t |      1.38    0.725688
+cluster_ge~i |      1.29    0.778166
+cluster_mo~p |      1.15    0.869984
+cluster_ne~g |      1.14    0.876750
+cluster_os~d |      1.39    0.720293
+cluster_sc~l |      1.37    0.727499
+cluster_se~y |      1.25    0.802326
+cluster_sy~g |      1.26    0.793045
+cluster_te~g |      1.12    0.895962
+    ai_level |
+          1  |      1.32    0.758012
+          2  |      1.74    0.573427
+sector_nac~m |
+          2  |      2.49    0.401713
+          3  |      1.56    0.641016
+          4  |      1.29    0.773804
+          5  |      1.91    0.522423
+          6  |      1.33    0.750453
+          7  |      2.95    0.339384
+  region_num |
+          2  |      1.84    0.542905
+          3  |      2.53    0.396000
+          4  |      2.63    0.380250
+          5  |      2.44    0.410306
+   is_remote |      1.66    0.601807
+    type_cat |
+          1  |      5.09    0.196372
+          2  |      4.82    0.207323
+          4  |      2.12    0.470724
+    size_cat |
+          1  |      2.07    0.482138
+          2  |      2.06    0.485492
+          3  |      1.79    0.559133
+          4  |      1.60    0.623473
+          5  |      2.22    0.449987
+          6  |      1.69    0.592621
+          7  |      3.18    0.314423
+   1.edu_cat |      1.14    0.877175
+exp_category |
+          2  |      2.01    0.497720
+          3  |      2.49    0.402243
+          4  |      2.22    0.451402
+job_family~m |
+          2  |      2.92    0.342883
+          3  |      1.86    0.538105
+          4  |      6.52    0.153292
+          5  |      4.39    0.227575
+          6  |      3.36    0.297352
+          7  |      2.47    0.405059
+-------------+----------------------
+    Mean VIF |      2.02
+
+. 
+. * --- 6.3 Srovnání modelů A vs B (F-test nested models) ---
+. display _n "--- 6.3 Srovnani modelu A vs B ---"
+
+--- 6.3 Srovnani modelu A vs B ---
+
+. display "F-test: testuje zda edu + exp + job_family vyznamne zlepsuje model"
+F-test: testuje zda edu + exp + job_family vyznamne zlepsuje model
+
+. 
+. quietly regress ln_salary ///
+>     cluster_* ///
+>     i.ai_level ///
+>     i.sector_nace_num ///
+>     i.region_num ///
+>     is_remote ///
+>     i.type_cat ///
+>     i.size_cat ///
+>     if ln_salary != .
+
+. estimates store model_a_lr
+
+. 
+. quietly regress ln_salary ///
+>     cluster_* ///
+>     i.ai_level ///
+>     i.sector_nace_num ///
+>     i.region_num ///
+>     is_remote ///
+>     i.type_cat ///
+>     i.size_cat ///
+>     i.edu_cat ///
+>     i.exp_category ///
+>     i.job_family_num ///
+>     if ln_salary != .
+
+. estimates store model_b_lr
+
+. 
+. lrtest model_a_lr model_b_lr
+
+Likelihood-ratio test                                 LR chi2(10) =   2758.88
+(Assumption: model_a_lr nested in model_b_lr)         Prob > chi2 =    0.0000
+
+. estimates drop model_a_lr model_b_lr
+
+. 
+. * --- 6.4 Porovnávací tabulka modelů ---
+. display _n "--- 6.4 Porovnani koeficientu Model A vs B ---"
+
+--- 6.4 Porovnani koeficientu Model A vs B ---
+
+. estimates table model_a model_b, star stats(N r2 r2_a)
+
+----------------------------------------------
+    Variable |    model_a         model_b     
+-------------+--------------------------------
+cluster_ar~s |  .04387401***    .01827666**   
+cluster_bi~s | -.03362769***   -.02455831***  
+cluster_ba~t |  .00472829      -.00868892     
+cluster_ce~s |  .00585694      -.02001323*    
+cluster_cl~g |  .05526085***    .02589009***  
+cluster_da~g |  .02204689***    .01537153**   
+cluster_da~l |  .01040078        .0166477     
+cluster_da~e | -.03736524***   -.03599484***  
+cluster_de~s |  .05586444***    .02511798***  
+cluster_dy~b |  .01365212*      .02670616***  
+cluster_en~d | -.02085478***   -.01841702***  
+cluster_en~s | -.00699066      -.01168283     
+cluster_fr~t |  .00195148       .00091402     
+cluster_ge~i |  .04089292***    .02649504*    
+cluster_mo~p | -.00984895      -.00679864     
+cluster_ne~g |  .00659796        .0101547*    
+cluster_os~d | -.00192567       .00321151     
+cluster_sc~l | -.01084794      -.01442986*    
+cluster_se~y |  .02498256***    .02286135***  
+cluster_sy~g |  .09016487***     .0735347***  
+cluster_te~g | -.01779832***   -.01772447***  
+             |
+    ai_level |
+AI Integr..  |   .0899703***    .07725247***  
+Applied/C..  |  .12762974***    .09879757***  
+             |
+sector_nac~m |
+          J  |  .05170866***    .04429368***  
+          K  |  .02010175*      .01151497     
+          M  |  .05498929***    .06227056***  
+      Other  | -.04132689***   -.04407559***  
+          Q  |  .01022558       .00068889     
+    Unknown  |  .02238824*       .0162056     
+             |
+  region_num |
+  Northeast  |  .10755788***    .10206851***  
+      South  |  .06663341***    .05557817***  
+    Unknown  |  .19395684***    .16759651***  
+       West  |  .24067218***    .22565597***  
+             |
+   is_remote |  .06720409***     .0353068***  
+             |
+    type_cat |
+Private/S~y  |  .03211699**     .03897818***  
+     Public  |  .04337748***    .04805606***  
+Nonprofit~u  | -.03911905*     -.00750567     
+             |
+    size_cat |
+       1-50  | -.00479358      -.01166655     
+     51-200  |  .00619899       -.0015768     
+    201-500  |   .0046206      -.00710542     
+   501-1000  |   .0391504**     .02118313     
+  1001-5000  |  .06412177***    .04269982***  
+ 5001-10000  |  .09036903***    .07522974***  
+     10000+  |  .12076939***    .11226116***  
+             |
+     edu_cat |
+Bachelor ..  |                 -.01813394***  
+             |
+exp_category |
+Junior (..)  |                 -.17764436***  
+  Mid (3-5)  |                 -.00067156     
+Senior+ ..)  |                  .12066715***  
+             |
+job_family~m |
+DevOps & ..  |                  .06944558***  
+ Management  |                  .09228219***  
+      Other  |                 -.04454144***  
+Software ..  |                 -.05815298***  
+Software ..  |                  .06995981***  
+Sr+ Softw..  |                  .17122386***  
+             |
+       _cons |  11.331689***    11.434862***  
+-------------+--------------------------------
+           N |      14640           14640     
+          r2 |  .24688373       .37623628     
+        r2_a |  .24461329       .37392684     
+----------------------------------------------
+      legend: * p<0.05; ** p<0.01; *** p<0.001
+
+. 
+. 
+. * ==============================================================================
+. * 6B. JEDNODUCHÉ MODELY (původní — pro srovnání)
+. * ==============================================================================
+. 
+. display _n "=============================================================="
+
+==============================================================
+
+. display "6B. JEDNODUCHE MODELY (puvodni)"
+6B. JEDNODUCHE MODELY (puvodni)
+
+. display "=============================================================="
+==============================================================
+
+. 
+. * --- 6B.1 OLS: plat ~ has_ai + edu + exp + remote ---
+. display _n "--- 6B.1 OLS: Determinanty platu (jednoduchy model) ---"
+
+--- 6B.1 OLS: Determinanty platu (jednoduchy model) ---
+
+. regress salary_mid has_ai ib1.edu_cat ib3.exp_category is_remote, vce(robust)
+
+Linear regression                               Number of obs     =     14,640
+                                                F(6, 14633)       =     472.87
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.1611
+                                                Root MSE          =      38599
+
+--------------------------------------------------------------------------------------
+                     |               Robust
+          salary_mid |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+---------------------+----------------------------------------------------------------
+              has_ai |   21473.41   907.5946    23.66   0.000     19694.41    23252.41
+                     |
+             edu_cat |
+No Degree / Missing  |   3116.547   686.1418     4.54   0.000     1771.622    4461.471
+                     |
+        exp_category |
+            Missing  |  -2876.471   1121.908    -2.56   0.010    -5075.553   -677.3892
+       Junior (0-2)  |   -20235.3   778.9522   -25.98   0.000    -21762.14   -18708.45
+       Senior+ (6+)  |   19219.61   863.5728    22.26   0.000      17526.9    20912.32
+                     |
+           is_remote |   11011.55   835.1548    13.19   0.000      9374.54    12648.56
+               _cons |   116988.9   549.5954   212.86   0.000     115911.6    118066.2
+--------------------------------------------------------------------------------------
+
+. 
+. * --- 6B.2 Logistická regrese: Prediktory AI požadavků ---
+. display _n "--- 6B.2 Logisticka regrese: Prediktory AI pozadavku ---"
+
+--- 6B.2 Logisticka regrese: Prediktory AI pozadavku ---
+
+. logit has_ai ib1.edu_cat ib3.exp_category is_remote, or
+
+Iteration 0:   log likelihood = -8801.3004  
+Iteration 1:   log likelihood = -8677.4818  
+Iteration 2:   log likelihood =  -8676.092  
+Iteration 3:   log likelihood = -8676.0919  
+
+Logistic regression                             Number of obs     =     17,848
+                                                LR chi2(5)        =     250.42
+                                                Prob > chi2       =     0.0000
+Log likelihood = -8676.0919                     Pseudo R2         =     0.0142
+
+--------------------------------------------------------------------------------------
+              has_ai | Odds Ratio   Std. Err.      z    P>|z|     [95% Conf. Interval]
+---------------------+----------------------------------------------------------------
+             edu_cat |
+No Degree / Missing  |   1.287564   .0506896     6.42   0.000      1.19195    1.390847
+                     |
+        exp_category |
+            Missing  |   .7235071    .043823    -5.34   0.000      .642518    .8147049
+       Junior (0-2)  |    .806529   .0446531    -3.88   0.000     .7235918    .8989724
+       Senior+ (6+)  |   1.012611   .0495351     0.26   0.798     .9200329    1.114505
+                     |
+           is_remote |   1.586294    .064628    11.33   0.000      1.46455    1.718157
+               _cons |   .2032415   .0069457   -46.62   0.000     .1900741    .2173212
+--------------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+. display _n "--- 6B.2b Marginalni efekty ---"
+
+--- 6B.2b Marginalni efekty ---
+
+. margins, dydx(*) atmeans
+
+Conditional marginal effects                    Number of obs     =     17,848
+Model VCE    : OIM
+
+Expression   : Pr(has_ai), predict()
+dy/dx w.r.t. : 0.edu_cat 0.exp_category 2.exp_category 4.exp_category is_remote
+at           : 0.edu_cat       =     .396515 (mean)
+               1.edu_cat       =     .603485 (mean)
+               0.exp_cate~y    =    .1451703 (mean)
+               2.exp_cate~y    =    .1800202 (mean)
+               3.exp_cate~y    =    .4709771 (mean)
+               4.exp_cate~y    =    .2038324 (mean)
+               is_remote       =    .2838974 (mean)
+
+--------------------------------------------------------------------------------------
+                     |            Delta-method
+                     |      dy/dx   Std. Err.      z    P>|z|     [95% Conf. Interval]
+---------------------+----------------------------------------------------------------
+             edu_cat |
+No Degree / Missing  |   .0396507   .0062604     6.33   0.000     .0273806    .0519208
+                     |
+        exp_category |
+            Missing  |  -.0475614     .00839    -5.67   0.000    -.0640055   -.0311174
+       Junior (0-2)  |  -.0326938   .0081476    -4.01   0.000    -.0486627   -.0167249
+       Senior+ (6+)  |   .0020417   .0079815     0.26   0.798    -.0136017    .0176852
+                     |
+           is_remote |   .0712175   .0062486    11.40   0.000     .0589704    .0834646
+--------------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. 
+. * --- 6B.3 Multinomiální logit ---
+. display _n "--- 6B.3 Multinomialni logit: Uroven AI pozadavku ---"
+
+--- 6B.3 Multinomialni logit: Uroven AI pozadavku ---
+
+. mlogit ai_level ib1.edu_cat ib3.exp_category is_remote, baseoutcome(0) rrr
+
+Iteration 0:   log likelihood = -11456.516  
+Iteration 1:   log likelihood = -11316.046  
+Iteration 2:   log likelihood = -11314.341  
+Iteration 3:   log likelihood = -11314.341  
+
+Multinomial logistic regression                 Number of obs     =     17,848
+                                                LR chi2(10)       =     284.35
+                                                Prob > chi2       =     0.0000
+Log likelihood = -11314.341                     Pseudo R2         =     0.0124
+
+--------------------------------------------------------------------------------------
+            ai_level |        RRR   Std. Err.      z    P>|z|     [95% Conf. Interval]
+---------------------+----------------------------------------------------------------
+None                 |  (base outcome)
+---------------------+----------------------------------------------------------------
+AI_Integration       |
+             edu_cat |
+No Degree / Missing  |   1.406013   .0648235     7.39   0.000     1.284532    1.538982
+                     |
+        exp_category |
+            Missing  |   .6266465   .0458402    -6.39   0.000      .542945    .7232516
+       Junior (0-2)  |   .7632281   .0498374    -4.14   0.000     .6715409    .8674336
+       Senior+ (6+)  |   .9275572   .0537132    -1.30   0.194     .8280358     1.03904
+                     |
+           is_remote |   1.515232   .0726074     8.67   0.000     1.379402    1.664437
+               _cons |   .1424789    .005707   -48.65   0.000     .1317211    .1541153
+---------------------+----------------------------------------------------------------
+Applied_Core_AI      |
+             edu_cat |
+No Degree / Missing  |   1.116677   .0672701     1.83   0.067     .9923164    1.256624
+                     |
+        exp_category |
+            Missing  |   .8828497   .0794959    -1.38   0.166     .7400151    1.053254
+       Junior (0-2)  |   .8621776   .0734988    -1.74   0.082     .7295139    1.018967
+       Senior+ (6+)  |   1.164495   .0849232     2.09   0.037     1.009397    1.343424
+                     |
+           is_remote |   1.679625   .1029225     8.46   0.000     1.489544    1.893963
+               _cons |   .0757693    .003996   -48.92   0.000     .0683284    .0840205
+--------------------------------------------------------------------------------------
+Note: _cons estimates baseline relative risk for each outcome.
+
+. display _n "--- 6B.3b Marginalni efekty: P(AI Integration) ---"
+
+--- 6B.3b Marginalni efekty: P(AI Integration) ---
+
+. margins, dydx(*) predict(outcome(1)) atmeans
+
+Conditional marginal effects                    Number of obs     =     17,848
+Model VCE    : OIM
+
+Expression   : Pr(ai_level==AI_Integration), predict(outcome(1))
+dy/dx w.r.t. : 0.edu_cat 0.exp_category 2.exp_category 4.exp_category is_remote
+at           : 0.edu_cat       =     .396515 (mean)
+               1.edu_cat       =     .603485 (mean)
+               0.exp_cate~y    =    .1451703 (mean)
+               2.exp_cate~y    =    .1800202 (mean)
+               3.exp_cate~y    =    .4709771 (mean)
+               4.exp_cate~y    =    .2038324 (mean)
+               is_remote       =    .2838974 (mean)
+
+--------------------------------------------------------------------------------------
+                     |            Delta-method
+                     |      dy/dx   Std. Err.      z    P>|z|     [95% Conf. Interval]
+---------------------+----------------------------------------------------------------
+             edu_cat |
+No Degree / Missing  |   .0381397   .0053799     7.09   0.000     .0275954     .048684
+                     |
+        exp_category |
+            Missing  |  -.0477517   .0068776    -6.94   0.000    -.0612315   -.0342718
+       Junior (0-2)  |  -.0290197   .0069593    -4.17   0.000    -.0426597   -.0153797
+       Senior+ (6+)  |  -.0106123   .0067663    -1.57   0.117    -.0238741    .0026494
+                     |
+           is_remote |   .0417334   .0052911     7.89   0.000     .0313629    .0521038
+--------------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. display _n "--- 6B.3c Marginalni efekty: P(Applied/Core AI) ---"
+
+--- 6B.3c Marginalni efekty: P(Applied/Core AI) ---
+
+. margins, dydx(*) predict(outcome(2)) atmeans
+
+Conditional marginal effects                    Number of obs     =     17,848
+Model VCE    : OIM
+
+Expression   : Pr(ai_level==Applied_Core_AI), predict(outcome(2))
+dy/dx w.r.t. : 0.edu_cat 0.exp_category 2.exp_category 4.exp_category is_remote
+at           : 0.edu_cat       =     .396515 (mean)
+               1.edu_cat       =     .603485 (mean)
+               0.exp_cate~y    =    .1451703 (mean)
+               2.exp_cate~y    =    .1800202 (mean)
+               3.exp_cate~y    =    .4709771 (mean)
+               4.exp_cate~y    =    .2038324 (mean)
+               is_remote       =    .2838974 (mean)
+
+--------------------------------------------------------------------------------------
+                     |            Delta-method
+                     |      dy/dx   Std. Err.      z    P>|z|     [95% Conf. Interval]
+---------------------+----------------------------------------------------------------
+             edu_cat |
+No Degree / Missing  |   .0041446    .004049     1.02   0.306    -.0037913    .0120805
+                     |
+        exp_category |
+            Missing  |  -.0042175   .0057276    -0.74   0.462    -.0154434    .0070084
+       Junior (0-2)  |  -.0070592    .005279    -1.34   0.181    -.0174058    .0032874
+       Senior+ (6+)  |   .0117128   .0053184     2.20   0.028      .001289    .0221367
+                     |
+           is_remote |   .0309173   .0040216     7.69   0.000     .0230352    .0387994
+--------------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. 
+. * Hausman test IIA
+. display _n "--- 6B.3d Hausman test IIA ---"
+
+--- 6B.3d Hausman test IIA ---
+
+. quietly mlogit ai_level ib1.edu_cat ib3.exp_category is_remote, baseoutcome(0)
+
+. estimates store full_model
+
+. quietly mlogit ai_level ib1.edu_cat ib3.exp_category is_remote if ai_level != 1, baseoutcome(0)
+
+. estimates store reduced_model
+
+. capture hausman reduced_model full_model, alleqs constant
+
+. if _rc {
+.     display "Hausman test nelze provest (typicke pro male vzorky v nekterych kategoriich)"
+. }
+
+. estimates drop full_model reduced_model
+
+. 
+. 
+. * ==============================================================================
+. * 7. ANALÝZA HARD SKILLS
+. * ==============================================================================
+. * Rozbor nejčastějších technických dovedností
+. 
+. display _n "=============================================================="
+
+==============================================================
+
+. display "7. ANALYZA HARD SKILLS"
+7. ANALYZA HARD SKILLS
+
+. display "=============================================================="
+==============================================================
+
+. 
+. * Poznámka: hardskills je textový sloupec s čárkami oddělenými skills
+. * Pro detailní analýzu je lepší použít Python k vytvoření dummy proměnných
+. * Zde ukážeme základní exploraci
+. 
+. * Počet unique skills na pozici (aproximace)
+. gen skill_count = 1 + length(hardskills) - length(subinstr(hardskills, ",", "", .))
+
+. replace skill_count = 0 if hardskills == ""
+(110 real changes made)
+
+. label variable skill_count "Pocet pozadovanych hard skills"
+
+. 
+. display _n "--- 7.1 Pocet skills na pozici ---"
+
+--- 7.1 Pocet skills na pozici ---
+
+. summarize skill_count, detail
+
+               Pocet pozadovanych hard skills
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%            1              0
+ 5%            3              0
+10%            5              0       Obs              17,848
+25%            9              0       Sum of Wgt.      17,848
+
+50%           15                      Mean           16.78737
+                        Largest       Std. Dev.      10.30623
+75%           23             72
+90%           31             72       Variance       106.2184
+95%           36             80       Skewness       .9651727
+99%           47             80       Kurtosis       4.326039
+
+. tabstat skill_count, by(desc_tier_llm) statistics(count mean sd min max)
+
+Summary for variables: skill_count
+     by categories of: desc_tier_llm 
+
+ desc_tier_llm |         N      mean        sd       min       max
+---------------+--------------------------------------------------
+ai_integration |      2354  19.46432   10.3817         0        68
+    applied_ai |      1313   20.5834  10.80076         1        80
+          none |     14181  15.99154  10.09214         0        80
+---------------+--------------------------------------------------
+         Total |     17848  16.78737  10.30623         0        80
+------------------------------------------------------------------
+
+. 
+. * T-test: Vyžadují AI pozice více skills?
+. display _n "--- 7.2 T-test: Pocet skills AI vs non-AI ---"
+
+--- 7.2 T-test: Pocet skills AI vs non-AI ---
+
+. ttest skill_count, by(has_ai)
+
+Two-sample t test with equal variances
+------------------------------------------------------------------------------
+   Group |     Obs        Mean    Std. Err.   Std. Dev.   [95% Conf. Interval]
+---------+--------------------------------------------------------------------
+       0 |  14,371    16.04704    .0843192    10.10811    15.88176    16.21232
+       1 |   3,477    19.84728    .1789442    10.55164    19.49644    20.19813
+---------+--------------------------------------------------------------------
+combined |  17,848    16.78737    .0771445    10.30623    16.63616    16.93858
+---------+--------------------------------------------------------------------
+    diff |           -3.800243     .192699               -4.177952   -3.422534
+------------------------------------------------------------------------------
+    diff = mean(0) - mean(1)                                      t = -19.7211
+Ho: diff = 0                                     degrees of freedom =    17846
+
+    Ha: diff < 0                 Ha: diff != 0                 Ha: diff > 0
+ Pr(T < t) = 0.0000         Pr(|T| > |t|) = 0.0000          Pr(T > t) = 1.0000
+
+. 
+. 
+. * ==============================================================================
+. * 8. EXPORTY PRO TABULKY A GRAFY
+. * ==============================================================================
+. * Příprava dat pro publikovatelné tabulky
+. 
+. display _n "=============================================================="
+
+==============================================================
+
+. display "8. EXPORTY"
+8. EXPORTY
+
+. display "=============================================================="
+==============================================================
+
+. 
+. * --- 8.1 Summary statistics ---
+. display _n "--- 8.1 Summary statistics pro tabulky ---"
+
+--- 8.1 Summary statistics pro tabulky ---
+
+. summarize salary_mid experience_min_llm edu_cat exp_category skill_count has_ai is_remote
+
+    Variable |        Obs        Mean    Std. Dev.       Min        Max
+-------------+---------------------------------------------------------
+  salary_mid |     14,640    124631.6    42133.04      20000     450000
+experience~m |     15,257    4.520433    2.625669          0         35
+     edu_cat |     17,848     .603485    .4891874          0          1
+exp_category |     17,848    2.588301    1.233278          0          4
+ skill_count |     17,848    16.78737    10.30623          0         80
+-------------+---------------------------------------------------------
+      has_ai |     17,848    .1948117    .3960668          0          1
+   is_remote |     17,848    .2838974    .4509003          0          1
+
+. 
+. * Export do CSV pro další zpracování (grafy v Excelu/R/Python)
+. export delimited desc_tier_llm salary_mid experience_min_llm edulevel_llm state sector using "$outdir/summary_for_charts.csv" if salary_mid != ., delimiter(",") replace
+(note: file ./output/run__5_Mar_2026_13-50-35/summary_for_charts.csv not found)
+file ./output/run__5_Mar_2026_13-50-35/summary_for_charts.csv saved
+
+. 
+. 
+. * ==============================================================================
+. * 9. VIZUALIZACE
+. * ==============================================================================
+. * Základní grafy pro diplomovou práci
+. 
+. display _n "=============================================================="
+
+==============================================================
+
+. display "9. VIZUALIZACE"
+9. VIZUALIZACE
+
+. display "=============================================================="
+==============================================================
+
+. 
+. * --- 9.1 Sloupcový graf: AI tier distribuce ---
+. graph bar (count), over(desc_tier_llm) ///
+>     title("Distribuce AI pozadavku v IT pozicich") ///
+>     ytitle("Pocet pozic") ///
+>     bar(1, color(navy))
+
+. graph export "$outdir/ai_tier_distribution.png", replace width(1200)
+(note: file ./output/run__5_Mar_2026_13-50-35/ai_tier_distribution.png not found)
+(file ./output/run__5_Mar_2026_13-50-35/ai_tier_distribution.png written in PNG format)
+
+. 
+. * --- 9.2 Box plot: Platy podle AI tier ---
+. graph box salary_mid, over(desc_tier_llm) ///
+>     title("Rozlozeni platu podle AI pozadavku") ///
+>     ytitle("Rocni plat (USD)")
+
+. graph export "$outdir/salary_by_ai_tier.png", replace width(1200)
+(note: file ./output/run__5_Mar_2026_13-50-35/salary_by_ai_tier.png not found)
+(file ./output/run__5_Mar_2026_13-50-35/salary_by_ai_tier.png written in PNG format)
+
+. 
+. * --- 9.3 Histogram: Požadované zkušenosti ---
+. histogram experience_min_llm if experience_min_llm < 15, ///
+>     by(has_ai, title("Pozadovane zkusenosti") note("")) ///
+>     xtitle("Roky zkusenosti") percent bin(15)
+
+. graph export "$outdir/experience_histogram.png", replace width(1200)
+(note: file ./output/run__5_Mar_2026_13-50-35/experience_histogram.png not found)
+(file ./output/run__5_Mar_2026_13-50-35/experience_histogram.png written in PNG format)
+
+. 
+. * --- 9.4 Vzdělání podle AI tier ---
+. graph bar (count), over(edu_cat) over(has_ai) ///
+>     title("Vzdelavaci pozadavky: AI vs non-AI pozice") ///
+>     ytitle("Pocet pozic") ///
+>     legend(label(1 "non-AI") label(2 "AI pozice"))
+
+. graph export "$outdir/education_by_ai.png", replace width(1200)
+(note: file ./output/run__5_Mar_2026_13-50-35/education_by_ai.png not found)
+(file ./output/run__5_Mar_2026_13-50-35/education_by_ai.png written in PNG format)
+
+. 
+. 
+. * ==============================================================================
+. * 10. ZÁVĚR A ULOŽENÍ
+. * ==============================================================================
+. 
+. display _n "=============================================================="
+
+==============================================================
+
+. display "ANALYZA DOKONCENA"
+ANALYZA DOKONCENA
+
+. display "=============================================================="
+==============================================================
+
+. display "Vystupy ulozeny do: $outdir"
+Vystupy ulozeny do: ./output/run__5_Mar_2026_13-50-35
+
+. display "Log soubor: $outdir/ai_skills_analysis_`time_string'.log"
+Log soubor: ./output/run__5_Mar_2026_13-50-35/ai_skills_analysis__5_Mar_2026_13-50-35.log
+
+. 
+. * Ulož zpracovaný dataset pro další práci
+. save "$outdir/ai_skills_processed.dta", replace
+(note: file ./output/run__5_Mar_2026_13-50-35/ai_skills_processed.dta not found)
+file ./output/run__5_Mar_2026_13-50-35/ai_skills_processed.dta saved
+
+. 
+. * Zavři log
+. log close
+      name:  <unnamed>
+       log:  C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata\output/run__5_Mar_2026_13-50-35/ai_skills_analysis.log
+  log type:  text
+ closed on:   5 Mar 2026, 14:53:18
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
