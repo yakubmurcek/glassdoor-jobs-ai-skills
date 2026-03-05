@@ -34,15 +34,15 @@ K ověření, zda pozorované rozdíly v deskriptivní statistice nejsou dílem 
 Pro rigorózní vyčíslení platového benefitu a očištění vlivu tzv. zavádějících proměnných (confounders) byly zkonstruovány MNS (OLS) regresní modely vysvětlující přirozený logaritmus mzdy (`ln_salary`). 
 
 #### 📊 Model A (Základní OLS model)
-* **Specifikace:** Region, velikost organizace, možnost remote working a sektor ($R^2 = 0,246$ 🆗).
+* **Specifikace:** Skill clustery, AI tier, sektor (NACE), region, remote práce, typ a velikost organizace ($R^2 = 0,247$ 🆗).
 * **Výsledek:** *AI Integration* = nárůst mzdy o **+9,4 %**, *Applied/Core AI* = **+13,6 %**.
 
 #### 📈 Model B (Rozšířený, preferovaný model)
-* **Specifikace:** Přidáno *vzdělání*, *léta zkušeností* a *job family*. Model smazal šum a vysvětlí téměř 38 % diferencí v platech ($R^2 = 0,376$ 🟢 **Skvělá hodnota**).
+* **Specifikace:** Model A + job family, **granulární vzdělání** (`edu_ols`, 4 úrovně: High School → Associate → Bachelor → Master+), léta zkušeností. Model smazal šum a vysvětlí **38,0 %** diferencí v platech ($R^2 = 0,380$ 🟢 **Skvělá hodnota**).
 * **Interpretace úpravy AI Prémie:** Důsledkem kontroly osobních charakteristik hrubá "AI prémie" mírně poklesla. Větší platy AI pozic byly zčásti způsobeny faktem, že se na ně hlásí **vzdělanější uchazeč s delší praxí**.
 * **Konečné vyčíslení čistého AI benefitu:** I po dokonalém očištění je expertíza v AI nadstandardně pojištěna:
-  * 🧩 **AI Integration:** Čistá mzdová prémie činí 💵 **+ 8,0 %** ✅ ke standardní mzdě.
-  * 🧠 **Applied/Core AI:** Účast na vývoji samotného jádra představuje benefit 🚀 **+ 10,4 %** ✅.
+  * 🧩 **AI Integration:** Čistá mzdová prémie činí 💵 **+ 7,5 %** ✅ ke standardní mzdě.
+  * 🧠 **Applied/Core AI:** Účast na vývoji samotného jádra představuje benefit 🚀 **+ 9,6 %** ✅.
 
 ### 4. 🛠️ Analýza odborné náročnosti profilu (Hard skills)
 * Doplňková analýza vysvětluje mzdový rozdíl: inzeráty s AI vyžadují objemnější spektrum technických dovedností. 
@@ -57,7 +57,7 @@ Při analýze dat je naprosto klíčové věnovat pozornost i premenným, u kter
 * 🏛️ **Neziskový / Státní sektor:** Mzdové ohodnocení v tomto sektoru se statisticky neliší od "Unknown" zařazení ($p = 0,617$).
 
 ### 💡 Ústřední argument pro obhajobu (Závěr interpretace)
-> Analýza s nezpochybnitelnou statistickou jistotou (✅ $p < 0,001$) verifikuje tezi o mzdové "AI prémii". V regresním Modelu B se efektivně eliminovaly zavádějící faktory podoby vzdělání, regionu či charakteru firmy. Je tudíž prokazatelné, že **reálný čistý osobní mzdový příplatek za AI dovednosti činí solidních 8 až 10,5 %**. Tento příplatek odráží trend, v němž tyto pozice od zaměstnance vyžadují nejen sofistikovanější profil (seniorita a vzdělání), ale rovněž zvládání širšího arzenálu oborových hard skills.
+> Analýza s nezpochybnitelnou statistickou jistotou (✅ $p < 0,001$) verifikuje tezi o mzdové "AI prémii". V regresním Modelu B se efektivně eliminovaly zavádějící faktory podoby vzdělání (granulárně rozlišeno 4 úrovně), regionu či charakteru firmy. Je tudíž prokazatelné, že **reálný čistý osobní mzdový příplatek za AI dovednosti činí solidních 7,5 až 9,6 %**. Tento příplatek odráží trend, v němž tyto pozice od zaměstnance vyžadují nejen sofistikovanější profil (seniorita a vzdělání), ale rovněž zvládání širšího arzenálu oborových hard skills.
 
 ---
 
@@ -71,16 +71,17 @@ Při analýze dat je naprosto klíčové věnovat pozornost i premenným, u kter
 4. 🔢 **Faktorové proměnné (`i.var`):** Stata je správně instruována, co jsou kategorie ✅.
 5. 📊 **Marginální efekty (Logit/Mlogit):** Správně voláte `margins, dydx(*) atmeans`, což vyhodí přímo procentní body změn u nečitelných logit koeficientů ✅.
 6. 📏 **Effect size (Cohenovo d):** Obohacení T-testu o effect size (0.587) dokazuje teoretickou i praktickou významnost rozdílů ✅.
-7. 🏗️ **Inkrementální modely (Base vs. Full):** Nárůst $R^2$ z 24.7 % na krásných **37.6 %** ukazuje vysokou vypovídající hodnotu začlenění lidského kapitálu ✅.
+7. 🏗️ **Inkrementální modely (Base vs. Full):** Nárůst $R^2$ z 24.7 % na **38.0 %** ukazuje vysokou vypovídající hodnotu začlenění lidského kapitálu ✅.
+8. 🎓 **Diferenciace vzdělávací proměnné:** Pro OLS model granulární proměnná `edu_ols` (4 úrovně: HS / Associate / Bachelor / Master+), pro Logit/Mlogit sloučená binární `edu_logit` (HS+Associate+Missing vs. Bachelor+). Metodologicky správně dle doporučení vedoucího. ✅
 
 ### ⚠️ Co vzít v potaz / Drobné nuance pro obhajobu
 
 #### 1. Implementace požadavků dle checklistu (Soulad se zadáním)
 Modelování a čištění dat bylo provedeno v striktním souladu s dohodnutým metodologickým checklistem:
 * 🛠️ **Příprava proměnných:** Úspěšně byla zavedena závislá proměnná logaritmu platu `ln_salary`, byl vytvořen index počtu dovedností `skill_count` (0-80) a do binární podoby byla zredukována přítomnost AI požadavků `has_ai`.
-* 🔄 **Slučování řídkých kategorií (Sparse data):** Aby multinomiální modely nevykazovaly chyby konvergence (např. *perfect separation*), byly striktně dodrženy limity počtu pozorování (min. 50 na buňku). Z toho důvodu došlo v rámci přípravy k agregaci specifických technických clusterů (vyřazeno např. `cluster_legacy__mainframe`), drobných sektorů i edukace (sloučení High School a Associate Degree).
-* 🎯 **Rozlišení specifikace pro Logit a OLS:** V rámci OLS (mzdového) modelu dává smysl měřit vliv **Remote práce**, nicméně v modelech predikujících *požadavek zaměstnavatele na AI* je tato proměnná (dle checklistu) brána s odstupem – remote status statisticky nevysvětluje primární potřebu firmy zavádět umělou inteligenci, reflektuje to spíše celkový firemní provoz, ačkoliv v mzdové regresi je plně přítomen.
-* 📈 **Inkrementální 3-stupňová struktura:** Práce plně těží z domluvené sekvence modelů (Základní ➡️ doplněný o Lidský kapitál ➡️ doplněný o konkrétní technologické skilly/úrovně). Výsledný Model B a rozpad vlivů přesně zrcadlí tuto strategickou posloupnost.
+* 🔄 **Slučování řídkých kategorií (Sparse data):** Aby multinomiální modely nevykazovaly chyby konvergence (např. *perfect separation*), byly striktně dodrženy limity počtu pozorování (min. 50 na buňku). Z toho důvodu došlo v rámci přípravy k agregaci specifických technických clusterů (vyřazeno např. `cluster_legacy__mainframe`), drobných sektorů i edukace v Logit modelu (sloučení High School a Associate Degree do jedné kategorie, PhD globálně sloučeno s Master).
+* 🎯 **Rozlišení specifikace pro Logit a OLS:** V rámci OLS (mzdového) modelu dává smysl měřit vliv **Remote práce** i **granulárního vzdělání** (4 úrovně), nicméně v modelech predikujících *požadavek zaměstnavatele na AI* je `is_remote` záměrně vynechána dle doporučení vedoucího a vzdělání je sloučeno do binární formy kvůli malému N v buňkách AI kategorií.
+* 📈 **Inkrementální 3-stupňová struktura Logit/Mlogit:** Práce těží z domluvené sekvence modelů (Profil firmy ➡️ Profil role/osoby ➡️ Kompletní). Výsledný Model 3 a rozpad vlivů přesně zrcadlí tuto strategickou posloupnost.
 
 #### 2. LR Test po robustních odhadech
 V logu je vidět použití `lrtest`:
@@ -104,9 +105,9 @@ Všechny hodnoty byly vizuálně zkontrolovány proti zdrojovému logu. 🟢 = O
 | Metrika | Hodnota v analýze | Hodnota v logu | Status a interpretace |
 |---|---|---|---|
 | Model A — $R^2$ | 24.7 % | 0.24688 | 🟢 OK ($R^2$ je solidní) |
-| Model B — $R^2$ | **37.6 %** | 0.37624 | 🌟 **Vynikající** (masivní skok) |
-| Robustní std. chyby `vce(robust)` | Ano | 1471, 1642 | 🟢 Implementováno správně |
-| LR test (společná signifikance M. A vs B) | $p = 0.0000$ | 1865 | 🟢 Přidání proměnných má masivní smysl |
+| Model B — $R^2$ | **38.0 %** | 0.38011 | 🌟 **Vynikající** (masivní skok z 24.7 % na 38.0 %) |
+| Robustní std. chyby `vce(robust)` | Ano | ✅ | 🟢 Implementováno správně |
+| LR test (společná signifikance M. A vs B) | $p = 0.0000$ | ✅ | 🟢 Přidání proměnných má masivní smysl |
 
 ### 🔍 VIF diagnostika (Klinická kontrola multikolinearity)
 *(Ideálně pod 5, cokoliv pod 10 je akceptovatelné)*
@@ -142,8 +143,19 @@ Všechny hodnoty byly vizuálně zkontrolovány proti zdrojovému logu. 🟢 = O
 ### 🎲 Logistické a Multinomiální modely (Predikce výskytu AI)
 Dle dohodnuté specifikace tyto modely určují, *proč vůbec pozice vyžaduje AI* (Base úroveň = None). Zde je provedena verifikace konvergence – úspěšně jsme zamezili riziku zhroucení modelu vlivem nedostatku dat v subkategoriích.
 
-| Modely | Status indikátory konvergence a spolehlivosti |
-|---|---|
-| **Logit (Binární: AI vs. None)** | 🟢 $p < 0.0000$ \| 🟢 Konvexe OK \| ℹ️ Pseudo $R^2$ = 1.4% (Očekáváno) |
-| **Mlogit (None vs. AI Int. vs. Core AI)** | 🟢 $p < 0.0000$ \| 🟢 Konvexe OK \| ℹ️ Pseudo $R^2$ = 1.2% (Očekáváno) |
-| **Metodika (okrajové efekty)** | 🟢 `margins, dydx(*)` zavoláno úspěšně oba případy |
+| Modely | N | Pseudo $R^2$ | Konvergence |
+|---|---|---|---|
+| **Logit M1** (Profil firmy) | 17 848 | 2.5 % | 🟢 4 iter. |
+| **Mlogit M1** (Profil firmy) | 17 848 | 2.1 % | 🟢 4 iter. |
+| **Logit M2** (Profil role) | 17 848 | 35.9 % | 🟢 5 iter. |
+| **Mlogit M2** (Profil role) | 17 848 | 33.2 % | 🟢 6 iter. |
+| **Logit M3** (Kompletní) | 17 848 | 36.4 % | 🟢 konvergoval |
+| **Mlogit M3** (Kompletní) | 17 848 | 33.9 % | 🟢 konvergoval |
+| **Marginální efekty** | — | — | 🟢 `margins, dydx(*) atmeans` u všech 6 modelů |
+| **Hausman IIA test** | — | — | 🟢 `capture hausman` proběhl bez chyby |
+
+> ℹ️ Nízké Pseudo $R^2$ u M1 (2 %) je zcela očekávané — samotný firemní profil (sektor, typ, velikost) predikuje AI požadavek slabě. Vysoké Pseudo $R^2$ u M2/M3 (33–36 %) potvrzuje, že technologické skill clustery a job family jsou silnými prediktory AI poptávky.
+
+---
+*Poslední aktualizace: 5. března 2026 — výsledky ze Stata runu `22-59-18` (granulární `edu_ols` pro OLS, binární `edu_logit` pro Logit, PhD sloučen s Master)*
+
