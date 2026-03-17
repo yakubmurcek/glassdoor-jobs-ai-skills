@@ -292,6 +292,21 @@ drop cluster_legacy__mainframe
 drop cluster_data_analysis__stats
 drop cluster_tools__editors
 
+* --- 3.16 Počet hard skills na pozici (kontinuální proměnná) ---
+* Přesunuto sem z sekce 7 — potřebujeme pro deskriptivní i regresní analýzy
+gen skill_count = 1 + length(hardskills) - length(subinstr(hardskills, ",", "", .))
+replace skill_count = 0 if hardskills == ""
+label variable skill_count "Pocet pozadovanych hard skills"
+
+* --- 3.17 Kvadratický člen zkušeností (Mincerova specifikace) ---
+gen experience_sq = experience_min_llm^2
+label variable experience_sq "Zkusenosti na druhou (Mincer)"
+
+* --- 3.18 Logaritmus platu (pro OLS) ---
+* Mincerova mzdová rovnice standardně používá ln(plat)
+gen ln_salary = ln(salary_mid)
+label variable ln_salary "Prirozeny logaritmus platu"
+
 * ==============================================================================
 * 4. DESKRIPTIVNÍ STATISTIKA
 * ==============================================================================
@@ -344,7 +359,10 @@ tab sector if sector != "Unknown", sort
 
 display _n "--- 4.6 Remote prace ---"
 tab is_remote
-tab is_remote has_ai, chi2 row
+display _n "Remote x AI (sloupcova procenta — % AI/non-AI pozic s remote):"
+tab is_remote has_ai, chi2 column
+display _n "Remote x AI tier (sloupcova procenta):"
+tab is_remote ai_level, chi2 column
 
 * --- 4.7 Velikost firmy ---
 display _n "--- 4.7 Velikost firmy ---"
@@ -392,6 +410,24 @@ tab region ai_level, column
 display _n "Job Family x AI level:"
 tab job_family ai_level, column
 
+* --- 4.14b Seniority x AI (sloupcova procenta pro srovnani) ---
+display _n "--- 4.14b Seniority x AI (sloupcova procenta) ---"
+display _n "Seniority x has_ai:"
+tab exp_category has_ai, column chi2
+display _n "Seniority x AI tier:"
+tab exp_category ai_level, column chi2
+
+* --- 4.15 Diagnostika chybejicich platu ---
+* Test zda missingness platu je systematicka (selection bias)
+display _n "--- 4.15 Diagnostika chybejicich platu ---"
+gen has_salary = (salary_mid != .)
+label variable has_salary "Ma uvedeny plat (1=ano)"
+display _n "Chybejici platy x AI flag:"
+tab has_salary has_ai, chi2 row
+display _n "Chybejici platy x AI tier:"
+tab has_salary desc_tier_llm, chi2 row
+display "Test zda AI pozice maji systematicky jiny podil chybejicich platu"
+
 
 * ==============================================================================
 * 5. ANALYTICKÉ TESTY - HYPOTÉZY
@@ -406,8 +442,11 @@ display "=============================================================="
 * H0: Průměrný plat AI pozic = průměrný plat non-AI pozic
 * H1: Průměrné platy se liší
 
-display _n "--- 5.1 T-test: Plat AI vs non-AI pozic ---"
+display _n "--- 5.1a T-test: Plat AI vs non-AI pozic (rovne variance) ---"
 ttest salary_mid, by(has_ai)
+
+display _n "--- 5.1b Welch t-test (nerovne variance) ---"
+ttest salary_mid, by(has_ai) unequal
 
 * Efekt size (Cohenovo d) - důležité pro interpretaci praktické významnosti
 quietly summarize salary_mid if has_ai == 0
@@ -430,14 +469,20 @@ display "Interpretace: |d| < 0.2 = maly, 0.2-0.8 = stredni, > 0.8 = velky efekt"
 * --- 5.2 ANOVA: Liší se platy mezi AI tiers? ---
 * Testuje rozdíly mezi none, ai_integration, ai_focused
 
-display _n "--- 5.2 ANOVA: Plat podle AI tier ---"
+display _n "--- 5.2a ANOVA: Plat podle AI tier ---"
 oneway salary_mid ai_tier_num, tabulate bonferroni
+
+display _n "--- 5.2b Robustni ANOVA (Kruskal-Wallis) ---"
+display "Bartlett test je signifikantni → neparametricky test jako robustnostni kontrola"
+kwallis salary_mid, by(ai_tier_num)
 
 * --- 5.3 Chi-square: Vzdělání a AI požadavky ---
 * Jsou AI pozice náročnější na vzdělání?
 
 display _n "--- 5.3 Chi-square: Vzdelani x AI tier ---"
-tab edu_cat has_ai if edu_cat > 0, chi2 expected
+tab edu_cat has_ai, chi2 expected
+display _n "Granularni vzdelani x AI (pro informaci):"
+tab edu_ols has_ai, chi2 column
 
 * --- 5.4 Chi-square: Zkušenosti a AI požadavky ---
 display _n "--- 5.4 Chi-square: Zkusenosti x AI tier ---"
@@ -460,10 +505,7 @@ display _n "=============================================================="
 display "6. REGRESNI ANALYZA — OLS MODELY"
 display "=============================================================="
 
-* --- 6.0 Příprava: log transformace platu ---
-gen ln_salary = ln(salary_mid)
-label variable ln_salary "Prirozeny logaritmus platu"
-
+* --- 6.0 Příprava: log transformace (již vytvořeno v sekci 3.18) ---
 summarize ln_salary, detail
 display _n "Pozn: koeficient b v log modelu = (exp(b)-1)*100 % zmena platu"
 
@@ -536,6 +578,125 @@ quietly regress ln_salary ///
     if ln_salary != .
 vif
 
+* -----------------------------------------------------------------------
+* VARIANTY MODELU B (dle feedbacku vedouciho)
+* 6.2e-f: Model B bez job_family (test mediace)
+* 6.2g-h: Model B-Mincer (kontinualni zkusenosti)
+* 6.2i:   Srovnavaci tabulka vsech OLS modelu
+* Puvodni robustnostni kontroly nasleduji v 6.2c-d
+* -----------------------------------------------------------------------
+
+* --- 6.2e Model B bez job_family (test mediace — job_family muze byt mediator) ---
+* Vedouci: "Zkuste udelat Model B a pak Model B bez job-family. Oboje ukazuje zajimave vysledky."
+display _n "--- 6.2e Model B bez job_family ---"
+display "ln(plat) ~ Model B - job_family (test zda job_family mediuje AI premii)"
+regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    i.edu_ols ///
+    ib3.exp_category ///
+    if ln_salary != ., vce(robust)
+estimates store model_b_nojf
+display _n "Model B-nojf: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+
+* VIF pro Model B-nojf
+display _n "--- 6.2f VIF diagnostika Model B bez job_family ---"
+quietly regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    i.edu_ols ///
+    ib3.exp_category ///
+    if ln_salary != .
+vif
+
+* --- 6.2g Model B s kontinualni zkusenosti (Mincerova specifikace) ---
+* Vedouci: "Ma model nejakou kontinualni promennou? Pokud ne, je to problem."
+* Pridavame experience_min_llm + experience_sq misto kategoricke exp_category
+* POZOR: Tento model MA JINY VZOREK nez Model B! Model B pouziva exp_category,
+* kde missing zkusenosti = kategorie 0 (zachovano v regresi). Model B-Mincer
+* pouziva kontinualni experience_min_llm, kde missing = . (Stata automaticky
+* dropne). Proto N v B-Mincer bude nizsi. Porovnani R2 je orientacni.
+display _n "--- 6.2g Model B s Mincerovou specifikaci (experience + experience^2) ---"
+display "ln(plat) ~ Model B s kontinualni experience misto kategoricke"
+display "POZN: Jiny vzorek — missing experience = dropped (vs. kategorie v Model B)"
+regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    i.job_family_num ///
+    i.edu_ols ///
+    experience_min_llm experience_sq ///
+    if ln_salary != ., vce(robust)
+estimates store model_b_mincer
+display _n "Model B-Mincer: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+
+* VIF pro Model B-Mincer
+display _n "--- 6.2h VIF diagnostika Model B Mincer ---"
+quietly regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    i.job_family_num ///
+    i.edu_ols ///
+    experience_min_llm experience_sq ///
+    if ln_salary != .
+vif
+
+* --- 6.2i Srovnavaci tabulka vsech OLS modelu ---
+display _n "--- 6.2i Porovnani vsech OLS modelu ---"
+estimates table model_a model_b_nojf model_b model_b_mincer, star stats(N r2 r2_a)
+
+* --- 6.2c Robustnostni kontrola: Clusterovane SE ---
+* Vice inzeratu od stejne firmy → korelovane chyby. Testujeme zda se SE meni.
+display _n "--- 6.2c Robustnostni kontrola: Clusterovane SE ---"
+encode company, generate(company_id)
+regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    i.job_family_num ///
+    i.edu_ols ///
+    ib3.exp_category ///
+    if ln_salary != ., vce(cluster company_id)
+estimates store model_b_cluster
+display _n "Porovnani: robust SE (Model B) vs cluster SE pro AI koeficienty"
+estimates table model_b model_b_cluster, star stats(N r2 r2_a)
+
+* --- 6.2d Interakcni efekt: AI x zkusenosti ---
+* Testujeme zda AI premie se lisi podle seniority
+display _n "--- 6.2d Interakcni efekt: AI x zkusenosti ---"
+regress ln_salary ///
+    cluster_* ///
+    i.ai_level##ib3.exp_category ///
+    i.sector_nace_num i.region_num is_remote ///
+    i.type_cat i.size_cat ///
+    i.job_family_num i.edu_ols ///
+    if ln_salary != ., vce(robust)
+display "Testujeme zda AI premie se lisi podle seniority"
+testparm i.ai_level#ib3.exp_category
+
 * --- 6.3 Srovnání modelů A vs B (F-test nested models) ---
 display _n "--- 6.3 Srovnani OLS modelu A vs B ---"
 display "F-test (na standardnich chybach): testuje zda edu + exp + job_family vyznamne zlepsuje model"
@@ -579,6 +740,12 @@ estimates table model_a model_b, star stats(N r2 r2_a)
 * DV: has_ai (binární) a ai_level (multinomiální: 0=None, 1=AI Integration, 2=Applied/Core AI)
 * Cíl: Zjistit, jaké firmy a na jaké pozice nejčastěji vyžadují AI dovednosti?
 * DŮLEŽITÉ: Proměnná is_remote zde NENÍ zahrnuta dle požadavku vedoucího.
+*
+* POZN PRO OBHAJOBU: cluster_* jsou extrahovány z textu inzeratu,
+* ze ktereho LLM zaroven pridelil ai_level. Model je exploratorni,
+* nikoliv kauzalni — cilem je identifikovat asociovane dovednostni
+* profily, ne prokazovat kauzalitu. Pro kauzalni inferenci by byl
+* potreba instrumentalni promenna nebo kvazi-experiment.
 
 display _n "=============================================================="
 display "6B. PRAVDEPODOBNOSTNI MODELY — LOGIT / MLOGIT"
@@ -597,7 +764,7 @@ logit has_ai ///
     i.region_num, or
 estimates store logit_m1
 display _n "--- 6B.1b Marginalni efekty Model 1 ---"
-margins, dydx(*) atmeans
+margins, dydx(*)
 
 display _n "--- 6B.1c Mlogit Model 1: Profil firmy ---"
 mlogit ai_level ///
@@ -607,9 +774,9 @@ mlogit ai_level ///
     i.region_num, baseoutcome(0) rrr
 estimates store mlogit_m1
 display _n "--- 6B.1d Marginalni efekty Mlogit M1: P(AI Integration) ---"
-margins, dydx(*) predict(outcome(1)) atmeans
+margins, dydx(*) predict(outcome(1))
 display _n "--- 6B.1e Marginalni efekty Mlogit M1: P(Applied/Core AI) ---"
-margins, dydx(*) predict(outcome(2)) atmeans
+margins, dydx(*) predict(outcome(2))
 
 * -----------------------------------------------------------------------
 * MODEL 2: Profil role a člověka (Skills, Pozice, Vzdělání, Praxe)
@@ -624,7 +791,7 @@ logit has_ai ///
     ib3.exp_category, or
 estimates store logit_m2
 display _n "--- 6B.2b Marginalni efekty Model 2 ---"
-margins, dydx(*) atmeans
+margins, dydx(*)
 
 display _n "--- 6B.2c Mlogit Model 2: Profil role a cloveka ---"
 mlogit ai_level ///
@@ -634,9 +801,9 @@ mlogit ai_level ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m2
 display _n "--- 6B.2d Marginalni efekty Mlogit M2: P(AI Integration) ---"
-margins, dydx(*) predict(outcome(1)) atmeans
+margins, dydx(*) predict(outcome(1))
 display _n "--- 6B.2e Marginalni efekty Mlogit M2: P(Applied/Core AI) ---"
-margins, dydx(*) predict(outcome(2)) atmeans
+margins, dydx(*) predict(outcome(2))
 
 * -----------------------------------------------------------------------
 * MODEL 3: Kompletní (Model 1 + Model 2)
@@ -655,7 +822,20 @@ logit has_ai ///
     ib3.exp_category, or
 estimates store logit_m3
 display _n "--- 6B.3b Marginalni efekty Model 3 ---"
-margins, dydx(*) atmeans
+margins, dydx(*)
+
+* --- 6B.3f Hosmer-Lemeshow test (Logit M3) ---
+display _n "--- 6B.3f Hosmer-Lemeshow goodness-of-fit test (Logit M3) ---"
+quietly logit has_ai ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib1.edu_logit ///
+    ib3.exp_category
+estat gof, group(10)
 
 display _n "--- 6B.3c Mlogit Model 3: Kompletni ---"
 mlogit ai_level ///
@@ -669,9 +849,9 @@ mlogit ai_level ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m3
 display _n "--- 6B.3d Marginalni efekty Mlogit M3: P(AI Integration) ---"
-margins, dydx(*) predict(outcome(1)) atmeans
+margins, dydx(*) predict(outcome(1))
 display _n "--- 6B.3e Marginalni efekty Mlogit M3: P(Applied/Core AI) ---"
-margins, dydx(*) predict(outcome(2)) atmeans
+margins, dydx(*) predict(outcome(2))
 
 * -----------------------------------------------------------------------
 * Srovnávací tabulky Logit a Mlogit modelů
@@ -693,11 +873,144 @@ quietly mlogit ai_level ///
     cluster_* i.job_family_num ib1.edu_logit ib3.exp_category ///
     if ai_level != 1, baseoutcome(0)
 estimates store hausman_reduced
-capture hausman hausman_reduced hausman_full, alleqs constant
+capture noisily hausman hausman_reduced hausman_full, alleqs constant
 if _rc {
-    display "Hausman test nelze provest (typicke pro male vzorky v nekterych kategoriich)"
+    display _n "Hausman test selhal (return code: " _rc ")"
+    display "Pozn: Hausman test casto selhava u mlogit s mnoha kategoriemi"
+    display "kvuli non-positive-definite variancni matici (V_b-V_B)."
+    display "Toto je znama limitace — neznamena to problem s modelem."
 }
 estimates drop hausman_full hausman_reduced
+
+* -----------------------------------------------------------------------
+* MODEL 3a: Kompletní BEZ job_family (test mediace)
+* -----------------------------------------------------------------------
+* Vedouci: "Zkusil bych Model 3 bez job-family; job_family muze byt mediator"
+display _n "--- 6B.7a Logit Model 3a: Kompletni bez job_family ---"
+logit has_ai ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    ib1.edu_logit ///
+    ib3.exp_category, or
+estimates store logit_m3a
+display _n "--- 6B.7b Marginalni efekty Logit M3a ---"
+margins, dydx(*)
+
+display _n "--- 6B.7c Mlogit Model 3a: Kompletni bez job_family ---"
+mlogit ai_level ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    ib1.edu_logit ///
+    ib3.exp_category, baseoutcome(0) rrr
+estimates store mlogit_m3a
+display _n "--- 6B.7d Marginalni efekty Mlogit M3a: P(AI Integration) ---"
+margins, dydx(*) predict(outcome(1))
+display _n "--- 6B.7e Marginalni efekty Mlogit M3a: P(Applied/Core AI) ---"
+margins, dydx(*) predict(outcome(2))
+
+* -----------------------------------------------------------------------
+* MODEL 3b: Kompletní BEZ job_family A BEZ seniority (test mediace)
+* -----------------------------------------------------------------------
+* Vedouci: "Uvazujte faktory, ktere mohou primo v sobe zahrnovat pozadavky na
+* skills — to je prave job a seniorita — mohly by to byt mediatory"
+display _n "--- 6B.8a Logit Model 3b: Bez job_family a seniority ---"
+logit has_ai ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    ib1.edu_logit, or
+estimates store logit_m3b
+display _n "--- 6B.8b Marginalni efekty Logit M3b ---"
+margins, dydx(*)
+
+display _n "--- 6B.8c Mlogit Model 3b: Bez job_family a seniority ---"
+mlogit ai_level ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    ib1.edu_logit, baseoutcome(0) rrr
+estimates store mlogit_m3b
+display _n "--- 6B.8d Marginalni efekty Mlogit M3b: P(AI Integration) ---"
+margins, dydx(*) predict(outcome(1))
+display _n "--- 6B.8e Marginalni efekty Mlogit M3b: P(Applied/Core AI) ---"
+margins, dydx(*) predict(outcome(2))
+
+* -----------------------------------------------------------------------
+* Srovnávací tabulky: Model 3 vs 3a vs 3b
+* -----------------------------------------------------------------------
+display _n "--- 6B.9 Porovnani Logit M3 vs M3a (bez jf) vs M3b (bez jf+exp) ---"
+estimates table logit_m3 logit_m3a logit_m3b, star stats(N ll chi2)
+display _n "--- 6B.10 Porovnani Mlogit M3 vs M3a vs M3b ---"
+estimates table mlogit_m3 mlogit_m3a mlogit_m3b, star stats(N ll chi2)
+
+* -----------------------------------------------------------------------
+* CITLIVOSTNÍ ANALÝZA: Logit/Mlogit BEZ cluster_generative_ai a cluster_data_science__ml
+* -----------------------------------------------------------------------
+* Vedouci: "Ma byt 'generative AI' jako prediktor? Vzdyt to uz je pozadavek na AI…"
+* Test cirkularity: cluster_generative_ai a cluster_data_science__ml primo implikuji
+* AI pozadavek (GPT, LLM, TensorFlow, PyTorch...). Vyradime je a porovname.
+* Technika: docasne prejmenovani, aby je cluster_* wildcard nezachytil.
+* POZOR: Pokud kod mezi rename a unrename selze, promenne zustanou prejmenovane
+* a zbytek do-filu nepujde spustit! V pripade chyby rucne spustte:
+*   rename _excl_genai cluster_generative_ai
+*   rename _excl_dsml cluster_data_science__ml
+
+display _n "=============================================================="
+display "6C. CITLIVOSTNI ANALYZA — LOGIT/MLOGIT BEZ GenAI A DS/ML CLUSTERU"
+display "=============================================================="
+
+rename cluster_generative_ai _excl_genai
+rename cluster_data_science__ml _excl_dsml
+
+display _n "--- 6C.1a Logit M3 bez GenAI a DS/ML ---"
+logit has_ai ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib1.edu_logit ///
+    ib3.exp_category, or
+estimates store logit_m3_nocirc
+display _n "--- 6C.1b Marginalni efekty Logit M3 bez cirkularnich clusteru ---"
+margins, dydx(*)
+
+display _n "--- 6C.2a Mlogit M3 bez GenAI a DS/ML ---"
+mlogit ai_level ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib1.edu_logit ///
+    ib3.exp_category, baseoutcome(0) rrr
+estimates store mlogit_m3_nocirc
+display _n "--- 6C.2b Marginalni efekty Mlogit M3 nocirc: P(AI Integration) ---"
+margins, dydx(*) predict(outcome(1))
+display _n "--- 6C.2c Marginalni efekty Mlogit M3 nocirc: P(Applied/Core AI) ---"
+margins, dydx(*) predict(outcome(2))
+
+* Vratit prejmenovane clustery
+rename _excl_genai cluster_generative_ai
+rename _excl_dsml cluster_data_science__ml
+
+* Srovnani: jak moc se zmeni ostatni koeficienty bez cirkularnich prediktoru?
+display _n "--- 6C.3 Porovnani Logit M3 vs M3-nocirc ---"
+estimates table logit_m3 logit_m3_nocirc, star stats(N ll chi2)
+display _n "--- 6C.4 Porovnani Mlogit M3 vs M3-nocirc ---"
+estimates table mlogit_m3 mlogit_m3_nocirc, star stats(N ll chi2)
 
 
 * ==============================================================================
@@ -712,19 +1025,18 @@ display "=============================================================="
 * Poznámka: hardskills je textový sloupec s čárkami oddělenými skills
 * Pro detailní analýzu je lepší použít Python k vytvoření dummy proměnných
 * Zde ukážeme základní exploraci
-
-* Počet unique skills na pozici (aproximace)
-gen skill_count = 1 + length(hardskills) - length(subinstr(hardskills, ",", "", .))
-replace skill_count = 0 if hardskills == ""
-label variable skill_count "Pocet pozadovanych hard skills"
+* POZN: skill_count je jiz vytvoren v sekci 3.16 (priprava dat)
 
 display _n "--- 7.1 Pocet skills na pozici ---"
 summarize skill_count, detail
 tabstat skill_count, by(desc_tier_llm) statistics(count mean sd min max)
 
 * T-test: Vyžadují AI pozice více skills?
-display _n "--- 7.2 T-test: Pocet skills AI vs non-AI ---"
+display _n "--- 7.2a T-test: Pocet skills AI vs non-AI (rovne variance) ---"
 ttest skill_count, by(has_ai)
+
+display _n "--- 7.2b Welch t-test: Pocet skills (nerovne variance) ---"
+ttest skill_count, by(has_ai) unequal
 
 
 * ==============================================================================
