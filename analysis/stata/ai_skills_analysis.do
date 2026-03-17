@@ -308,7 +308,8 @@ gen ln_salary = ln(salary_mid)
 label variable ln_salary "Prirozeny logaritmus platu"
 
 * --- 3.19 ID firmy (pro clusterované SE) ---
-encode company, generate(company_id)
+* company_id jiz existuje v importovanem CSV — neni treba encode
+destring company_id, replace force
 label variable company_id "ID firmy (pro cluster SE)"
 
 * ==============================================================================
