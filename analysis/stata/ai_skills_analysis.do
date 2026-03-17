@@ -307,6 +307,10 @@ label variable experience_sq "Zkusenosti na druhou (Mincer)"
 gen ln_salary = ln(salary_mid)
 label variable ln_salary "Prirozeny logaritmus platu"
 
+* --- 3.19 ID firmy (pro clusterované SE) ---
+encode company, generate(company_id)
+label variable company_id "ID firmy (pro cluster SE)"
+
 * ==============================================================================
 * 4. DESKRIPTIVNÍ STATISTIKA
 * ==============================================================================
@@ -667,7 +671,6 @@ estimates table model_a model_b_nojf model_b model_b_mincer, star stats(N r2 r2_
 * --- 6.2c Robustnostni kontrola: Clusterovane SE ---
 * Vice inzeratu od stejne firmy → korelovane chyby. Testujeme zda se SE meni.
 display _n "--- 6.2c Robustnostni kontrola: Clusterovane SE ---"
-encode company, generate(company_id)
 regress ln_salary ///
     cluster_* ///
     i.ai_level ///
