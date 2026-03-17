@@ -130,12 +130,12 @@ replace education_hybrid = edu_level_det if education_hybrid == "missing" & edu_
 * Krok 3: Finální missing pro prázdné
 replace education_hybrid = "missing" if education_hybrid == ""
 
-* Krok 4: Globální sloučení PhD → Master (dle požadavku vedoucího)
+* Krok 4: Globální sloučení PhD → Master
 replace education_hybrid = "master" if education_hybrid == "phd"
 
 * --- 3.3a edu_ols: Granulární proměnná pro OLS (mzdovou) regresi ---
 * Úrovně: 0=Missing, 1=High School, 2=Associate, 3=Bachelor, 4=Master(+PhD)
-* Vedoucí: "NESLUČUJ — nech detaily, sloučením bys model zhoršil"
+* Granulární 4 úrovně — zachování detailů zlepšuje model
 gen edu_ols = .
 replace edu_ols = 0 if education_hybrid == "missing"
 replace edu_ols = 1 if education_hybrid == "highschool"
@@ -149,7 +149,7 @@ label variable edu_ols "Vzdelani (granularni pro OLS)"
 
 * --- 3.3b edu_logit: Binární proměnná pro Logit/Mlogit ---
 * Úrovně: 0=Missing/HS/Associate, 1=Bachelor+
-* Vedoucí: "SLOUČ Associate+HS — jinak málo pozorování v AI buňce"
+* Sloučení Associate+HS kvůli malému počtu pozorování v AI buňkách
 gen edu_logit = .
 replace edu_logit = 0 if inlist(education_hybrid, "missing", "", "highschool", "associate")
 replace edu_logit = 1 if inlist(education_hybrid, "bachelor", "master")
@@ -579,7 +579,7 @@ quietly regress ln_salary ///
 vif
 
 * -----------------------------------------------------------------------
-* VARIANTY MODELU B (dle feedbacku vedouciho)
+* VARIANTY MODELU B
 * 6.2e-f: Model B bez job_family (test mediace)
 * 6.2g-h: Model B-Mincer (kontinualni zkusenosti)
 * 6.2i:   Srovnavaci tabulka vsech OLS modelu
@@ -587,7 +587,7 @@ vif
 * -----------------------------------------------------------------------
 
 * --- 6.2e Model B bez job_family (test mediace — job_family muze byt mediator) ---
-* Vedouci: "Zkuste udelat Model B a pak Model B bez job-family. Oboje ukazuje zajimave vysledky."
+* job_family muze byt mediator AI pozadavku — oba modely ukazuji zajimave vysledky
 display _n "--- 6.2e Model B bez job_family ---"
 display "ln(plat) ~ Model B - job_family (test zda job_family mediuje AI premii)"
 regress ln_salary ///
@@ -620,8 +620,8 @@ quietly regress ln_salary ///
 vif
 
 * --- 6.2g Model B s kontinualni zkusenosti (Mincerova specifikace) ---
-* Vedouci: "Ma model nejakou kontinualni promennou? Pokud ne, je to problem."
 * Pridavame experience_min_llm + experience_sq misto kategoricke exp_category
+* — kontinualni promenna pro spravnou specifikaci Mincerovy rovnice
 * POZOR: Tento model MA JINY VZOREK nez Model B! Model B pouziva exp_category,
 * kde missing zkusenosti = kategorie 0 (zachovano v regresi). Model B-Mincer
 * pouziva kontinualni experience_min_llm, kde missing = . (Stata automaticky
@@ -739,7 +739,7 @@ estimates table model_a model_b, star stats(N r2 r2_a)
 * ==============================================================================
 * DV: has_ai (binární) a ai_level (multinomiální: 0=None, 1=AI Integration, 2=Applied/Core AI)
 * Cíl: Zjistit, jaké firmy a na jaké pozice nejčastěji vyžadují AI dovednosti?
-* DŮLEŽITÉ: Proměnná is_remote zde NENÍ zahrnuta dle požadavku vedoucího.
+* DŮLEŽITÉ: Proměnná is_remote zde NENÍ zahrnuta (is_remote je spíše výsledek než příčina AI požadavku).
 *
 * POZN PRO OBHAJOBU: cluster_* jsou extrahovány z textu inzeratu,
 * ze ktereho LLM zaroven pridelil ai_level. Model je exploratorni,
@@ -885,7 +885,7 @@ estimates drop hausman_full hausman_reduced
 * -----------------------------------------------------------------------
 * MODEL 3a: Kompletní BEZ job_family (test mediace)
 * -----------------------------------------------------------------------
-* Vedouci: "Zkusil bych Model 3 bez job-family; job_family muze byt mediator"
+* job_family muze byt mediator — primo v sobe zahrnuje typ dovednosti
 display _n "--- 6B.7a Logit Model 3a: Kompletni bez job_family ---"
 logit has_ai ///
     i.sector_nace_num ///
@@ -917,8 +917,7 @@ margins, dydx(*) predict(outcome(2))
 * -----------------------------------------------------------------------
 * MODEL 3b: Kompletní BEZ job_family A BEZ seniority (test mediace)
 * -----------------------------------------------------------------------
-* Vedouci: "Uvazujte faktory, ktere mohou primo v sobe zahrnovat pozadavky na
-* skills — to je prave job a seniorita — mohly by to byt mediatory"
+* job_family a seniorita mohou primo v sobe zahrnovat pozadavky na skills — potencialni mediatory
 display _n "--- 6B.8a Logit Model 3b: Bez job_family a seniority ---"
 logit has_ai ///
     i.sector_nace_num ///
@@ -956,7 +955,6 @@ estimates table mlogit_m3 mlogit_m3a mlogit_m3b, star stats(N ll chi2)
 * -----------------------------------------------------------------------
 * CITLIVOSTNÍ ANALÝZA: Logit/Mlogit BEZ cluster_generative_ai a cluster_data_science__ml
 * -----------------------------------------------------------------------
-* Vedouci: "Ma byt 'generative AI' jako prediktor? Vzdyt to uz je pozadavek na AI…"
 * Test cirkularity: cluster_generative_ai a cluster_data_science__ml primo implikuji
 * AI pozadavek (GPT, LLM, TensorFlow, PyTorch...). Vyradime je a porovname.
 * Technika: docasne prejmenovani, aby je cluster_* wildcard nezachytil.

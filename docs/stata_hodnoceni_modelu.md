@@ -1,6 +1,6 @@
 # 📊 Hodnocení výstupu a analýza modelů ze Staty (AI na trhu práce v IT)
 
-Tento dokument sumarizuje a interpretuje klíčová zjištění ze statistického zpracování datasetu pracovních inzerátů (N = 17 848). Slouží jako podklad pro konzultaci výsledků výzkumné části diplomové práce s vedoucím a pro následné teoretické ukotvení do textu práce. Zároveň ověřuje metodologickou kvalitu výstupů proti surovému Stata logu.
+Tento dokument sumarizuje a interpretuje klíčová zjištění ze statistického zpracování datasetu pracovních inzerátů (N = 17 848). Slouží jako podklad pro konzultaci výsledků výzkumné části diplomové práce a pro následné teoretické ukotvení do textu práce. Zároveň ověřuje metodologickou kvalitu výstupů proti surovému Stata logu.
 
 Výstup ze Staty vypadá z metodologického hlediska **velmi profesionálně a kvalitně** 🌟. Modely běží, konvergují a jsou nastaveny způsobem, který přesně odpovídá standardům pro socioekonomický / ekonometrický výzkum.
 
@@ -66,21 +66,21 @@ Pro rigorózní vyčíslení platového benefitu a očištění vlivu tzv. zavá
 
 #### 📊 Model B bez job_family (Test mediace)
 
-- **Specifikace:** Jako Model B, ale BEZ proměnné `job_family_num`. Vedoucí doporučil reportovat oba modely — job family může být mediátor (typ pozice přímo ovlivňuje požadavky na AI).
+- **Specifikace:** Jako Model B, ale BEZ proměnné `job_family_num`. Oba modely se reportují paralelně — job family může být mediátor (typ pozice přímo ovlivňuje požadavky na AI).
 - **Očekávání:** AI prémie v tomto modelu bude vyšší, protože job_family absorbuje část efektu AI (Data & AI pozice mají vyšší platy i nezávisle na AI).
 - ⏳ _Výsledky budou doplněny po novém Stata runu._
 
 #### 📊 Model B — Mincerova specifikace (kontinuální zkušenosti)
 
 - **Specifikace:** Jako Model B, ale s kontinuální proměnnou `experience_min_llm` + `experience_sq` (kvadratický člen) místo kategorické `exp_category`. Klasická Mincerova mzdová rovnice s klesajícími výnosy ze zkušeností.
-- **Motivace:** Vedoucí upozornil, že model by měl obsahovat alespoň jednu kontinuální proměnnou pro správnou specifikaci.
+- **Motivace:** Model by měl obsahovat alespoň jednu kontinuální proměnnou pro správnou specifikaci Mincerovy rovnice.
 - ⚠️ **Caveat:** Model B-Mincer má **jiný vzorek** než Model B. Model B kóduje missing zkušenosti jako explicitní kategorii (`exp_category = 0`), zatímco B-Mincer používá kontinuální `experience_min_llm`, kde missing hodnoty jsou automaticky Statou vyřazeny. Proto N v B-Mincer bude nižší a přímé srovnání $R^2$ je pouze orientační.
 - ⏳ _Výsledky budou doplněny po novém Stata runu._
 
 #### 📋 Kompletní hierarchie faktorů určujících plat (Model B)
 
 AI prémie je signifikantní, ale **není nejsilnějším prediktorem platu**. Tato hierarchie je klíčový nález pro obhajobu.
-- ⚠️ **Poznámka vedoucího:** Všechny proměnné v hierarchii jsou dummy (0 vs 1). Pro srovnatelnost koeficientů je třeba mít na paměti, že efekty dummy proměnných ukazují rozdíl oproti referenční kategorii, zatímco kontinuální proměnné (v modelu B-Mincer) ukazují efekt jednotkové změny.
+- ⚠️ **Poznámka ke srovnatelnosti:** Všechny proměnné v hierarchii jsou dummy (0 vs 1). Pro srovnatelnost koeficientů je třeba mít na paměti, že efekty dummy proměnných ukazují rozdíl oproti referenční kategorii, zatímco kontinuální proměnné (v modelu B-Mincer) ukazují efekt jednotkové změny.
 
 | Faktor | Efekt na plat | $p$-value | Interpretace |
 |---|---|---|---|
@@ -141,8 +141,8 @@ Tato sekce představuje ekonometrickou verzi analýzy odborné náročnosti z bo
 | **Certifications** | -4,0 p.b. | $< 0,01$ | Certifikované role jsou tradičnější |
 | **Scripting / Shell** | -3,2 p.b. | $< 0,01$ | Tradiční skriptování bez AI |
 
-- ⚠️ **Poznámka k cirkularitě (feedback vedoucího):** `cluster_generative_ai` a `cluster_data_science__ml` obsahují skills (GPT, LLM, TensorFlow, PyTorch...), které přímo implikují AI požadavek. Proto byla provedena **citlivostní analýza** s vyřazením obou clusterů — výsledky viz sekce 5b.
-- 📊 **Formát výsledků:** Na doporučení vedoucího reportujeme **Average Marginal Effects (AME)** místo Odds Ratios / Relative Risk Ratios. AME ukazují změnu v procentních bodech a jsou ekonomům srozumitelnější.
+- ⚠️ **Poznámka k cirkularitě:** `cluster_generative_ai` a `cluster_data_science__ml` obsahují skills (GPT, LLM, TensorFlow, PyTorch...), které přímo implikují AI požadavek. Proto byla provedena **citlivostní analýza** s vyřazením obou clusterů — výsledky viz sekce 5b.
+- 📊 **Formát výsledků:** Reportujeme **Average Marginal Effects (AME)** místo Odds Ratios / Relative Risk Ratios. AME ukazují změnu v procentních bodech a jsou ekonomům srozumitelnější.
 
 #### 5b. Citlivostní analýza — Logit/Mlogit bez GenAI a DS/ML clusterů
 
@@ -171,7 +171,7 @@ Toto je stěžejní sekce pro tezi diplomové práce: co odlišuje pozice, kter�
 
 > 💡 **Klíčová interpretace:** Skutečné AI pozice (Applied/Core) se od "pouhého používání AI" (Integration) liší tím, že vyžadují **fundamentální dovednosti** — data science/ML, systémové programování a data engineering. Naopak AI Integration je charakterizována **aplikačními dovednostmi** — frontend, enterprise platformy, generativní AI nástroje. Toto přímo validuje rozlišení mezi "rozumět AI" a "používat AI".
 
-- 📊 **Formát:** Na doporučení vedoucího reportujeme **AME (Average Marginal Effects)** v procentních bodech místo RRR (Relative Risk Ratios). AME jsou ekonomům srozumitelnější — přímo ukazují, o kolik procentních bodů se změní pravděpodobnost dané kategorie při přítomnosti daného skill clusteru.
+- 📊 **Formát:** Reportujeme **AME (Average Marginal Effects)** v procentních bodech místo RRR (Relative Risk Ratios). AME jsou ekonomům srozumitelnější — přímo ukazují, o kolik procentních bodů se změní pravděpodobnost dané kategorie při přítomnosti daného skill clusteru.
 
 #### Job Family efekty v multinomiálním modelu (M2)
 
@@ -220,10 +220,10 @@ Při analýze dat je naprosto klíčové věnovat pozornost i proměnným, u kte
 2. 🛡️ **Robustní standardní chyby:** U OLS modelů správně používáte `vce(robust)`. Kriticky důležité pro průřezová data k ošetření heteroskedasticity ✅.
 3. 📉 **Diagnostika modelů (VIF):** Perfektní! Všechny hodnoty VIF jsou kolem 2, což bezpečně vylučuje multikolinearitu (✅ bezchybné).
 4. 🔢 **Faktorové proměnné (`i.var`):** Stata je správně instruována, co jsou kategorie ✅.
-5. 📊 **Marginální efekty (Logit/Mlogit):** Správně voláte `margins, dydx(*)` **bez `atmeans`** (dle doporučení vedoucího), což vyhodí Average Marginal Effects (AME) — průměrné marginální efekty přes celou distribuci pozorování, nikoliv efekty v bodě průměrů ✅.
+5. 📊 **Marginální efekty (Logit/Mlogit):** Správně voláte `margins, dydx(*)` **bez `atmeans`**, což vyhodí Average Marginal Effects (AME) — průměrné marginální efekty přes celou distribuci pozorování, nikoliv efekty v bodě průměrů ✅.
 6. 📏 **Effect size (Cohenovo d):** Obohacení T-testu o effect size (0.587) dokazuje teoretickou i praktickou významnost rozdílů ✅.
 7. 🏗️ **Inkrementální modely (Base vs. Full):** Nárůst $R^2$ z 24.7 % na **38.0 %** ukazuje vysokou vypovídající hodnotu začlenění lidského kapitálu ✅.
-8. 🎓 **Diferenciace vzdělávací proměnné:** Pro OLS model granulární proměnná `edu_ols` (4 úrovně: HS / Associate / Bachelor / Master+), pro Logit/Mlogit sloučená binární `edu_logit` (HS+Associate+Missing vs. Bachelor+). Metodologicky správně dle doporučení vedoucího. ✅
+8. 🎓 **Diferenciace vzdělávací proměnné:** Pro OLS model granulární proměnná `edu_ols` (4 úrovně: HS / Associate / Bachelor / Master+), pro Logit/Mlogit sloučená binární `edu_logit` (HS+Associate+Missing vs. Bachelor+) kvůli malému N v AI buňkách. ✅
 9. 🔬 **Neparametrická verifikace:** Mann-Whitney U test doplňuje parametrický T-test a potvrzuje robustnost závěru bez předpokladu normality ✅.
 10. 📐 **ANOVA Bonferroni korekce:** Všechny pairwise porovnání tierů prokázaly signifikanci — monotónní gradient prémie je ověřen ✅.
 
@@ -235,7 +235,7 @@ Modelování a čištění dat bylo provedeno v striktním souladu s dohodnutým
 
 - 🛠️ **Příprava proměnných:** Úspěšně byla zavedena závislá proměnná logaritmu platu `ln_salary`, byl vytvořen index počtu dovedností `skill_count` (0-80) a do binární podoby byla zredukována přítomnost AI požadavků `has_ai`.
 - 🔄 **Slučování řídkých kategorií (Sparse data):** Aby multinomiální modely nevykazovaly chyby konvergence (např. _perfect separation_), byly striktně dodrženy limity počtu pozorování (min. 50 na buňku). Z toho důvodu došlo v rámci přípravy k agregaci specifických technických clusterů (vyřazeno např. `cluster_legacy__mainframe`), drobných sektorů i edukace v Logit modelu (sloučení High School a Associate Degree do jedné kategorie, PhD globálně sloučeno s Master).
-- 🎯 **Rozlišení specifikace pro Logit a OLS:** V rámci OLS (mzdového) modelu dává smysl měřit vliv **Remote práce** i **granulárního vzdělání** (4 úrovně), nicméně v modelech predikujících _požadavek zaměstnavatele na AI_ je `is_remote` záměrně vynechána dle doporučení vedoucího a vzdělání je sloučeno do binární formy kvůli malému N v buňkách AI kategorií.
+- 🎯 **Rozlišení specifikace pro Logit a OLS:** V rámci OLS (mzdového) modelu dává smysl měřit vliv **Remote práce** i **granulárního vzdělání** (4 úrovně), nicméně v modelech predikujících _požadavek zaměstnavatele na AI_ je `is_remote` záměrně vynechána a vzdělání je sloučeno do binární formy kvůli malému N v buňkách AI kategorií.
 - 📈 **Inkrementální 3-stupňová struktura Logit/Mlogit:** Práce těží z domluvené sekvence modelů (Profil firmy ➡️ Profil role/osoby ➡️ Kompletní). Výsledný Model 3 a rozpad vlivů přesně zrcadlí tuto strategickou posloupnost.
 
 #### 2. Metodologické nuance
@@ -423,4 +423,4 @@ Toto je standardní limitace většiny mzdových studií založených na průře
 
 ---
 
-_Poslední aktualizace: 17. března 2026 — zapracován feedback vedoucího: (1) opraveny remote statistiky (sloupcová vs řádková procenta), (2) přidány seniority cross-taby, (3) přidán OLS Model B bez job_family + Model B-Mincer s kontinuální experience+experience², (4) přidány Logit/Mlogit M3a (bez job_family) a M3b (bez job_family+seniority), (5) přidána citlivostní analýza bez GenAI a DS/ML clusterů (test cirkularity), (6) tabulky přepsány z RRR na AME, (7) logit interpretace přeformulována jako ekonometrická analýza odborné náročnosti, (8) ověřeno: margins bez atmeans. ⏳ Čísla z nových modelů budou doplněna po novém Stata runu._
+_Poslední aktualizace: 17. března 2026 — (1) opraveny remote statistiky (sloupcová vs řádková procenta), (2) přidány seniority cross-taby, (3) přidán OLS Model B bez job_family + Model B-Mincer s kontinuální experience+experience², (4) přidány Logit/Mlogit M3a (bez job_family) a M3b (bez job_family+seniority), (5) přidána citlivostní analýza bez GenAI a DS/ML clusterů (test cirkularity), (6) tabulky přepsány z RRR na AME, (7) logit interpretace přeformulována jako ekonometrická analýza odborné náročnosti, (8) ověřeno: margins bez atmeans. ⏳ Čísla z nových modelů budou doplněna po novém Stata runu._
