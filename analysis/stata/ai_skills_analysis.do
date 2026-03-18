@@ -415,12 +415,20 @@ tab region ai_level, column
 display _n "Job Family x AI level:"
 tab job_family ai_level, column
 
-* --- 4.14b Seniority x AI (sloupcova procenta pro srovnani) ---
+* --- 4.14b Seniority x AI (sloupcova procenta — slozeni AI/non-AI workforce) ---
 display _n "--- 4.14b Seniority x AI (sloupcova procenta) ---"
 display _n "Seniority x has_ai:"
 tab exp_category has_ai, column chi2
 display _n "Seniority x AI tier:"
 tab exp_category ai_level, column chi2
+
+* --- 4.14c Seniority x AI (radkova procenta — % AI penetrace v kazde urovni) ---
+* Pro Word tabulky: kazdy radek (seniority level) sumi do 100%
+display _n "--- 4.14c Seniority x AI (radkova procenta) ---"
+display _n "Seniority x has_ai (radkova %):"
+tab exp_category has_ai, row chi2
+display _n "Seniority x AI tier (radkova %):"
+tab exp_category ai_level, row chi2
 
 * --- 4.15 Diagnostika chybejicich platu ---
 * Test zda missingness platu je systematicka (selection bias)
@@ -501,7 +509,7 @@ ranksum salary_mid, by(has_ai)
 
 
 * ==============================================================================
-* 6. REGRESNÍ ANALÝZA — MODELY VEDOUCÍHO
+* 6. REGRESNÍ ANALÝZA — EKONOMETRICKÉ MODELY
 * ==============================================================================
 * Závěsná rovnice: log(mzda)
 * Závorka = Model B (plný s lidským kapitálem), bez závorky = Model A (firemní základ)

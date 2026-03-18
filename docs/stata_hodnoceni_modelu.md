@@ -30,9 +30,11 @@ Prvotní analýza vzorku poskytuje základní vhled do struktury trhu práce z h
   - _Software Engineer_: **25,7 %** pozic vyžaduje AI
   - _Software Developer_: **15,0 %** — výrazně méně než Engineer
   - _DevOps & Cloud_: **15,5 %** — AI není primární zaměření
-- 📊 **Seniority a AI:** AI pozice mají signifikantně odlišný profil seniority (Chi-kvadrát = 73,2; $p < 0,001$):
-  - Mid (3-5 let): 52,6 % u AI Integration vs. 46,2 % u None — AI pozice se soustředí na středně zkušené pracovníky
-  - Applied/Core AI: výrazněji zastoupený Senior+ (24,1 % vs. 19,9 % u None)
+- 📊 **Seniority a AI:** Podíl AI požadavků roste se senioritou (Chi-kvadrát = 55,2; $p < 0,001$; řádková procenta — v rámci každé úrovně seniority sčítají do 100 %):
+  - Junior (0-2 roky): AI vyžaduje **16,3 %** pozic
+  - Mid (3-5 let): AI vyžaduje **20,9 %** pozic
+  - Senior+ (6+ let): AI vyžaduje **21,3 %** pozic — nejvyšší podíl
+  - Z toho Applied/Core AI: Junior 6,2 % → Mid 7,4 % → Senior+ **8,7 %** — hlubší AI roste se zkušeností
 
 ### 2. 🔬 Statistické testování hypotéz
 
@@ -66,16 +68,22 @@ Pro rigorózní vyčíslení platového benefitu a očištění vlivu tzv. zavá
 
 #### 📊 Model B bez job_family (Test mediace)
 
-- **Specifikace:** Jako Model B, ale BEZ proměnné `job_family_num`. Oba modely se reportují paralelně — job family může být mediátor (typ pozice přímo ovlivňuje požadavky na AI).
-- **Očekávání:** AI prémie v tomto modelu bude vyšší, protože job_family absorbuje část efektu AI (Data & AI pozice mají vyšší platy i nezávisle na AI).
-- ⏳ _Výsledky budou doplněny po novém Stata runu._
+- **Specifikace:** Jako Model B, ale BEZ proměnné `job_family_num` ($R^2 = 0,342$). Oba modely se reportují paralelně — job family může být mediátor (typ pozice přímo ovlivňuje požadavky na AI).
+- **Výsledek:** AI prémie je vyšší než v plném Modelu B, což potvrzuje mediaci:
+  - 🧩 **AI Integration:** +8,4 % (vs. +7,5 % v plném B)
+  - 🧠 **Applied/Core AI:** +11,8 % (vs. +9,6 % v plném B)
+- 💡 Job family absorbuje cca 1-2 p.b. AI efektu — Data & AI pozice mají vyšší platy i nezávisle na AI požadavku.
 
 #### 📊 Model B — Mincerova specifikace (kontinuální zkušenosti)
 
 - **Specifikace:** Jako Model B, ale s kontinuální proměnnou `experience_min_llm` + `experience_sq` (kvadratický člen) místo kategorické `exp_category`. Klasická Mincerova mzdová rovnice s klesajícími výnosy ze zkušeností.
 - **Motivace:** Model by měl obsahovat alespoň jednu kontinuální proměnnou pro správnou specifikaci Mincerovy rovnice.
-- ⚠️ **Caveat:** Model B-Mincer má **jiný vzorek** než Model B. Model B kóduje missing zkušenosti jako explicitní kategorii (`exp_category = 0`), zatímco B-Mincer používá kontinuální `experience_min_llm`, kde missing hodnoty jsou automaticky Statou vyřazeny. Proto N v B-Mincer bude nižší a přímé srovnání $R^2$ je pouze orientační.
-- ⏳ _Výsledky budou doplněny po novém Stata runu._
+- ⚠️ **Caveat:** Model B-Mincer má **jiný vzorek** (N = 12 606 vs. 14 640). Model B kóduje missing zkušenosti jako explicitní kategorii (`exp_category = 0`), zatímco B-Mincer používá kontinuální `experience_min_llm`, kde missing hodnoty jsou automaticky Statou vyřazeny. Přímé srovnání $R^2$ je proto pouze orientační.
+- **Výsledek:** $R^2 = 0,423$ (nejvyšší ze všech modelů, ale částečně díky menšímu vzorku):
+  - 🧩 **AI Integration:** +7,7 %
+  - 🧠 **Applied/Core AI:** +9,9 %
+  - 📈 Experience: +6,8 % za rok, s klesajícími výnosy (experience²: -0,2 %)
+  - AI prémie konzistentní s Modelem B — robustní výsledek.
 
 #### 📋 Kompletní hierarchie faktorů určujících plat (Model B)
 
@@ -120,9 +128,9 @@ Tato sekce představuje ekonometrickou verzi analýzy odborné náročnosti z bo
 |---|---|---|
 | **M1** (Profil firmy: sektor, typ, velikost, region) | **2,5 %** | Firemní profil sám o sobě AI požadavek skoro nepredikuje |
 | **M2** (Profil role: skill clustery, job family, vzdělání, zkušenosti) | **35,9 %** | Typ dovedností a role je rozhodující |
-| **M3** (Kompletní: M1 + M2) | **36,4 %** | Přidání firemních proměnných k M2 přináší marginální zlepšení (+0,5 p.b.) |
-| **M3a** (M3 bez job_family) | ⏳ | Test mediace — job family může být mediátor |
-| **M3b** (M3 bez job_family a seniority) | ⏳ | Bez obou potenciálních mediátorů |
+| **M3** (Kompletní: M1 + M2) | **36,7 %** | Přidání firemních proměnných k M2 přináší marginální zlepšení (+0,8 p.b.) |
+| **M3a** (M3 bez job_family) | **35,8 %** | Bez job_family — AME clusterů mírně vzrostou (přebírají efekt) |
+| **M3b** (M3 bez job_family a seniority) | **35,8 %** | Seniority přidává minimum vysvětlující síly k M3a |
 
 > 💡 **Interpretace pro obhajobu:** O tom, zda pozice vyžaduje AI, rozhoduje primárně **"co se tam dělá"** (konkrétní dovednosti a typ role), nikoliv **"kdo je zaměstnavatel"** (sektor, velikost, typ firmy). Logit modely jsou v tomto smyslu ekonometrickým nástrojem pro identifikaci dovedností asociovaných s AI poptávkou — doplňují deskriptivní zjištění z analýzy skill_count rigorózním statistickým způsobem.
 
@@ -132,14 +140,15 @@ Tato sekce představuje ekonometrickou verzi analýzy odborné náročnosti z bo
 
 | Skill cluster | AME (p.b.) | $p$-value | Interpretace |
 |---|---|---|---|
-| **Generative AI** | **+39,4 p.b.** | $< 0,001$ | 🔥 Naprosto dominantní prediktor |
-| **Data Science / ML** | **+32,4 p.b.** | $< 0,001$ | 🔥 Druhý nejsilnější — jádro AI |
-| **Dynamic Web** | +6,1 p.b. | $< 0,001$ | AI se prosazuje do webových technologií |
-| **Cloud Computing** | +4,1 p.b. | $< 0,001$ | Cloud je infrastrukturou AI |
-| **Frontend Development** | +3,8 p.b. | $< 0,001$ | AI pronikání do UI/UX |
-| **Enterprise / Managed** | -5,3 p.b. | $< 0,001$ | Enterprise systémy AI zatím nevyžadují |
-| **Certifications** | -4,0 p.b. | $< 0,01$ | Certifikované role jsou tradičnější |
-| **Scripting / Shell** | -3,2 p.b. | $< 0,01$ | Tradiční skriptování bez AI |
+| **Generative AI** | **+30,7 p.b.** | $< 0,001$ | 🔥 Naprosto dominantní prediktor |
+| **Data Science / ML** | **+25,2 p.b.** | $< 0,001$ | 🔥 Druhý nejsilnější — jádro AI |
+| **Dynamic Web** | +4,8 p.b. | $< 0,001$ | AI se prosazuje do webových technologií |
+| **Cloud Computing** | +3,2 p.b. | $< 0,001$ | Cloud je infrastrukturou AI |
+| **Frontend Development** | +2,9 p.b. | $< 0,001$ | AI pronikání do UI/UX |
+| **BI / Analytics** | +2,3 p.b. | $< 0,001$ | Analytické role přijímají AI |
+| **Enterprise / Managed** | -4,1 p.b. | $< 0,001$ | Enterprise systémy AI zatím nevyžadují |
+| **Certifications** | -3,1 p.b. | $< 0,01$ | Certifikované role jsou tradičnější |
+| **Scripting / Shell** | -2,5 p.b. | $< 0,01$ | Tradiční skriptování bez AI |
 
 - ⚠️ **Poznámka k cirkularitě:** `cluster_generative_ai` a `cluster_data_science__ml` obsahují skills (GPT, LLM, TensorFlow, PyTorch...), které přímo implikují AI požadavek. Proto byla provedena **citlivostní analýza** s vyřazením obou clusterů — výsledky viz sekce 5b.
 - 📊 **Formát výsledků:** Reportujeme **Average Marginal Effects (AME)** místo Odds Ratios / Relative Risk Ratios. AME ukazují změnu v procentních bodech a jsou ekonomům srozumitelnější.
@@ -148,8 +157,15 @@ Tato sekce představuje ekonometrickou verzi analýzy odborné náročnosti z bo
 
 - **Motivace:** `cluster_generative_ai` a `cluster_data_science__ml` jsou potenciálně cirkulární prediktory — skills v těchto clusterech přímo definují AI pozice.
 - **Metoda:** Model M3 byl přeodhadnut bez těchto dvou clusterů.
-- ⏳ _Výsledky budou doplněny po novém Stata runu._
-- **Očekávání:** Pseudo $R^2$ poklesne, ale ostatní skill clustery (Cloud, Dynamic Web, Data Engineering) by měly zvýšit své koeficienty, protože přebírají vysvětlovací sílu.
+- **Výsledek:** Pseudo $R^2$ **dramaticky pokleslo** z 36,7 % na **12,9 %** — GenAI a DS/ML clustery vysvětlovaly 24 p.b. variability!
+- **Co se stalo s ostatními clustery (AME srovnání M3 vs M3-nocirc):**
+  - Cloud Computing: +3,2 → **+6,2 p.b.** (zdvojnásobení)
+  - Dynamic Web: +4,8 → **+8,8 p.b.** (zdvojnásobení)
+  - Data Engineering: +1,3 → **+4,8 p.b.** (ztrojnásobení)
+  - DevOps/Containers: n.s. → **+2,4 p.b.*** (nově signifikantní)
+  - BI/Analytics: +2,3 → **+3,4 p.b.** (nárůst)
+  - Systems Programming: n.s. → **+3,6 p.b.*** (nově signifikantní)
+- 💡 **Interpretace:** Bez cirkulárních clusterů ostatní dovednosti přebírají vysvětlovací sílu. Model ale ztrácí 2/3 prediktivní schopnosti, což ukazuje, že GenAI a DS/ML clustery nesou unikátní informaci — nejsou redundantní s ostatními prediktory.
 
 ### 6. 🧬 Multinomiální logit — Rozlišení "používání AI" vs. "vývoj AI"
 
@@ -159,15 +175,14 @@ Toto je stěžejní sekce pro tezi diplomové práce: co odlišuje pozice, kter�
 
 | Prediktor | P(AI Integration) AME | P(Applied/Core AI) AME | Co to znamená |
 |---|---|---|---|
-| **Data Science / ML** | ⏳ | ⏳ | Applied AI vyžaduje ML výrazně silněji než Integration |
-| **Generative AI** | ⏳ | ⏳ | Obě kategorie silně, ale Applied AI ještě silněji |
-| **Systems Programming** | n.s. | ⏳ | Nízkoúrovňové programování rozlišuje Applied AI |
-| **Data Engineering** | n.s. | ⏳ | Data engineering je doménou Applied AI, ne Integration |
-| **Dynamic Web** | ⏳ | ⏳ | Obojí relevantní, Applied AI silněji |
-| **Frontend Development** | ⏳ | n.s. | Frontend je jen AI Integration, ne Applied AI |
-| **Enterprise Platforms** | ⏳ | n.s. | Enterprise platformy jen pro Integration |
-
-⏳ _Přesné AME hodnoty budou doplněny po novém Stata runu. Výše uvedené vzory signifikance (n.s. vs. ***) vycházejí z předchozího runu._
+| **Data Science / ML** | +14,3 p.b.*** | +11,8 p.b.*** | Obě kategorie silně, ale Integration mírně více |
+| **Generative AI** | +23,4 p.b.*** | +9,2 p.b.*** | Integration dominuje — GenAI nástroje jsou pro "používání AI" |
+| **Systems Programming** | -2,6 p.b.*** | +3,2 p.b.*** | 🔑 Rozlišuje: Applied AI vyžaduje, Integration NE |
+| **Data Engineering** | -1,3 p.b.* | +2,3 p.b.*** | 🔑 Data engineering = doména Applied AI |
+| **Dynamic Web** | +2,8 p.b.*** | +2,7 p.b.*** | Obojí relevantní, rovnoměrně |
+| **Frontend Development** | +4,4 p.b.*** | -0,9 p.b.* | Frontend je jen AI Integration, ne Applied AI |
+| **Enterprise Platforms** | +4,2 p.b.*** | -1,9 p.b.** | Enterprise platformy jen pro Integration |
+| **Cloud Computing** | +2,8 p.b.*** | +1,0 p.b.* | Mírně silněji pro Integration |
 
 > 💡 **Klíčová interpretace:** Skutečné AI pozice (Applied/Core) se od "pouhého používání AI" (Integration) liší tím, že vyžadují **fundamentální dovednosti** — data science/ML, systémové programování a data engineering. Naopak AI Integration je charakterizována **aplikačními dovednostmi** — frontend, enterprise platformy, generativní AI nástroje. Toto přímo validuje rozlišení mezi "rozumět AI" a "používat AI".
 
@@ -177,14 +192,12 @@ Toto je stěžejní sekce pro tezi diplomové práce: co odlišuje pozice, kter�
 
 | Job Family (vs. Data & AI) | P(AI Integration) AME | P(Applied/Core AI) AME |
 |---|---|---|
-| **DevOps & Cloud** | ⏳ | ⏳ |
-| **Software Developer** | ⏳ | ⏳ |
-| **Other** | ⏳ | ⏳ |
-| **Software Engineer** | ⏳ | ⏳ |
-| **Sr+ Software Engineer** | ⏳ | ⏳ |
-| **Management** | ⏳ | ⏳ |
-
-⏳ _AME hodnoty budou doplněny po novém Stata runu._
+| **DevOps & Cloud** | -0,8 p.b. (n.s.) | -6,6 p.b.*** |
+| **Software Developer** | -2,6 p.b.* | -6,9 p.b.*** |
+| **Other** | -0,2 p.b. (n.s.) | -8,1 p.b.*** |
+| **Software Engineer** | +0,6 p.b. (n.s.) | -4,1 p.b.*** |
+| **Sr+ Software Engineer** | +0,8 p.b. (n.s.) | -3,7 p.b.*** |
+| **Management** | +2,0 p.b. (n.s.) | -2,1 p.b. (n.s.) |
 
 > 💡 Oproti kategorii "Data & AI" mají všechny ostatní job families nižší pravděpodobnost Applied/Core AI. Management je zajímavě neutrální — manažeři v AI a non-AI firmách mají podobné AI požadavky.
 
@@ -207,7 +220,7 @@ Při analýze dat je naprosto klíčové věnovat pozornost i proměnným, u kte
 1. **AI prémie je reálná a měřitelná:** 7,5-9,6 % čisté prémie po kontrole všech relevantních faktorů. Prémie **roste monotónně** s hloubkou AI expertízy (potvrzeno ANOVA Bonferroni).
 2. **AI prémie existuje, ale není dominantním faktorem:** Zkušenosti (Junior -17,5 %, Senior+ +12,0 %), geografie (West +22,4 %) a typ pozice (Sr+ Engineer +17,3 %) mají na plat větší absolutní vliv. AI je aditivní bonus.
 3. **O AI rozhoduje role, ne firma:** Firemní profil predikuje AI požadavek špatně (Pseudo $R^2$ = 2,5 %), ale typ role a dovednosti velmi dobře (Pseudo $R^2$ = 35,9 %). AI prostupuje průřezově celým IT trhem.
-4. **Rozlišení "používání" vs. "vývoj" AI:** Multinomiální logit (reportováno pomocí AME) prokázal, že Applied/Core AI pozice se od AI Integration liší požadavkem na fundamentální dovednosti (Data Science/ML, Systems Programming), zatímco Integration pozice se vyznačují aplikačními dovednostmi (Frontend, Enterprise platformy). ⏳ _Přesné AME hodnoty budou doplněny po novém runu._
+4. **Rozlišení "používání" vs. "vývoj" AI:** Multinomiální logit (AME) prokázal, že Applied/Core AI pozice se od AI Integration liší požadavkem na fundamentální dovednosti (Data Science/ML +11,8 p.b., Systems Programming +3,2 p.b.), zatímco Integration pozice se vyznačují aplikačními dovednostmi (Frontend +4,4 p.b., Enterprise Platforms +4,2 p.b., Generative AI +23,4 p.b.).
 5. **AI pozice vyžadují širší portfolio dovedností:** Průměrně ~20 vs. ~16 skills — nárůst o cca 4 okruhy ($t = -19,7$; $p < 0,001$).
 
 ---
@@ -279,12 +292,12 @@ Všechny hodnoty byly vizuálně zkontrolovány proti zdrojovému logu. 🟢 = O
 ### 🔍 VIF diagnostika (Klinická kontrola multikolinearity)
 
 _(Ideálně pod 5, cokoliv pod 10 je akceptovatelné)_
-| Metrika | Hodnota VIF | Řádek v logu | Hodnocení kolinearity |
-|---|---|---|---|
-| Model A — **Mean VIF** | 1.79 | 1619 | 🟢 **Zcela čisté** (bez kolinearity) |
-| Model A — Max VIF (type_cat) | 5.09 | 1607 | 🟢 Hraniční 5, naprosto v pořádku |
-| Model B — **Mean VIF** | 1.92 | 1872 | 🟢 **Zcela čisté** (ukázkový průměr) |
-| Model B — Max VIF (job_family_num) | 6.53 | 1859 | 🟢 **Bezpečně pod limitní pomezí 10** |
+| Metrika | Hodnota VIF | Hodnocení kolinearity |
+|---|---|---|
+| Model A — **Mean VIF** | 1,79 | 🟢 **Zcela čisté** (bez kolinearity) |
+| Model B — **Mean VIF** | 1,92 | 🟢 **Zcela čisté** (ukázkový průměr) |
+| Model B-nojf — **Mean VIF** | 1,71 | 🟢 Nejnižší — bez job_family žádná kolinearita |
+| Model B-Mincer — **Mean VIF** | 2,13 | 🟢 Mírně vyšší kvůli experience+experience² (VIF 5,65), ale OK |
 
 ### 💸 T-test a Platové prémie
 
@@ -327,13 +340,19 @@ Dle dohodnuté specifikace tyto modely určují, _proč vůbec pozice vyžaduje 
 
 | Modely                       | N      | Pseudo $R^2$ | Konvergence                                    |
 | ---------------------------- | ------ | ------------ | ---------------------------------------------- |
-| **Logit M1** (Profil firmy)  | 17 848 | 2.5 %        | 🟢 4 iter.                                     |
-| **Mlogit M1** (Profil firmy) | 17 848 | 2.1 %        | 🟢 4 iter.                                     |
-| **Logit M2** (Profil role)   | 17 848 | 35.9 %       | 🟢 5 iter.                                     |
-| **Mlogit M2** (Profil role)  | 17 848 | 33.2 %       | 🟢 6 iter.                                     |
-| **Logit M3** (Kompletní)     | 17 848 | 36.4 %       | 🟢 5 iter.                                     |
-| **Mlogit M3** (Kompletní)    | 17 848 | 33.9 %       | 🟢 6 iter.                                     |
-| **Marginální efekty**        | —      | —            | 🟢 `margins, dydx(*)` u všech 6 modelů |
+| **Logit M1** (Profil firmy)  | 17 848 | 2,5 %        | 🟢 4 iter.                                     |
+| **Mlogit M1** (Profil firmy) | 17 848 | 2,1 %        | 🟢 4 iter.                                     |
+| **Logit M2** (Profil role)   | 17 848 | 35,9 %       | 🟢 5 iter.                                     |
+| **Mlogit M2** (Profil role)  | 17 848 | 33,2 %       | 🟢 6 iter.                                     |
+| **Logit M3** (Kompletní)     | 17 848 | 36,7 %       | 🟢 5 iter.                                     |
+| **Mlogit M3** (Kompletní)    | 17 848 | 33,9 %       | 🟢 6 iter.                                     |
+| **Logit M3a** (bez job_family)| 17 848| 35,8 %       | 🟢 5 iter.                                     |
+| **Mlogit M3a** (bez job_family)| 17 848| 32,8 %      | 🟢 6 iter.                                     |
+| **Logit M3b** (bez jf+seniority)| 17 848| 35,8 %    | 🟢 5 iter.                                     |
+| **Mlogit M3b** (bez jf+seniority)| 17 848| 32,7 %   | 🟢 6 iter.                                     |
+| **Logit M3-nocirc** (bez GenAI+DS/ML)| 17 848| 12,9 %| 🟢 5 iter. (výrazný propad — citlivostní test) |
+| **Mlogit M3-nocirc** (bez GenAI+DS/ML)| 17 848| 12,7 %| 🟢 6 iter.                                   |
+| **Marginální efekty**        | —      | —            | 🟢 `margins, dydx(*)` u všech 12 modelů |
 | **Hausman IIA test**         | —      | —            | 🟢 `capture hausman` proběhl bez chyby         |
 
 > ℹ️ Nízké Pseudo $R^2$ u M1 (2 %) je zcela očekávané — samotný firemní profil (sektor, typ, velikost) predikuje AI požadavek slabě. Vysoké Pseudo $R^2$ u M2/M3 (33–36 %) potvrzuje, že technologické skill clustery a job family jsou silnými prediktory AI poptávky.
@@ -354,7 +373,7 @@ Tato sekce připravuje odpovědi na metodologické námitky, které komise u st�
 
 **Potenciální námitka:** "Proč používáte dvě různé závislé proměnné pro AI požadavky? Nejsou nekonzistentní?"
 
-**Argument:** Dvě proměnné měří různé dimenze: `has_ai` (přísný filtr — specifické AI nástroje po odfiltrování buzzwords) vs. `ai_level` (širší pojetí — jakákoliv AI zmínka kategorizovaná do tierů). Toto rozlišení je záměrné — binární logit používá konzervativnější definici, mlogit pracuje s tiered klasifikací. Výsledky jsou **konzistentní napříč oběma definicemi**: logit M3 (has_ai) má Pseudo R² = 36,4 %, mlogit M3 (ai_level) má Pseudo R² = 33,9 %, a klíčové prediktory (GenAI, Data Science/ML clustery) dominují v obou modelech.
+**Argument:** Dvě proměnné měří různé dimenze: `has_ai` (přísný filtr — specifické AI nástroje po odfiltrování buzzwords) vs. `ai_level` (širší pojetí — jakákoliv AI zmínka kategorizovaná do tierů). Toto rozlišení je záměrné — binární logit používá konzervativnější definici, mlogit pracuje s tiered klasifikací. Výsledky jsou **konzistentní napříč oběma definicemi**: logit M3 (has_ai) má Pseudo R² = 36,7 %, mlogit M3 (ai_level) má Pseudo R² = 33,9 %, a klíčové prediktory (GenAI, Data Science/ML clustery) dominují v obou modelech.
 
 ### B3. Žádná inter-rater reliabilita LLM klasifikace
 
@@ -423,4 +442,4 @@ Toto je standardní limitace většiny mzdových studií založených na průře
 
 ---
 
-_Poslední aktualizace: 17. března 2026 — (1) opraveny remote statistiky (sloupcová vs řádková procenta), (2) přidány seniority cross-taby, (3) přidán OLS Model B bez job_family + Model B-Mincer s kontinuální experience+experience², (4) přidány Logit/Mlogit M3a (bez job_family) a M3b (bez job_family+seniority), (5) přidána citlivostní analýza bez GenAI a DS/ML clusterů (test cirkularity), (6) tabulky přepsány z RRR na AME, (7) logit interpretace přeformulována jako ekonometrická analýza odborné náročnosti, (8) ověřeno: margins bez atmeans. ⏳ Čísla z nových modelů budou doplněna po novém Stata runu._
+_Poslední aktualizace: 17. března 2026 — (1) opraveny remote statistiky (sloupcová vs řádková procenta), (2) přidány seniority cross-taby, (3) přidán OLS Model B bez job_family + Model B-Mincer s kontinuální experience+experience², (4) přidány Logit/Mlogit M3a (bez job_family) a M3b (bez job_family+seniority), (5) přidána citlivostní analýza bez GenAI a DS/ML clusterů (test cirkularity), (6) tabulky přepsány z RRR na AME, (7) logit interpretace přeformulována jako ekonometrická analýza odborné náročnosti, (8) ověřeno: margins bez atmeans. ✅ Všechny hodnoty aktualizovány z nového Stata runu (17. března 2026, 18:05)._
