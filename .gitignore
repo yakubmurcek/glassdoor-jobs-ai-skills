@@ -3,6 +3,8 @@
 data/outputs/old
 data/outputs/backups
 data/processed/
+data/inputs/*_relevant.csv
+data/outputs/*_relevant_ai.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

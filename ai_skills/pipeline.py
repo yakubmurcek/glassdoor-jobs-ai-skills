@@ -158,41 +158,69 @@ class JobAnalysisPipeline:
         # Create a wrapper callback that tracks progress for THIS session only
         processed_count = 0
         batch_num = 0
+        current_batch_size = [0]
+        
+        # Status callback for save/unsaved indicators
+        status_callback = getattr(progress_callback, '_status_callback', None)
         
         def overall_progress_callback(batch_completed: int, batch_total: int) -> None:
             """Wrapper to report progress for this session."""
             if progress_callback:
-                # Show progress for this session: current / to_process_this_session
-                current = processed_count + batch_completed
+                fraction = batch_completed / batch_total if batch_total > 0 else 0.0
+                current_rows = int(round(fraction * current_batch_size[0]))
+                current = processed_count + current_rows
                 progress_callback(current, remaining)
         
-        for batch_start in range(0, remaining, checkpoint_interval):
-            batch_end = min(batch_start + checkpoint_interval, remaining)
-            batch_df = df.iloc[batch_start:batch_end].copy()
-            batch_num += 1
-            
-            logger.info(
-                f"Batch {batch_num}: Processing rows {batch_start+1}-{batch_end} "
-                f"({batch_end}/{remaining})"
-            )
-            
-            # Run the pipeline on this batch with wrapped progress callback
-            batch_df = annotate_declared_skills(batch_df)
-            batch_df = self._annotate_job_descriptions(
-                batch_df, 
-                progress_callback=overall_progress_callback,
-                skip_llm=skip_llm
-            )
-            batch_df = reorder_columns(batch_df)
-            
-            # Save checkpoint (force=True to save every batch)
-            checkpoint_mgr.save_checkpoint(batch_df, force=True)
-            
-            processed_count += len(batch_df)
-            logger.info(
-                f"Batch {batch_num} complete. "
-                f"Progress: {processed_count}/{remaining} rows this session."
-            )
+        try:
+            for batch_start in range(0, remaining, checkpoint_interval):
+                batch_end = min(batch_start + checkpoint_interval, remaining)
+                batch_df = df.iloc[batch_start:batch_end].copy()
+                current_batch_size[0] = len(batch_df)
+                batch_num += 1
+                
+                logger.info(
+                    f"Batch {batch_num}: Processing rows {batch_start+1}-{batch_end} "
+                    f"({batch_end}/{remaining})"
+                )
+                
+                # Signal unsaved state
+                if status_callback:
+                    status_callback("⚠ unsaved — do not quit")
+                
+                # Run the pipeline on this batch with wrapped progress callback
+                batch_df = annotate_declared_skills(batch_df)
+                batch_df = self._annotate_job_descriptions(
+                    batch_df, 
+                    progress_callback=overall_progress_callback,
+                    skip_llm=skip_llm
+                )
+                batch_df = reorder_columns(batch_df)
+                
+                # Signal saving
+                if status_callback:
+                    status_callback("💾 saving...")
+                
+                # Save checkpoint (force=True to save every batch)
+                checkpoint_mgr.save_checkpoint(batch_df, force=True)
+                
+                processed_count += len(batch_df)
+                
+                # Signal saved
+                if status_callback:
+                    status_callback(f"✓ saved {processed_count}/{remaining}")
+                
+                logger.info(
+                    f"Batch {batch_num} complete. "
+                    f"Progress: {processed_count}/{remaining} rows this session."
+                )
+        except KeyboardInterrupt:
+            logger.info("Interrupt received! Saving progress...")
+            if status_callback:
+                status_callback("💾 saving (interrupted)...")
+            checkpoint_mgr.flush()
+            print(f"\n\nInterrupted! Progress saved: {processed_count}/{remaining} rows.")
+            print(f"Resume with: --resume")
+            return load_input_data(path=out_path) if out_path.exists() else df
             
         # Final flush (should be no-op but just in case)
         checkpoint_mgr.flush()

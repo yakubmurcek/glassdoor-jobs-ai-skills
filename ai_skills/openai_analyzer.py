@@ -223,6 +223,11 @@ class OpenAIJobAnalyzer:
         processed = 0
         task_num = 0
         
+        def _sub_batch_cb(sub_done: int, sub_total: int) -> None:
+            """Called after each API sub-batch inside a task."""
+            if progress_callback:
+                progress_callback(processed + sub_done, total_items * total_tasks)
+        
         # Task 1: AI Tier Classification
         tier_results: dict[str, Any] = {}
         if LLM_TASK_AI_TIER in ENABLED_LLM_TASKS:
@@ -235,6 +240,7 @@ class OpenAIJobAnalyzer:
                 system_prompt=ai_tier_instructions(),
                 prompt_builder=ai_tier_batch_prompt,
                 response_model=AITierBatchResponse,
+                progress_callback=_sub_batch_cb,
             )
             processed += total_items
             if progress_callback:
@@ -254,6 +260,7 @@ class OpenAIJobAnalyzer:
                 system_prompt=skills_instructions(),
                 prompt_builder=skills_batch_prompt,
                 response_model=SkillsBatchResponse,
+                progress_callback=_sub_batch_cb,
             )
             processed += total_items
             if progress_callback:
@@ -271,6 +278,7 @@ class OpenAIJobAnalyzer:
                 task_name="education",
                 batch_size=EDUCATION_BATCH_SIZE,
                 system_prompt=education_instructions(),
+                progress_callback=_sub_batch_cb,
             )
             processed += total_items
             if progress_callback:
@@ -292,6 +300,7 @@ class OpenAIJobAnalyzer:
         system_prompt: str,
         prompt_builder: Callable[[list[tuple[str, str, str]]], str],
         response_model: Type[T],
+        progress_callback: Callable[[int, int], None] | None = None,
     ) -> dict[str, Any]:
         """Run a single-task batch analysis with error isolation.
         
@@ -300,9 +309,11 @@ class OpenAIJobAnalyzer:
         """
         results: dict[str, Any] = {}
         failed_ids: list[str] = []
+        total = len(all_items)
+        items_done = 0
         
         # Process in batches
-        for i in range(0, len(all_items), batch_size):
+        for i in range(0, total, batch_size):
             batch = all_items[i:i + batch_size]
             batch_ids = [item[0] for item in batch]
             
@@ -326,6 +337,10 @@ class OpenAIJobAnalyzer:
             except Exception as e:
                 logger.error(f"[{task_name}] Batch failed: {e}")
                 failed_ids.extend(batch_ids)
+            
+            items_done += len(batch)
+            if progress_callback:
+                progress_callback(items_done, total)
             
             time.sleep(self.delay_seconds)
         
@@ -362,6 +377,7 @@ class OpenAIJobAnalyzer:
         task_name: str,
         batch_size: int,
         system_prompt: str,
+        progress_callback: Callable[[int, int], None] | None = None,
     ) -> dict[str, EducationResultWithId]:
         """Run education task with 4-tuple items (includes education column).
         
@@ -369,9 +385,11 @@ class OpenAIJobAnalyzer:
         """
         results: dict[str, EducationResultWithId] = {}
         failed_ids: list[str] = []
+        total = len(all_items)
+        items_done = 0
         
         # Process in batches
-        for i in range(0, len(all_items), batch_size):
+        for i in range(0, total, batch_size):
             batch = all_items[i:i + batch_size]
             batch_ids = [item[0] for item in batch]
             
@@ -395,6 +413,10 @@ class OpenAIJobAnalyzer:
             except Exception as e:
                 logger.error(f"[{task_name}] Batch failed: {e}")
                 failed_ids.extend(batch_ids)
+            
+            items_done += len(batch)
+            if progress_callback:
+                progress_callback(items_done, total)
             
             time.sleep(self.delay_seconds)
         

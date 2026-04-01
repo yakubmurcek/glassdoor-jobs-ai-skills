@@ -417,16 +417,16 @@ def _handle_clean_stata(args: argparse.Namespace) -> int:
     # Order matters: specific patterns first, catch-all last
     # Includes broad German string matching to capture >94% of job titles
     _JOB_FAMILY_PATTERNS = [
-        ("Management", r"(?i)manager|director|architect|tech\s*lead|vp\s|head\sof|leiter|führung|\bproducer\b|\bpo\b|product\s*owner|scrum\s*master|koordinator"),
-        ("Security", r"(?i)secur|cyber|\bsoc\b|\bsiem\b|penetration|sicherheit|firewall"),
+        ("Management", r"(?i)manager|director|architect|tech\s*lead|vp\s|head\sof|leiter|führung|\bproducer\b|\bpo\b|product\s*owner|scrum\s*master|koordinator|technical\s*lead"),
+        ("Security", r"(?i)secur|cyber|\bsoc\b|\bsiem\b|penetration|sicherheit|firewall|\bgrc\b"),
         ("QA & Testing", r"(?i)\bqa\b|test(?:er|ing|automatisierung)\b|test\s*(?:engineer|auto)|quality\s*(?:assurance|engineer|analyst)|sdet|\bqe\b|qualität"),
         ("DevOps & Cloud", r"(?i)devops|devsecops|site\s*reliab|\bsre\b|cloud|platform|infrastructure|infrastruktur"),
         ("Data & AI", r"(?i)data\s*eng|data\s*scien|machine\s*learn|\bai\b|\bml\b|data\s*analy|business\s*(?:intel|analyst|systems\s*analyst)|daten|\bki\b|künstliche\s*intelligenz"),
-        ("Systems & Embedded", r"(?i)system\w*\s*eng|embedded|firmware|mainframe|systemadministrator|systemingenieur|netzwerk|network|it[- ]?support|service\s*eng|helpdesk|\bit\s*techniker"),
-        ("Frontend & Design", r"(?i)front[\s-]?end|frontend|\bui[\s/]ux\b|ux\s*design|ui\s*design|\bui\s*(?:develop|engineer)|grafik|game\s*design|art\s*lead"),
+        ("Systems & Embedded", r"(?i)system\w*\s*eng|embedded|firmware|mainframe|systemadministrator|systemingenieur|netzwerk|network|it[- ]?support|service\s*eng|helpdesk|\bit\s*techniker|database\s*admin|\bdba\b"),
+        ("Frontend & Design", r"(?i)front[\s-]?end|frontend|\bui[\s/]ux\b|ux\s*design|ui\s*design|\bui\s*(?:develop|engineer)|grafik|game\s*design|art\s*lead|web\s*design|product\s*design|software\s*design"),
         ("Sr+ Software Engineer", r"(?i)(?:senior|staff|principal|lead)\s.*(?:software\s*eng|backend\s*eng|full[\s-]?stack\s*eng|\bdeveloper\b|\bengineer\b)"),
-        ("Software Developer", r"(?i)software\s*develop|full[\s-]?stack|fullstack|\.net\s*develop|java\s*develop|web\s*develop|back[\s-]?end\s*develop|programmer[\s/]*analyst|application\s*develop|react\s*(?:native\s*)?develop|php\s*develop|python\s*develop|ruby\s*develop|angular\s*develop|wordpress\s*develop|javascript\s*develop|flutter\s*develop|html\s*develop|coldfusion\s*develop|\bweb\s*app\w*\s*(?:develop|program)|(?:it|junior|senior)\s*develop|^develop|entwickler|programmierer|informatik|\bdeveloper\b|\bentwicklung\b"),
-        ("Software Engineer", r"(?i)software\s*eng|backend\s*eng|full[\s-]?stack\s*eng|integration\s*eng|product\s*eng|java\s*eng|validation\s*eng|softwareentwickler|application\s*eng|requirements\s*eng|\bengineer\b|ingenieur"),
+        ("Software Developer", r"(?i)software\s*develop|full[\s-]?stack|fullstack|\.net\s*develop|java\s*develop|web\s*develop|back[\s-]?end\s*develop|programmer[\s/]*analyst|application\s*develop|react\s*(?:native\s*)?develop|php\s*develop|python\s*develop|ruby\s*develop|angular\s*develop|wordpress\s*develop|javascript\s*develop|flutter\s*develop|html\s*develop|coldfusion\s*develop|\bweb\s*app\w*\s*(?:develop|program)|(?:it|junior|senior)\s*develop|^develop|entwickler|programmierer|informatik|\bdeveloper\b|\bentwicklung\b|mobile\s*app"),
+        ("Software Engineer", r"(?i)software\s*eng|backend\s*eng|full[\s-]?stack\s*eng|integration\s*eng|product\s*eng|java\s*eng|validation\s*eng|softwareentwickler|application\s*eng|requirements\s*eng|analyst|specialist|associate|\bengineer\b|ingenieur"),
     ]
     if "job_title" in df.columns:
         import re as _re
@@ -444,27 +444,33 @@ def _handle_clean_stata(args: argparse.Namespace) -> int:
     # --- 3. NACE Sector (from sector) ---
     _SECTOR_TO_NACE = {
         "Information Technology": "J", "Informationstechnologie": "J",
-        "Media & Communication": "J", "Telecommunications": "J", "Media": "J", "Medien & Kommunikation": "J",
+        "Media & Communication": "J", "Telecommunications": "J", "Media": "J", "Medien & Kommunikation": "J", "Media and communication": "J", "Media and communication": "J",
         "Manufacturing": "C", "Produktion": "C",
-        "Aerospace & Defense": "C", "Pharmaceutical & Biotechnology": "C", "Luft- & Raumfahrt, Verteidigung": "C",
-        "Financial Services": "K", "Insurance": "K", "Finanzen": "K",
-        "Management & Consulting": "M", "Legal": "M", "Management & Beratung": "M",
+        "Aerospace & Defense": "C", "Aerospace and defence": "C", "Pharmaceutical & Biotechnology": "C", "Luft- & Raumfahrt, Verteidigung": "C", "Pharmaceutical and biotechnology": "C", "Aerospace and defence": "C", 
+        "Financial Services": "K", "Insurance": "K", "Finanzen": "K", "Finance": "K",
+        "Management & Consulting": "M", "Legal": "M", "Management & Beratung": "M", "Management and consulting": "M", "Management and consulting": "M",
         "Healthcare": "Q", "Gesundheitswesen": "Q",
-        "Retail & Wholesale": "G", "Einzel- & Großhandel": "G",
+        "Retail & Wholesale": "G", "Einzel- & Großhandel": "G", "Retail and wholesale": "G", "Retail and wholesale": "G",
         "Education": "P", "Bildungwesen": "P",
-        "Human Resources & Staffing": "N", "Personalwesen": "N",
-        "Government & Public Administration": "O",
-        "Transportation & Logistics": "H", "Transport & Logistik": "H",
-        "Construction, Repair & Maintenance Services": "F", "Bauwesen, Reparatur & Instandhaltung": "F",
-        "Real Estate": "L",
-        "Hotels & Travel Accommodation": "I", "Restaurants & Food Service": "I",
+        "Human Resources & Staffing": "N", "Personalwesen": "N", "Human resources and staffing": "N", "Human resources and staffing": "N",
+        "Government & Public Administration": "O", "Government and public administration": "O",
+        "Transportation & Logistics": "H", "Transport & Logistik": "H", "Transportation and logistics": "H", "Transportation and logistics": "H",
+        "Construction, Repair & Maintenance Services": "F", "Bauwesen, Reparatur & Instandhaltung": "F", "Construction, repair and maintenance": "F", "Construction, repair and maintenance": "F",
+        "Real Estate": "L", "Real estate": "L",
+        "Hotels & Travel Accommodation": "I", "Restaurants & Food Service": "I", "Hotel and travel accommodation": "I", "Hotels and travel accommodation": "I", "Restaurants and food service": "I",
         "Agriculture": "A",
-        "Arts, Entertainment & Recreation": "R",
-        "Nonprofit & NGO": "S", "Personal Consumer Services": "S",
-        "Energy, Mining & Utilities": "D", "Energie, Bergbau, Versorgungswirtschaft": "D",
+        "Arts, Entertainment & Recreation": "R", "Arts, entertainment and recreation": "R",
+        "Nonprofit & NGO": "S", "Personal Consumer Services": "S", "Non-profit and NGO": "S", "Personal consumer services": "S",
+        "Energy, Mining & Utilities": "D", "Energie, Bergbau, Versorgungswirtschaft": "D", "Energy, mining, utilities": "D", "Energy, mining, utilities": "D",
     }
     if "sector" in df.columns:
         df["sector_nace"] = df["sector"].map(_SECTOR_TO_NACE).fillna("Unknown")
+        # --- Symmetry Polish: Add Missing Structural Columns ---
+        if "desc_rationale_llm" not in df.columns:
+            df["desc_rationale_llm"] = ""
+        if "ceo_photo" not in df.columns:
+            df["ceo_photo"] = ""
+            
         nace_counts = df["sector_nace"].value_counts().to_dict()
         print(f"Created 'sector_nace': {nace_counts}")
     
@@ -556,8 +562,17 @@ def _handle_analyze(args: argparse.Namespace) -> int:
     progress = None
     callback: Callable[[int, int], None] | None = None
     if not args.no_progress and sys.stderr.isatty():
-        progress = _CLIProgressBar("Analyzing job descriptions")
-        callback = progress.update
+        progress = _CLIProgressBar("Analyzing", width=20)
+
+        class _ProgressCallback:
+            """Wrapper so we can attach _status_callback as an attribute."""
+            def __init__(self, bar: _CLIProgressBar) -> None:
+                self._bar = bar
+                self._status_callback = bar.set_status
+            def __call__(self, completed: int, total: int) -> None:
+                self._bar.update(completed, total)
+
+        callback = _ProgressCallback(progress)
 
     output_path: Path | None = args.output_csv
     if output_path is None and args.input_csv is not None:
@@ -1056,7 +1071,7 @@ def main(argv: Iterable[str] | None = None) -> int:
 
 
 class _CLIProgressBar:
-    """ASCII progress bar with inline percentage and spinner animation."""
+    """ASCII progress bar with inline percentage, spinner, and status text."""
 
     def __init__(
         self, message: str, width: int = 40, refresh_interval: float = 0.1
@@ -1065,6 +1080,7 @@ class _CLIProgressBar:
         self.width = max(10, width)
         self.current = 0
         self.total = 0
+        self.status = ""
         self._active = True
         self._refresh_interval = max(0.05, refresh_interval)
         self._fill_char = "█"
@@ -1083,6 +1099,11 @@ class _CLIProgressBar:
         self.total = max(total, 0)
         safe_total = max(self.total, 1)
         self.current = max(0, min(completed, safe_total))
+        self._render()
+
+    def set_status(self, status: str) -> None:
+        """Update the status text shown after the progress bar."""
+        self.status = status
         self._render()
 
     def finish(self) -> None:
@@ -1131,6 +1152,8 @@ class _CLIProgressBar:
             line = (
                 f"{self.message} {spinner} [{bar}] {completed}/{total_label}"
             )
+            if self.status:
+                line += f"  {self.status}"
             self._write_line(line)
 
     def _write_line(self, line: str) -> None:
