@@ -768,26 +768,16 @@ display "=============================================================="
 * -----------------------------------------------------------------------
 * Cíl: Jaký typ firmy, v jakém sektoru a lokalitě požaduje AI?
 
-display _n "--- 6B.1a Logit Model 1: Profil firmy ---"
-logit has_ai ///
-    i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
-    i.region_num, or
-estimates store logit_m1
-display _n "--- 6B.1b Marginalni efekty Model 1 ---"
-margins, dydx(*)
-
-display _n "--- 6B.1c Mlogit Model 1: Profil firmy ---"
+display _n "--- 6B.1a Mlogit Model 1: Profil firmy ---"
 mlogit ai_level ///
     i.sector_nace_num ///
     i.type_cat ///
     i.size_cat ///
     i.region_num, baseoutcome(0) rrr
 estimates store mlogit_m1
-display _n "--- 6B.1d Marginalni efekty Mlogit M1: P(AI Integration) ---"
+display _n "--- 6B.1b Marginalni efekty Mlogit M1: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
-display _n "--- 6B.1e Marginalni efekty Mlogit M1: P(Applied/Core AI) ---"
+display _n "--- 6B.1c Marginalni efekty Mlogit M1: P(Applied/Core AI) ---"
 margins, dydx(*) predict(outcome(2))
 
 * -----------------------------------------------------------------------
@@ -795,26 +785,16 @@ margins, dydx(*) predict(outcome(2))
 * -----------------------------------------------------------------------
 * Cíl: Souvisí požadavek na AI s typem dovedností a profilem uchazeče?
 
-display _n "--- 6B.2a Logit Model 2: Profil role a cloveka ---"
-logit has_ai ///
-    cluster_* ///
-    i.job_family_num ///
-    ib1.edu_logit ///
-    ib3.exp_category, or
-estimates store logit_m2
-display _n "--- 6B.2b Marginalni efekty Model 2 ---"
-margins, dydx(*)
-
-display _n "--- 6B.2c Mlogit Model 2: Profil role a cloveka ---"
+display _n "--- 6B.2a Mlogit Model 2: Profil role a cloveka ---"
 mlogit ai_level ///
     cluster_* ///
     i.job_family_num ///
     ib1.edu_logit ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m2
-display _n "--- 6B.2d Marginalni efekty Mlogit M2: P(AI Integration) ---"
+display _n "--- 6B.2b Marginalni efekty Mlogit M2: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
-display _n "--- 6B.2e Marginalni efekty Mlogit M2: P(Applied/Core AI) ---"
+display _n "--- 6B.2c Marginalni efekty Mlogit M2: P(Applied/Core AI) ---"
 margins, dydx(*) predict(outcome(2))
 
 * -----------------------------------------------------------------------
@@ -822,34 +802,7 @@ margins, dydx(*) predict(outcome(2))
 * -----------------------------------------------------------------------
 * Cíl: Kompletní pohled — jak firemní profil, tak profil role a člověka
 
-display _n "--- 6B.3a Logit Model 3: Kompletni ---"
-logit has_ai ///
-    i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
-    i.region_num ///
-    cluster_* ///
-    i.job_family_num ///
-    ib1.edu_logit ///
-    ib3.exp_category, or
-estimates store logit_m3
-display _n "--- 6B.3b Marginalni efekty Model 3 ---"
-margins, dydx(*)
-
-* --- 6B.3f Hosmer-Lemeshow test (Logit M3) ---
-display _n "--- 6B.3f Hosmer-Lemeshow goodness-of-fit test (Logit M3) ---"
-quietly logit has_ai ///
-    i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
-    i.region_num ///
-    cluster_* ///
-    i.job_family_num ///
-    ib1.edu_logit ///
-    ib3.exp_category
-estat gof, group(10)
-
-display _n "--- 6B.3c Mlogit Model 3: Kompletni ---"
+display _n "--- 6B.3a Mlogit Model 3: Kompletni ---"
 mlogit ai_level ///
     i.sector_nace_num ///
     i.type_cat ///
@@ -860,18 +813,15 @@ mlogit ai_level ///
     ib1.edu_logit ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m3
-display _n "--- 6B.3d Marginalni efekty Mlogit M3: P(AI Integration) ---"
+display _n "--- 6B.3b Marginalni efekty Mlogit M3: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
-display _n "--- 6B.3e Marginalni efekty Mlogit M3: P(Applied/Core AI) ---"
+display _n "--- 6B.3c Marginalni efekty Mlogit M3: P(Applied/Core AI) ---"
 margins, dydx(*) predict(outcome(2))
 
 * -----------------------------------------------------------------------
 * Srovnávací tabulky Logit a Mlogit modelů
 * -----------------------------------------------------------------------
-display _n "--- 6B.4 Porovnani Logit modelu 1, 2, 3 ---"
-estimates table logit_m1 logit_m2 logit_m3, star stats(N ll chi2)
-
-display _n "--- 6B.5 Porovnani Mlogit modelu 1, 2, 3 ---"
+display _n "--- 6B.4 Porovnani Mlogit modelu 1, 2, 3 ---"
 estimates table mlogit_m1 mlogit_m2 mlogit_m3, star stats(N ll chi2)
 
 * Hausman test IIA (na kompletním modelu 3)
@@ -898,20 +848,7 @@ estimates drop hausman_full hausman_reduced
 * MODEL 3a: Kompletní BEZ job_family (test mediace)
 * -----------------------------------------------------------------------
 * job_family muze byt mediator — primo v sobe zahrnuje typ dovednosti
-display _n "--- 6B.7a Logit Model 3a: Kompletni bez job_family ---"
-logit has_ai ///
-    i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
-    i.region_num ///
-    cluster_* ///
-    ib1.edu_logit ///
-    ib3.exp_category, or
-estimates store logit_m3a
-display _n "--- 6B.7b Marginalni efekty Logit M3a ---"
-margins, dydx(*)
-
-display _n "--- 6B.7c Mlogit Model 3a: Kompletni bez job_family ---"
+display _n "--- 6B.7a Mlogit Model 3a: Kompletni bez job_family ---"
 mlogit ai_level ///
     i.sector_nace_num ///
     i.type_cat ///
@@ -921,28 +858,16 @@ mlogit ai_level ///
     ib1.edu_logit ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m3a
-display _n "--- 6B.7d Marginalni efekty Mlogit M3a: P(AI Integration) ---"
+display _n "--- 6B.7b Marginalni efekty Mlogit M3a: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
-display _n "--- 6B.7e Marginalni efekty Mlogit M3a: P(Applied/Core AI) ---"
+display _n "--- 6B.7c Marginalni efekty Mlogit M3a: P(Applied/Core AI) ---"
 margins, dydx(*) predict(outcome(2))
 
 * -----------------------------------------------------------------------
 * MODEL 3b: Kompletní BEZ job_family A BEZ seniority (test mediace)
 * -----------------------------------------------------------------------
 * job_family a seniorita mohou primo v sobe zahrnovat pozadavky na skills — potencialni mediatory
-display _n "--- 6B.8a Logit Model 3b: Bez job_family a seniority ---"
-logit has_ai ///
-    i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
-    i.region_num ///
-    cluster_* ///
-    ib1.edu_logit, or
-estimates store logit_m3b
-display _n "--- 6B.8b Marginalni efekty Logit M3b ---"
-margins, dydx(*)
-
-display _n "--- 6B.8c Mlogit Model 3b: Bez job_family a seniority ---"
+display _n "--- 6B.8a Mlogit Model 3b: Bez job_family a seniority ---"
 mlogit ai_level ///
     i.sector_nace_num ///
     i.type_cat ///
@@ -951,17 +876,15 @@ mlogit ai_level ///
     cluster_* ///
     ib1.edu_logit, baseoutcome(0) rrr
 estimates store mlogit_m3b
-display _n "--- 6B.8d Marginalni efekty Mlogit M3b: P(AI Integration) ---"
+display _n "--- 6B.8b Marginalni efekty Mlogit M3b: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
-display _n "--- 6B.8e Marginalni efekty Mlogit M3b: P(Applied/Core AI) ---"
+display _n "--- 6B.8c Marginalni efekty Mlogit M3b: P(Applied/Core AI) ---"
 margins, dydx(*) predict(outcome(2))
 
 * -----------------------------------------------------------------------
 * Srovnávací tabulky: Model 3 vs 3a vs 3b
 * -----------------------------------------------------------------------
-display _n "--- 6B.9 Porovnani Logit M3 vs M3a (bez jf) vs M3b (bez jf+exp) ---"
-estimates table logit_m3 logit_m3a logit_m3b, star stats(N ll chi2)
-display _n "--- 6B.10 Porovnani Mlogit M3 vs M3a vs M3b ---"
+display _n "--- 6B.5 Porovnani Mlogit M3 vs M3a vs M3b ---"
 estimates table mlogit_m3 mlogit_m3a mlogit_m3b, star stats(N ll chi2)
 
 * -----------------------------------------------------------------------
@@ -982,21 +905,7 @@ display "=============================================================="
 rename cluster_generative_ai _excl_genai
 rename cluster_data_science__ml _excl_dsml
 
-display _n "--- 6C.1a Logit M3 bez GenAI a DS/ML ---"
-logit has_ai ///
-    i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
-    i.region_num ///
-    cluster_* ///
-    i.job_family_num ///
-    ib1.edu_logit ///
-    ib3.exp_category, or
-estimates store logit_m3_nocirc
-display _n "--- 6C.1b Marginalni efekty Logit M3 bez cirkularnich clusteru ---"
-margins, dydx(*)
-
-display _n "--- 6C.2a Mlogit M3 bez GenAI a DS/ML ---"
+display _n "--- 6C.1a Mlogit M3 bez GenAI a DS/ML ---"
 mlogit ai_level ///
     i.sector_nace_num ///
     i.type_cat ///
@@ -1007,9 +916,9 @@ mlogit ai_level ///
     ib1.edu_logit ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m3_nocirc
-display _n "--- 6C.2b Marginalni efekty Mlogit M3 nocirc: P(AI Integration) ---"
+display _n "--- 6C.1b Marginalni efekty Mlogit M3 nocirc: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
-display _n "--- 6C.2c Marginalni efekty Mlogit M3 nocirc: P(Applied/Core AI) ---"
+display _n "--- 6C.1c Marginalni efekty Mlogit M3 nocirc: P(Applied/Core AI) ---"
 margins, dydx(*) predict(outcome(2))
 
 * Vratit prejmenovane clustery
@@ -1017,9 +926,7 @@ rename _excl_genai cluster_generative_ai
 rename _excl_dsml cluster_data_science__ml
 
 * Srovnani: jak moc se zmeni ostatni koeficienty bez cirkularnich prediktoru?
-display _n "--- 6C.3 Porovnani Logit M3 vs M3-nocirc ---"
-estimates table logit_m3 logit_m3_nocirc, star stats(N ll chi2)
-display _n "--- 6C.4 Porovnani Mlogit M3 vs M3-nocirc ---"
+display _n "--- 6C.2 Porovnani Mlogit M3 vs M3-nocirc ---"
 estimates table mlogit_m3 mlogit_m3_nocirc, star stats(N ll chi2)
 
 

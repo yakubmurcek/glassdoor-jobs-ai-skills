@@ -140,15 +140,54 @@ replace exp_category = 4 if experience_min_llm > 5 & experience_min_llm < .
 
 * Plat
 destring salary_min salary_mid salary_max, replace force
-replace salary_min = salary_min * 2080 if pay_period == "HOURLY"
-replace salary_mid = salary_mid * 2080 if pay_period == "HOURLY"
-replace salary_max = salary_max * 2080 if pay_period == "HOURLY"
+
+* --- Konverze men na USD (scraping period: Sep-Oct 2025) ---
+* Pevne kurzy: prumerny ECB/RBI kurz za obdobi scrapingu
+display _n "--- Konverze men na USD ---"
+local eur_usd = 1.165
+local inr_usd = 88
+
+* Drop rows with non-standard or missing currencies
+* DE: 1 COP + 1 USD row (no salary data anyway)
+* IN: 2 rows with empty currency but non-empty salary (unknown currency)
+drop if country == "DE" & !inlist(pay_currency, "EUR", "")
+drop if country == "IN" & pay_currency == "" & salary_mid != .
+
+* Konverze EUR na USD
+foreach var of varlist salary_min salary_mid salary_max {
+    replace `var' = `var' * `eur_usd' if pay_currency == "EUR"
+}
+
+* Konverze INR na USD
+foreach var of varlist salary_min salary_mid salary_max {
+    replace `var' = `var' / `inr_usd' if pay_currency == "INR"
+}
+
+display "Vsechny platy nyni v USD"
+
+* Prepocet hodinovych mezd na rocni (country-specific hours)
+* US: 2080 h/rok (40h x 52w), DE: 1607 h/rok (OECD 2024), IN: 1920 h/rok (48h x 40w)
+replace salary_min = salary_min * 2080 if pay_period == "HOURLY" & country == "US"
+replace salary_mid = salary_mid * 2080 if pay_period == "HOURLY" & country == "US"
+replace salary_max = salary_max * 2080 if pay_period == "HOURLY" & country == "US"
+
+replace salary_min = salary_min * 1607 if pay_period == "HOURLY" & country == "DE"
+replace salary_mid = salary_mid * 1607 if pay_period == "HOURLY" & country == "DE"
+replace salary_max = salary_max * 1607 if pay_period == "HOURLY" & country == "DE"
+
+replace salary_min = salary_min * 1920 if pay_period == "HOURLY" & country == "IN"
+replace salary_mid = salary_mid * 1920 if pay_period == "HOURLY" & country == "IN"
+replace salary_max = salary_max * 1920 if pay_period == "HOURLY" & country == "IN"
+
+* Prepocet mesicnich mezd na rocni (12 mesicu — univerzalni)
 replace salary_min = salary_min * 12 if pay_period == "MONTHLY"
 replace salary_mid = salary_mid * 12 if pay_period == "MONTHLY"
 replace salary_max = salary_max * 12 if pay_period == "MONTHLY"
 
-* Outliery
-replace salary_mid = . if salary_mid < 20000 | salary_mid > 500000
+* Outliery (vsechny platy nyni v USD po konverzi)
+* Dolni mez $3K: zachyti near-zero / chyby (indicke IT median ~$6.8K)
+* Horni mez $500K: stejna jako US-only soubor
+replace salary_mid = . if salary_mid < 3000 | salary_mid > 500000
 gen ln_salary = ln(salary_mid)
 
 * Ostatní categorical covariates
@@ -271,15 +310,19 @@ display _n "=============================================================="
 display "6. CROSS-COUNTRY LOGISTICKE MODELY"
 display "=============================================================="
 
-display _n "--- 6.1 Modely Pravdepodobnosti poctu AI roli x Zeme ---"
-logit has_ai ///
+display _n "--- 6.1 Mlogit: Pravdepodobnost AI urovne x Zeme ---"
+mlogit ai_level ///
     i.country_id ///
     i.sector_nace_num ///
     i.type_cat i.size_cat ///
     cluster_* ///
     i.job_family_num ///
-    ib1.edu_logit ib3.exp_category, or
-estimates store pooled_logit
+    ib1.edu_logit ib3.exp_category, baseoutcome(0) rrr
+estimates store pooled_mlogit
+display _n "--- 6.2 Marginalni efekty Mlogit: P(AI Integration) ---"
+margins, dydx(*) predict(outcome(1))
+display _n "--- 6.3 Marginalni efekty Mlogit: P(Applied/Core AI) ---"
+margins, dydx(*) predict(outcome(2))
 
 
 * ==============================================================================
@@ -289,4 +332,6 @@ display _n "=============================================================="
 display "CROSS-COUNTRY ANALYZA DOKONCENA"
 display "=============================================================="
 estimates table pooled_model_b interaction_model, star stats(N r2 r2_a)
+display _n "--- Mlogit vysledky ---"
+estimates table pooled_mlogit, star stats(N ll chi2)
 log close
