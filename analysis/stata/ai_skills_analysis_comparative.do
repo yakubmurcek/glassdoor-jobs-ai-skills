@@ -50,26 +50,29 @@ log using "$outdir/ai_skills_comparative_analysis.log", replace text
 
 * 2.1 US Dataset
 import delimited "$datadir/us_relevant_ai_stata.csv", delimiter(";") clear varnames(1) encoding(utf8)
+capture drop country
 gen country = "US"
 tempfile us_data
 save `us_data'
 
 * 2.2 DE Dataset
 import delimited "$datadir/de/de_relevant_ai_stata.csv", delimiter(";") clear varnames(1) encoding(utf8)
+capture drop country
 gen country = "DE"
 tempfile de_data
 save `de_data'
 
 * 2.3 IN Dataset
 import delimited "$datadir/in_relevant_ai_stata.csv", delimiter(";") clear varnames(1) encoding(utf8)
+capture drop country
 gen country = "IN"
 tempfile in_data
 save `in_data'
 
 * 2.4 Merge do jednoho analyzovaneho poolu
 use `us_data', clear
-append using `de_data'
-append using `in_data'
+append using `de_data', force
+append using `in_data', force
 
 display "Pocet pozorovani celkem po spojeni (US+DE+IN): " _N
 tab country
@@ -195,7 +198,7 @@ gen type_cat = .
 replace type_cat = 0 if inlist(type, "", "Unknown", "Contract", "Self-employed", "Private Practice / Firm", "Franchise") 
 replace type_cat = 1 if inlist(type, "Company - Private", "Subsidiary or Business Segment")
 replace type_cat = 2 if type == "Company - Public"
-replace type_cat = 4 if inlist(type, "Nonprofit Organization", "Government", "College / University", "School / School District", "Hospital")
+replace type_cat = 3 if inlist(type, "Nonprofit Organization", "Government", "College / University", "School / School District", "Hospital")
 
 replace size = "Unknown" if size == ""
 gen size_cat = .
@@ -207,6 +210,11 @@ replace size_cat = 4 if size == "501 to 1000 Employees"
 replace size_cat = 5 if size == "1001 to 5000 Employees"
 replace size_cat = 6 if size == "5001 to 10000 Employees"
 replace size_cat = 7 if size == "10000+ Employees"
+
+* Audit: check missing coverage for categorical vars
+display _n "--- Audit: missing obs in type_cat and size_cat ---"
+tab type_cat, missing
+tab size_cat, missing
 
 replace sector_nace = "Unknown" if sector_nace == ""
 replace sector_nace = "Other" if !inlist(sector_nace, "J", "C", "K", "M", "Q", "Unknown")
@@ -284,14 +292,17 @@ estimates store pooled_model_b
 * --- 5.2 INTERAKCNI MODEL: AI mzdova premie podla zeme ---
 * KLICOVA ANALYZA PRO DIPLOMKU: Pta se, zdali "wage premium za znalost AI"
 * se statisticky signifikantne lisi podle toho, jestli pracujete v US, DE, nebo IN.
+* Pouzivame GRADOVANY ai_level (0=zadny AI, 1=AI integrace, 2=Applied/Core AI),
+* ktery je informativnejsi nez binarni has_ai a prokazal signifikanci v Modelu B.
 
-display _n "--- 5.2 Interakcni Model: Wage AI Premium lomeno zemi ---"
-display "Base level pro country je definovan Stata (typicky abecedne, asi DE)."
-display "Toto nam rekne % rozdil zvyseni platu za AI v zavislosti od regionu."
+display _n "--- 5.2 Interakcni Model: Wage AI Premium (ai_level) lomeno zemi ---"
+display "Base level pro country je definovan Stata (abecedne = DE)."
+display "Base level pro ai_level = 0 (zadna AI). Interakce testuje, zda se"
+display "gradovana AI premie statisticky lisi mezi DE, IN a US."
 
 regress ln_salary ///
     cluster_* ///
-    i.country_id##i.has_ai ///
+    i.country_id##i.ai_level ///
     i.location_market_num ///
     i.sector_nace_num ///
     is_remote ///
@@ -300,7 +311,8 @@ regress ln_salary ///
     i.edu_ols ib3.exp_category ///
     if ln_salary != ., vce(robust)
 estimates store interaction_model
-testparm i.country_id#1.has_ai
+* Test: jsou interakcni cleny country x ai_level spolecne signifikantni?
+testparm i.country_id#i.ai_level
 
 
 * ==============================================================================

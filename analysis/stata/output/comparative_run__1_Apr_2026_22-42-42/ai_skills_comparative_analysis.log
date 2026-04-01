@@ -1,0 +1,1585 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata\output/comparative_run__1_Apr_2026_22-42-42/ai_skills_comparative_analysis.log
+  log type:  text
+ opened on:   1 Apr 2026, 22:42:42
+
+. 
+. 
+. * ==============================================================================
+. * 2. IMPORT DAT A APPENDING
+. * ==============================================================================
+. 
+. * 2.1 US Dataset
+. import delimited "$datadir/us_relevant_ai_stata.csv", delimiter(";") clear varnames(1) encoding(utf8)
+(75 vars, 18,464 obs)
+
+. capture drop country
+
+. gen country = "US"
+
+. tempfile us_data
+
+. save `us_data'
+file C:\Users\murcj\AppData\Local\Temp\ST_4f24_000001.tmp saved
+
+. 
+. * 2.2 DE Dataset
+. import delimited "$datadir/de/de_relevant_ai_stata.csv", delimiter(";") clear varnames(1) encoding(utf8)
+(75 vars, 9,254 obs)
+
+. capture drop country
+
+. gen country = "DE"
+
+. tempfile de_data
+
+. save `de_data'
+file C:\Users\murcj\AppData\Local\Temp\ST_4f24_000002.tmp saved
+
+. 
+. * 2.3 IN Dataset
+. import delimited "$datadir/in_relevant_ai_stata.csv", delimiter(";") clear varnames(1) encoding(utf8)
+(75 vars, 17,114 obs)
+
+. capture drop country
+
+. gen country = "IN"
+
+. tempfile in_data
+
+. save `in_data'
+file C:\Users\murcj\AppData\Local\Temp\ST_4f24_000003.tmp saved
+
+. 
+. * 2.4 Merge do jednoho analyzovaneho poolu
+. use `us_data', clear
+
+. append using `de_data', force
+(note: variable skill_cluster was byte in the using data, but will be str1217 now)
+(note: variable website was byte in the using data, but will be str127 now)
+(note: variable job_title was str131, now str154 to accommodate using data's values)
+(note: variable location was str32, now str34 to accommodate using data's values)
+(note: variable company was str81, now str92 to accommodate using data's values)
+(note: variable city was str32, now str34 to accommodate using data's values)
+(note: variable ceo was str64, now str102 to accommodate using data's values)
+(note: variable headquarters was str37, now str51 to accommodate using data's values)
+(note: variable industry was str40, now str58 to accommodate using data's values)
+(note: variable revenue was str32, now str40 to accommodate using data's values)
+(note: variable size was str23, now str28 to accommodate using data's values)
+(note: variable type was str30, now str42 to accommodate using data's values)
+
+. append using `in_data', force
+(note: variable skill_cluster was byte in the using data, but will be str1217 now)
+(note: variable website was byte in the using data, but will be str127 now)
+(note: variable skills was str576, now str622 to accommodate using data's values)
+(note: variable skills_ai_det was str98, now str112 to accommodate using data's values)
+(note: variable desc_ai_llm was str400, now str613 to accommodate using data's values)
+(note: variable job_title was str154, now str186 to accommodate using data's values)
+
+. 
+. display "Pocet pozorovani celkem po spojeni (US+DE+IN): " _N
+Pocet pozorovani celkem po spojeni (US+DE+IN): 44832
+
+. tab country
+
+    country |      Freq.     Percent        Cum.
+------------+-----------------------------------
+         DE |      9,254       20.64       20.64
+         IN |     17,114       38.17       58.82
+         US |     18,464       41.18      100.00
+------------+-----------------------------------
+      Total |     44,832      100.00
+
+. 
+. * Vytvoreni country_id faktorove promenne pro regrese
+. encode country, generate(country_id)
+
+. label variable country_id "Zeme povodu inzeratu (US/DE/IN)"
+
+. 
+. 
+. * ==============================================================================
+. * 3. ČIŠTĚNÍ A PŘÍPRAVA DAT (Identicke jako v base modelu)
+. * ==============================================================================
+. * Ponecháme pouze pozice s vysokou confidencí modelu
+. keep if desc_conf_llm >= 0.7
+(6,384 observations deleted)
+
+. 
+. * Zbaveni se starych if existuji
+. gen date_format_discover = date(substr(discover_date, 1, 10), "YMD")
+
+. format date_format_discover %td
+
+. destring age_in_days, replace force
+age_in_days already numeric; no replace
+
+. gen real_post_date = date_format_discover - age_in_days
+
+. format real_post_date %td
+
+. gen post_year = year(real_post_date)
+
+. drop if post_year <= 2023
+(12 observations deleted)
+
+. 
+. * Zpracovani AI Tier a AI Flag
+. replace desc_tier_llm = "missing" if desc_tier_llm == ""
+(0 real changes made)
+
+. replace desc_tier_llm = "applied_ai" if desc_tier_llm == "core_ai"
+(90 real changes made)
+
+. encode desc_tier_llm, generate(ai_tier_num)
+
+. 
+. gen skills_combined = lower(skills_ai_det + " " + desc_ai_llm)
+
+. gen skills_no_buzz = ustrregexra(skills_combined, "(?i)\b(ai|ml|artificial intelligence|machine learning|genai)\b", "")
+
+. gen skills_cleaned = subinstr(skills_no_buzz, ",", "", .)
+
+. replace skills_cleaned = subinstr(skills_cleaned, " ", "", .)
+(38,436 real changes made)
+
+. replace skills_cleaned = subinstr(skills_cleaned, ";", "", .)
+(0 real changes made)
+
+. 
+. gen has_ai = ((desc_tier_llm != "none" & desc_tier_llm != "missing") & length(skills_cleaned) > 1)
+
+. label variable has_ai "AI Job (Tier + Valid Skills, no buzzwords)"
+
+. 
+. * Vzdelani
+. gen education_hybrid = lower(edulevel_llm)
+(4 missing values generated)
+
+. replace education_hybrid = subinstr(education_hybrid, "'s", "", .)
+(16,072 real changes made)
+
+. replace education_hybrid = "highschool" if education_hybrid == "high school"
+(361 real changes made)
+
+. replace education_hybrid = "missing" if education_hybrid == "-" | education_hybrid == ""
+(21,043 real changes made)
+
+. replace education_hybrid = edu_level_det if education_hybrid == "missing" & edu_level_det != ""
+(4,519 real changes made)
+
+. replace education_hybrid = "missing" if education_hybrid == ""
+(0 real changes made)
+
+. replace education_hybrid = "master" if education_hybrid == "phd"
+(40 real changes made)
+
+. 
+. gen edu_ols = .
+(38,436 missing values generated)
+
+. replace edu_ols = 0 if education_hybrid == "missing"
+(16,524 real changes made)
+
+. replace edu_ols = 1 if education_hybrid == "highschool"
+(460 real changes made)
+
+. replace edu_ols = 2 if education_hybrid == "associate"
+(1,174 real changes made)
+
+. replace edu_ols = 3 if education_hybrid == "bachelor"
+(19,153 real changes made)
+
+. replace edu_ols = 4 if education_hybrid == "master"
+(1,125 real changes made)
+
+. label define edu_ols_lbl 0 "Missing" 1 "High School" 2 "Associate" 3 "Bachelor" 4 "Master+"
+
+. label values edu_ols edu_ols_lbl
+
+. 
+. gen edu_logit = .
+(38,436 missing values generated)
+
+. replace edu_logit = 0 if inlist(education_hybrid, "missing", "", "highschool", "associate")
+(18,158 real changes made)
+
+. replace edu_logit = 1 if inlist(education_hybrid, "bachelor", "master")
+(20,278 real changes made)
+
+. 
+. * Zkusenosti
+. destring experience_min_llm, replace force
+experience_min_llm: contains nonnumeric characters; replaced as double
+(7599 missing values generated)
+
+. gen exp_category = .
+(38,436 missing values generated)
+
+. replace exp_category = 0 if experience_min_llm == .
+(7,599 real changes made)
+
+. replace exp_category = 2 if experience_min_llm >= 0 & experience_min_llm <= 2
+(7,951 real changes made)
+
+. replace exp_category = 3 if experience_min_llm > 2 & experience_min_llm <= 5
+(16,174 real changes made)
+
+. replace exp_category = 4 if experience_min_llm > 5 & experience_min_llm < .
+(6,712 real changes made)
+
+. 
+. * Plat
+. destring salary_min salary_mid salary_max, replace force
+salary_min already numeric; no replace
+salary_mid already numeric; no replace
+salary_max already numeric; no replace
+
+. 
+. * --- Konverze men na USD (scraping period: Sep-Oct 2025) ---
+. * Pevne kurzy: prumerny ECB/RBI kurz za obdobi scrapingu
+. display _n "--- Konverze men na USD ---"
+
+--- Konverze men na USD ---
+
+. local eur_usd = 1.165
+
+. local inr_usd = 88
+
+. 
+. * Drop rows with non-standard or missing currencies
+. * DE: 1 COP + 1 USD row (no salary data anyway)
+. * IN: 2 rows with empty currency but non-empty salary (unknown currency)
+. drop if country == "DE" & !inlist(pay_currency, "EUR", "")
+(2 observations deleted)
+
+. drop if country == "IN" & pay_currency == "" & salary_mid != .
+(2 observations deleted)
+
+. 
+. * Konverze EUR na USD
+. foreach var of varlist salary_min salary_mid salary_max {
+  2.     replace `var' = `var' * `eur_usd' if pay_currency == "EUR"
+  3. }
+(516 real changes made)
+(516 real changes made)
+(516 real changes made)
+
+. 
+. * Konverze INR na USD
+. foreach var of varlist salary_min salary_mid salary_max {
+  2.     replace `var' = `var' / `inr_usd' if pay_currency == "INR"
+  3. }
+(10,049 real changes made)
+(10,049 real changes made)
+(10,049 real changes made)
+
+. 
+. display "Vsechny platy nyni v USD"
+Vsechny platy nyni v USD
+
+. 
+. * Prepocet hodinovych mezd na rocni (country-specific hours)
+. * US: 2080 h/rok (40h x 52w), DE: 1607 h/rok (OECD 2024), IN: 1920 h/rok (48h x 40w)
+. replace salary_min = salary_min * 2080 if pay_period == "HOURLY" & country == "US"
+(840 real changes made)
+
+. replace salary_mid = salary_mid * 2080 if pay_period == "HOURLY" & country == "US"
+(840 real changes made)
+
+. replace salary_max = salary_max * 2080 if pay_period == "HOURLY" & country == "US"
+(840 real changes made)
+
+. 
+. replace salary_min = salary_min * 1607 if pay_period == "HOURLY" & country == "DE"
+(21 real changes made)
+
+. replace salary_mid = salary_mid * 1607 if pay_period == "HOURLY" & country == "DE"
+(21 real changes made)
+
+. replace salary_max = salary_max * 1607 if pay_period == "HOURLY" & country == "DE"
+(21 real changes made)
+
+. 
+. replace salary_min = salary_min * 1920 if pay_period == "HOURLY" & country == "IN"
+(30 real changes made)
+
+. replace salary_mid = salary_mid * 1920 if pay_period == "HOURLY" & country == "IN"
+(30 real changes made)
+
+. replace salary_max = salary_max * 1920 if pay_period == "HOURLY" & country == "IN"
+(30 real changes made)
+
+. 
+. * Prepocet mesicnich mezd na rocni (12 mesicu — univerzalni)
+. replace salary_min = salary_min * 12 if pay_period == "MONTHLY"
+(1,584 real changes made)
+
+. replace salary_mid = salary_mid * 12 if pay_period == "MONTHLY"
+(1,584 real changes made)
+
+. replace salary_max = salary_max * 12 if pay_period == "MONTHLY"
+(1,584 real changes made)
+
+. 
+. * Outliery (vsechny platy nyni v USD po konverzi)
+. * Dolni mez $3K: zachyti near-zero / chyby (indicke IT median ~$6.8K)
+. * Horni mez $500K: stejna jako US-only soubor
+. replace salary_mid = . if salary_mid < 3000 | salary_mid > 500000
+(855 real changes made, 855 to missing)
+
+. gen ln_salary = ln(salary_mid)
+(14,077 missing values generated)
+
+. 
+. * Ostatní categorical covariates
+. gen type_cat = .
+(38,432 missing values generated)
+
+. replace type_cat = 0 if inlist(type, "", "Unknown", "Contract", "Self-employed", "Private Practice / Firm", "Franchise") 
+(4,408 real changes made)
+
+. replace type_cat = 1 if inlist(type, "Company - Private", "Subsidiary or Business Segment")
+(16,818 real changes made)
+
+. replace type_cat = 2 if type == "Company - Public"
+(10,128 real changes made)
+
+. replace type_cat = 3 if inlist(type, "Nonprofit Organization", "Government", "College / University", "School / School District", "Hospital")
+(934 real changes made)
+
+. 
+. replace size = "Unknown" if size == ""
+(3,336 real changes made)
+
+. gen size_cat = .
+(38,432 missing values generated)
+
+. replace size_cat = 0 if size == "Unknown"
+(6,237 real changes made)
+
+. replace size_cat = 1 if size == "1 to 50 Employees"
+(5,567 real changes made)
+
+. replace size_cat = 2 if size == "51 to 200 Employees"
+(4,064 real changes made)
+
+. replace size_cat = 3 if size == "201 to 500 Employees"
+(2,328 real changes made)
+
+. replace size_cat = 4 if size == "501 to 1000 Employees"
+(1,668 real changes made)
+
+. replace size_cat = 5 if size == "1001 to 5000 Employees"
+(3,490 real changes made)
+
+. replace size_cat = 6 if size == "5001 to 10000 Employees"
+(1,873 real changes made)
+
+. replace size_cat = 7 if size == "10000+ Employees"
+(7,079 real changes made)
+
+. 
+. * Audit: check missing coverage for categorical vars
+. display _n "--- Audit: missing obs in type_cat and size_cat ---"
+
+--- Audit: missing obs in type_cat and size_cat ---
+
+. tab type_cat, missing
+
+   type_cat |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |      4,408       11.47       11.47
+          1 |     16,818       43.76       55.23
+          2 |     10,128       26.35       81.58
+          3 |        934        2.43       84.01
+          . |      6,144       15.99      100.00
+------------+-----------------------------------
+      Total |     38,432      100.00
+
+. tab size_cat, missing
+
+   size_cat |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |      6,237       16.23       16.23
+          1 |      5,567       14.49       30.71
+          2 |      4,064       10.57       41.29
+          3 |      2,328        6.06       47.35
+          4 |      1,668        4.34       51.69
+          5 |      3,490        9.08       60.77
+          6 |      1,873        4.87       65.64
+          7 |      7,079       18.42       84.06
+          . |      6,126       15.94      100.00
+------------+-----------------------------------
+      Total |     38,432      100.00
+
+. 
+. replace sector_nace = "Unknown" if sector_nace == ""
+(0 real changes made)
+
+. replace sector_nace = "Other" if !inlist(sector_nace, "J", "C", "K", "M", "Q", "Unknown")
+(3,663 real changes made)
+
+. encode sector_nace, generate(sector_nace_num)
+
+. 
+. gen is_remote = 0
+
+. replace is_remote = 1 if strpos(lower(remote_work_types), "home") > 0 | strpos(lower(remote_work_types), "remote") > 0
+(7,831 real changes made)
+
+. 
+. gen ai_level = 0
+
+. replace ai_level = 1 if desc_tier_llm == "ai_integration"
+(3,370 real changes made)
+
+. replace ai_level = 2 if desc_tier_llm == "applied_ai"
+(2,359 real changes made)
+
+. 
+. replace job_family = "Unknown" if job_family == ""
+(0 real changes made)
+
+. replace job_family = "Other" if inlist(job_family, "Frontend & Design", "QA & Testing", "Security", "Systems & Embedded")
+(10,147 real changes made)
+
+. encode job_family, generate(job_family_num)
+
+. 
+. * Pro sjednoceni lokaci mezi zahranicnimi (nemaji US regiony)
+. gen location_market = ""
+(38,432 missing values generated)
+
+. replace location_market = "US_" + region if country == "US"
+variable location_market was str1 now str12
+(17,848 real changes made)
+
+. replace location_market = country if country != "US"
+(20,584 real changes made)
+
+. encode location_market, generate(location_market_num)
+
+. 
+. drop cluster_legacy__mainframe
+
+. drop cluster_data_analysis__stats
+
+. drop cluster_tools__editors
+
+. 
+. 
+. * ==============================================================================
+. * 4. CROSS-COUNTRY DESKRIPTIVNI STATISTIKA
+. * ==============================================================================
+. display _n "=============================================================="
+
+==============================================================
+
+. display "4. CROSS-COUNTRY DESKRIPTIVNI STATISTIKA"
+4. CROSS-COUNTRY DESKRIPTIVNI STATISTIKA
+
+. display "=============================================================="
+==============================================================
+
+. 
+. display _n "--- 4.1 Distribuce podilu pozic s AI mezi roznymi zememi ---"
+
+--- 4.1 Distribuce podilu pozic s AI mezi roznymi zememi ---
+
+. tab country has_ai, row chi2
+
++----------------+
+| Key            |
+|----------------|
+|   frequency    |
+| row percentage |
++----------------+
+
+           | AI Job (Tier + Valid
+           | Skills, no buzzwords)
+   country |         0          1 |     Total
+-----------+----------------------+----------
+        DE |     5,393      1,007 |     6,400 
+           |     84.27      15.73 |    100.00 
+-----------+----------------------+----------
+        IN |    13,301        883 |    14,184 
+           |     93.77       6.23 |    100.00 
+-----------+----------------------+----------
+        US |    14,371      3,477 |    17,848 
+           |     80.52      19.48 |    100.00 
+-----------+----------------------+----------
+     Total |    33,065      5,367 |    38,432 
+           |     86.04      13.96 |    100.00 
+
+          Pearson chi2(2) =  1.2e+03   Pr = 0.000
+
+. 
+. display _n "--- 4.2 Prumerny a medialni hruby rocni plat (v USD) podle zeme ---"
+
+--- 4.2 Prumerny a medialni hruby rocni plat (v USD) podle zeme ---
+
+. tabstat salary_mid, by(country) stat(count mean median p25 p75)
+
+Summary for variables: salary_mid
+     by categories of: country 
+
+country |         N      mean       p50       p25       p75
+--------+--------------------------------------------------
+     DE |       514  82055.64   79103.5   66987.5     93200
+     IN |      9199  8323.851  6535.034  5113.636  8446.625
+     US |     14642    124617  117868.5     95000    147734
+--------+--------------------------------------------------
+  Total |     24355   79794.3     88374  7643.261    125629
+-----------------------------------------------------------
+
+. 
+. display _n "--- 4.3 Chybejici mzdova data podle zeme (% platu reportovanych) ---"
+
+--- 4.3 Chybejici mzdova data podle zeme (% platu reportovanych) ---
+
+. gen has_salary = (salary_mid != .)
+
+. tab country has_salary, row chi2
+
++----------------+
+| Key            |
+|----------------|
+|   frequency    |
+| row percentage |
++----------------+
+
+           |      has_salary
+   country |         0          1 |     Total
+-----------+----------------------+----------
+        DE |     5,886        514 |     6,400 
+           |     91.97       8.03 |    100.00 
+-----------+----------------------+----------
+        IN |     4,985      9,199 |    14,184 
+           |     35.15      64.85 |    100.00 
+-----------+----------------------+----------
+        US |     3,206     14,642 |    17,848 
+           |     17.96      82.04 |    100.00 
+-----------+----------------------+----------
+     Total |    14,077     24,355 |    38,432 
+           |     36.63      63.37 |    100.00 
+
+          Pearson chi2(2) =  1.1e+04   Pr = 0.000
+
+. 
+. display _n "--- 4.4 Prumerny vzdelavaci narok podle zemes ---"
+
+--- 4.4 Prumerny vzdelavaci narok podle zemes ---
+
+. tab country edu_logit, row chi2
+
++----------------+
+| Key            |
+|----------------|
+|   frequency    |
+| row percentage |
++----------------+
+
+           |       edu_logit
+   country |         0          1 |     Total
+-----------+----------------------+----------
+        DE |     4,270      2,130 |     6,400 
+           |     66.72      33.28 |    100.00 
+-----------+----------------------+----------
+        IN |     6,809      7,375 |    14,184 
+           |     48.00      52.00 |    100.00 
+-----------+----------------------+----------
+        US |     7,077     10,771 |    17,848 
+           |     39.65      60.35 |    100.00 
+-----------+----------------------+----------
+     Total |    18,156     20,276 |    38,432 
+           |     47.24      52.76 |    100.00 
+
+          Pearson chi2(2) =  1.4e+03   Pr = 0.000
+
+. 
+. 
+. * ==============================================================================
+. * 5. CROSS-COUNTRY REGRESNI ANALYZA
+. * ==============================================================================
+. display _n "=============================================================="
+
+==============================================================
+
+. display "5. CROSS-COUNTRY OLS WAGE REGRESSION"
+5. CROSS-COUNTRY OLS WAGE REGRESSION
+
+. display "=============================================================="
+==============================================================
+
+. * Tato analyza kombinuje data ze tri statu. Pro to abychom vyrovnali ekonomicke
+. * rozdily a menove kurzy mezi zememi, zahrnujeme dummy promennou pro zemi
+. * i.country_id, ktera tento fixni rozdil pohlti do zkraceni (intercept).
+. 
+. * --- 5.1 Baseline "Slouceny" Model B (s fixed effects na zemi) ---
+. display _n "--- 5.1 Baseline Slouceny Model B (s country FEs) ---"
+
+--- 5.1 Baseline Slouceny Model B (s country FEs) ---
+
+. regress ln_salary ///
+>     cluster_* ///
+>     i.ai_level ///
+>     i.country_id ///
+>     i.location_market_num ///
+>     i.sector_nace_num ///
+>     is_remote ///
+>     i.type_cat i.size_cat ///
+>     i.job_family_num ///
+>     i.edu_ols ib3.exp_category ///
+>     if ln_salary != ., vce(robust)
+note: 2.location_market_num omitted because of collinearity
+note: 7.location_market_num omitted because of collinearity
+
+Linear regression                               Number of obs     =     23,897
+                                                F(59, 23837)      =    6022.79
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.9357
+                                                Root MSE          =     .36358
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                    ln_salary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+cluster_architecture__methods |   .0061385   .0065134     0.94   0.346    -.0066282    .0189052
+        cluster_bi__analytics |  -.0242485   .0051303    -4.73   0.000    -.0343041   -.0141929
+  cluster_backend_development |  -.0035602   .0056877    -0.63   0.531    -.0147084    .0075879
+       cluster_certifications |   .0081868   .0110138     0.74   0.457     -.013401    .0297746
+      cluster_cloud_computing |   .0312328   .0060189     5.19   0.000     .0194354    .0430302
+     cluster_data_engineering |   .0179947   .0058465     3.08   0.002     .0065352    .0294543
+     cluster_data_science__ml |   .0000175   .0095291     0.00   0.999    -.0186601     .018695
+   cluster_databases__storage |  -.0125453   .0056125    -2.24   0.025    -.0235462   -.0015444
+   cluster_devops__containers |    .037906   .0058992     6.43   0.000     .0263431    .0494689
+         cluster_dynamic__web |   .0106553   .0055277     1.93   0.054    -.0001794      .02149
+  cluster_enterprise__managed |   .0033571   .0056651     0.59   0.553    -.0077467     .014461
+ cluster_enterprise_platforms |  -.0105943   .0114742    -0.92   0.356    -.0330845    .0118959
+ cluster_frontend_development |   .0021734   .0055153     0.39   0.694     -.008637    .0129838
+        cluster_generative_ai |  -.0022931   .0122034    -0.19   0.851    -.0262125    .0216264
+      cluster_mobile__desktop |  -.0177439   .0064378    -2.76   0.006    -.0303624   -.0051253
+           cluster_networking |    .013766   .0055342     2.49   0.013     .0029187    .0246133
+         cluster_os__embedded |   .0022892   .0064592     0.35   0.723    -.0103712    .0149496
+     cluster_scripting__shell |  -.0037439   .0081579    -0.46   0.646    -.0197338    .0122461
+   cluster_security__identity |   .0251017   .0055777     4.50   0.000      .014169    .0360344
+  cluster_systems_programming |   .0626301   .0073911     8.47   0.000      .048143    .0771172
+cluster_testing_qa__debugging |   .0014113   .0050506     0.28   0.780    -.0084883    .0113108
+                              |
+                     ai_level |
+                           1  |   .0844292    .008703     9.70   0.000     .0673707    .1014877
+                           2  |   .1158558   .0139215     8.32   0.000     .0885688    .1431428
+                              |
+                   country_id |
+                          IN  |  -2.269158   .0406561   -55.81   0.000    -2.348847    -2.18947
+                          US  |   .6554779   .0406473    16.13   0.000     .5758067    .7351491
+                              |
+          location_market_num |
+                          IN  |          0  (omitted)
+                  US_Midwest  |  -.2343739    .007262   -32.27   0.000     -.248608   -.2201399
+                US_Northeast  |  -.1366606   .0075328   -18.14   0.000    -.1514253   -.1218959
+                    US_South  |  -.1831985   .0060531   -30.27   0.000     -.195063    -.171334
+                  US_Unknown  |  -.1248251   .0095234   -13.11   0.000    -.1434916   -.1061585
+                     US_West  |          0  (omitted)
+                              |
+              sector_nace_num |
+                           J  |   -.003124   .0066466    -0.47   0.638    -.0161519    .0099038
+                           K  |  -.0194688   .0083913    -2.32   0.020    -.0359163   -.0030213
+                           M  |    .004495   .0117437     0.38   0.702    -.0185233    .0275133
+                       Other  |  -.0425115   .0089224    -4.76   0.000         -.06   -.0250231
+                           Q  |   -.016982    .011626    -1.46   0.144    -.0397697    .0058057
+                     Unknown  |   .0051164    .009808     0.52   0.602    -.0141079    .0243407
+                              |
+                    is_remote |   .1087031   .0083597    13.00   0.000     .0923175    .1250887
+                              |
+                     type_cat |
+                           1  |  -.0484653   .0116275    -4.17   0.000     -.071256   -.0256745
+                           2  |  -.0580152   .0121997    -4.76   0.000    -.0819274   -.0341029
+                           3  |   -.099423   .0158954    -6.25   0.000    -.1305789   -.0682671
+                              |
+                     size_cat |
+                           1  |  -.0416676   .0100214    -4.16   0.000    -.0613102    -.022025
+                           2  |  -.0599653   .0107667    -5.57   0.000    -.0810686   -.0388619
+                           3  |  -.0496457   .0116691    -4.25   0.000    -.0725178   -.0267737
+                           4  |  -.0060292   .0137225    -0.44   0.660    -.0329262    .0208678
+                           5  |  -.0041024   .0110934    -0.37   0.712    -.0258461    .0176414
+                           6  |  -.0072008   .0125525    -0.57   0.566    -.0318045    .0174029
+                           7  |   .0073107   .0107126     0.68   0.495    -.0136867    .0283082
+                              |
+               job_family_num |
+              DevOps & Cloud  |  -.0024558   .0158333    -0.16   0.877    -.0334901    .0285785
+                  Management  |   .0065086   .0189731     0.34   0.732    -.0306798    .0436969
+                       Other  |  -.0901218   .0138307    -6.52   0.000    -.1172308   -.0630129
+          Software Developer  |  -.1024425   .0144206    -7.10   0.000    -.1307078   -.0741771
+           Software Engineer  |  -.0041208   .0148793    -0.28   0.782    -.0332852    .0250435
+       Sr+ Software Engineer  |   .0609323   .0162227     3.76   0.000     .0291347    .0927298
+                              |
+                      edu_ols |
+                 High School  |  -.0601418   .0152501    -3.94   0.000    -.0900329   -.0302506
+                   Associate  |  -.1302993   .0150975    -8.63   0.000    -.1598914   -.1007073
+                    Bachelor  |  -.0259282   .0054526    -4.76   0.000    -.0366156   -.0152407
+                     Master+  |   .0676582   .0193779     3.49   0.000     .0296763    .1056402
+                              |
+                 exp_category |
+                           0  |   -.058018    .007301    -7.95   0.000    -.0723283   -.0437076
+                           2  |   -.174558    .006303   -27.69   0.000    -.1869122   -.1622038
+                           4  |   .1099118   .0069484    15.82   0.000     .0962924    .1235312
+                              |
+                        _cons |   11.21972   .0425225   263.85   0.000     11.13638    11.30307
+-----------------------------------------------------------------------------------------------
+
+. estimates store pooled_model_b
+
+. 
+. 
+. * --- 5.2 INTERAKCNI MODEL: AI mzdova premie podla zeme ---
+. * KLICOVA ANALYZA PRO DIPLOMKU: Pta se, zdali "wage premium za znalost AI"
+. * se statisticky signifikantne lisi podle toho, jestli pracujete v US, DE, nebo IN.
+. * Pouzivame GRADOVANY ai_level (0=zadny AI, 1=AI integrace, 2=Applied/Core AI),
+. * ktery je informativnejsi nez binarni has_ai a prokazal signifikanci v Modelu B.
+. 
+. display _n "--- 5.2 Interakcni Model: Wage AI Premium (ai_level) lomeno zemi ---"
+
+--- 5.2 Interakcni Model: Wage AI Premium (ai_level) lomeno zemi ---
+
+. display "Base level pro country je definovan Stata (abecedne = DE)."
+Base level pro country je definovan Stata (abecedne = DE).
+
+. display "Base level pro ai_level = 0 (zadna AI). Interakce testuje, zda se"
+Base level pro ai_level = 0 (zadna AI). Interakce testuje, zda se
+
+. display "gradovana AI premie statisticky lisi mezi DE, IN a US."
+gradovana AI premie statisticky lisi mezi DE, IN a US.
+
+. 
+. regress ln_salary ///
+>     cluster_* ///
+>     i.country_id##i.ai_level ///
+>     i.location_market_num ///
+>     i.sector_nace_num ///
+>     is_remote ///
+>     i.type_cat i.size_cat ///
+>     i.job_family_num ///
+>     i.edu_ols ib3.exp_category ///
+>     if ln_salary != ., vce(robust)
+note: 2.location_market_num omitted because of collinearity
+note: 7.location_market_num omitted because of collinearity
+
+Linear regression                               Number of obs     =     23,897
+                                                F(63, 23833)      =    5657.40
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.9357
+                                                Root MSE          =      .3636
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                    ln_salary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+cluster_architecture__methods |   .0061791   .0065134     0.95   0.343    -.0065876    .0189458
+        cluster_bi__analytics |  -.0242714   .0051341    -4.73   0.000    -.0343346   -.0142082
+  cluster_backend_development |  -.0035642   .0056859    -0.63   0.531     -.014709    .0075806
+       cluster_certifications |   .0081701   .0110149     0.74   0.458    -.0134198    .0297601
+      cluster_cloud_computing |   .0311956   .0060189     5.18   0.000     .0193982    .0429931
+     cluster_data_engineering |   .0179885   .0058508     3.07   0.002     .0065206    .0294564
+     cluster_data_science__ml |   .0000529   .0095115     0.01   0.996    -.0185902     .018696
+   cluster_databases__storage |  -.0125792    .005612    -2.24   0.025     -.023579   -.0015793
+   cluster_devops__containers |   .0379251   .0058983     6.43   0.000      .026364    .0494862
+         cluster_dynamic__web |   .0106427   .0055211     1.93   0.054     -.000179    .0214644
+  cluster_enterprise__managed |   .0034062   .0056657     0.60   0.548    -.0076989    .0145113
+ cluster_enterprise_platforms |   -.010538   .0114725    -0.92   0.358    -.0330248    .0119487
+ cluster_frontend_development |   .0021418   .0055164     0.39   0.698    -.0086706    .0129542
+        cluster_generative_ai |  -.0023902    .012402    -0.19   0.847    -.0266989    .0219185
+      cluster_mobile__desktop |   -.017726    .006438    -2.75   0.006    -.0303449   -.0051071
+           cluster_networking |   .0137707   .0055338     2.49   0.013      .002924    .0246173
+         cluster_os__embedded |   .0022268   .0064624     0.34   0.730      -.01044    .0148936
+     cluster_scripting__shell |   -.003677   .0081624    -0.45   0.652    -.0196759    .0123218
+   cluster_security__identity |   .0251273   .0055778     4.50   0.000     .0141946    .0360601
+  cluster_systems_programming |   .0627075    .007393     8.48   0.000     .0482168    .0771982
+cluster_testing_qa__debugging |   .0014095   .0050533     0.28   0.780    -.0084953    .0113143
+                              |
+                   country_id |
+                          IN  |  -2.252026   .0405324   -55.56   0.000    -2.331473    -2.17258
+                          US  |      .6727    .040577    16.58   0.000     .5931665    .7522335
+                              |
+                     ai_level |
+                           1  |   .1803298   .1392697     1.29   0.195    -.0926477    .4533073
+                           2  |   .1507996   .1428181     1.06   0.291    -.1291331    .4307322
+                              |
+          country_id#ai_level |
+                        IN#1  |  -.1025144   .1437321    -0.71   0.476    -.3842384    .1792097
+                        IN#2  |  -.0297522   .1475035    -0.20   0.840    -.3188684    .2593641
+                        US#1  |  -.0954092   .1393907    -0.68   0.494    -.3686237    .1778053
+                        US#2  |  -.0366686    .142779    -0.26   0.797    -.3165245    .2431873
+                              |
+          location_market_num |
+                          IN  |          0  (omitted)
+                  US_Midwest  |  -.2344356   .0072459   -32.35   0.000    -.2486379   -.2202332
+                US_Northeast  |  -.1366748   .0075313   -18.15   0.000    -.1514365    -.121913
+                    US_South  |  -.1832411   .0060372   -30.35   0.000    -.1950744   -.1714079
+                  US_Unknown  |  -.1248543   .0095249   -13.11   0.000    -.1435237    -.106185
+                     US_West  |          0  (omitted)
+                              |
+              sector_nace_num |
+                           J  |  -.0031278   .0066526    -0.47   0.638    -.0161673    .0099116
+                           K  |  -.0194676   .0083972    -2.32   0.020    -.0359267   -.0030084
+                           M  |   .0044432    .011756     0.38   0.705    -.0185993    .0274856
+                       Other  |  -.0425527    .008925    -4.77   0.000    -.0600462   -.0250592
+                           Q  |  -.0169769   .0116227    -1.46   0.144    -.0397583    .0058044
+                     Unknown  |   .0051363   .0098183     0.52   0.601    -.0141082    .0243808
+                              |
+                    is_remote |   .1087653   .0083578    13.01   0.000     .0923835    .1251471
+                              |
+                     type_cat |
+                           1  |  -.0484415   .0116239    -4.17   0.000    -.0712252   -.0256579
+                           2  |  -.0580003   .0121965    -4.76   0.000    -.0819063   -.0340943
+                           3  |  -.0994012   .0158855    -6.26   0.000    -.1305378   -.0682647
+                              |
+                     size_cat |
+                           1  |  -.0416473   .0100226    -4.16   0.000    -.0612922   -.0220025
+                           2  |  -.0599332   .0107633    -5.57   0.000    -.0810299   -.0388364
+                           3  |  -.0496424   .0116758    -4.25   0.000    -.0725278   -.0267571
+                           4  |  -.0060209   .0137215    -0.44   0.661     -.032916    .0208741
+                           5  |  -.0040793   .0110996    -0.37   0.713    -.0258352    .0176767
+                           6  |  -.0072492   .0125563    -0.58   0.564    -.0318603    .0173619
+                           7  |   .0073372   .0107175     0.68   0.494    -.0136698    .0283442
+                              |
+               job_family_num |
+              DevOps & Cloud  |  -.0021888   .0157934    -0.14   0.890    -.0331448    .0287672
+                  Management  |   .0068055    .018979     0.36   0.720    -.0303945    .0440054
+                       Other  |  -.0899029   .0138013    -6.51   0.000    -.1169543   -.0628516
+          Software Developer  |  -.1021554   .0143978    -7.10   0.000    -.1303761   -.0739347
+           Software Engineer  |  -.0037777   .0148653    -0.25   0.799    -.0329146    .0253591
+       Sr+ Software Engineer  |   .0610749   .0161596     3.78   0.000     .0294012    .0927487
+                              |
+                      edu_ols |
+                 High School  |  -.0601993   .0152434    -3.95   0.000    -.0900773   -.0303212
+                   Associate  |  -.1299124   .0150998    -8.60   0.000     -.159509   -.1003159
+                    Bachelor  |  -.0259893   .0054524    -4.77   0.000    -.0366763   -.0153023
+                     Master+  |   .0671158   .0192779     3.48   0.000     .0293298    .1049018
+                              |
+                 exp_category |
+                           0  |  -.0579734   .0072985    -7.94   0.000    -.0722789   -.0436679
+                           2  |  -.1745802   .0063012   -27.71   0.000    -.1869309   -.1622295
+                           4  |   .1099143    .006949    15.82   0.000     .0962939    .1235347
+                              |
+                        _cons |   11.20234   .0426953   262.38   0.000     11.11866    11.28603
+-----------------------------------------------------------------------------------------------
+
+. estimates store interaction_model
+
+. * Test: jsou interakcni cleny country x ai_level spolecne signifikantni?
+. testparm i.country_id#i.ai_level
+
+ ( 1)  2.country_id#1.ai_level = 0
+ ( 2)  2.country_id#2.ai_level = 0
+ ( 3)  3.country_id#1.ai_level = 0
+ ( 4)  3.country_id#2.ai_level = 0
+
+       F(  4, 23833) =    0.15
+            Prob > F =    0.9651
+
+. 
+. 
+. * ==============================================================================
+. * 6. CROSS-COUNTRY LOGISTICKE MODELY (PRAVDEPODOBNOST AI)
+. * ==============================================================================
+. display _n "=============================================================="
+
+==============================================================
+
+. display "6. CROSS-COUNTRY LOGISTICKE MODELY"
+6. CROSS-COUNTRY LOGISTICKE MODELY
+
+. display "=============================================================="
+==============================================================
+
+. 
+. display _n "--- 6.1 Mlogit: Pravdepodobnost AI urovne x Zeme ---"
+
+--- 6.1 Mlogit: Pravdepodobnost AI urovne x Zeme ---
+
+. mlogit ai_level ///
+>     i.country_id ///
+>     i.sector_nace_num ///
+>     i.type_cat i.size_cat ///
+>     cluster_* ///
+>     i.job_family_num ///
+>     ib1.edu_logit ib3.exp_category, baseoutcome(0) rrr
+
+Iteration 0:   log likelihood = -16342.463  
+Iteration 1:   log likelihood = -13655.951  
+Iteration 2:   log likelihood = -10438.139  
+Iteration 3:   log likelihood = -9762.1025  
+Iteration 4:   log likelihood = -9722.9487  
+Iteration 5:   log likelihood = -9722.8156  
+Iteration 6:   log likelihood = -9722.8155  
+
+Multinomial logistic regression                 Number of obs     =     32,279
+                                                LR chi2(98)       =   13239.30
+                                                Prob > chi2       =     0.0000
+Log likelihood = -9722.8155                     Pseudo R2         =     0.4051
+
+-----------------------------------------------------------------------------------------------
+                     ai_level |        RRR   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+0                             |  (base outcome)
+------------------------------+----------------------------------------------------------------
+1                             |
+                   country_id |
+                          IN  |   .1710147    .041008    -7.36   0.000     .1068863    .2736181
+                          US  |   1.563212   .3702165     1.89   0.059      .982714    2.486614
+                              |
+              sector_nace_num |
+                           J  |   1.278973   .1112164     2.83   0.005     1.078556     1.51663
+                           K  |   1.276369   .1472314     2.12   0.034     1.018096    1.600162
+                           M  |   1.292407   .1840265     1.80   0.072     .9776793    1.708451
+                       Other  |   .9991301     .11046    -0.01   0.994     .8044822    1.240874
+                           Q  |   1.613932   .2329649     3.32   0.001     1.216236    2.141672
+                     Unknown  |   1.613531   .1823376     4.23   0.000     1.292965    2.013574
+                              |
+                     type_cat |
+                           1  |   1.000177   .1035627     0.00   0.999     .8164693     1.22522
+                           2  |   1.004313   .1056209     0.04   0.967     .8172422    1.234206
+                           3  |   1.067331   .1736753     0.40   0.689     .7758755     1.46827
+                              |
+                     size_cat |
+                           1  |   .8637824   .0821755    -1.54   0.124     .7168458    1.040838
+                           2  |    1.18987   .1265966     1.63   0.102     .9659081    1.465762
+                           3  |   1.390823   .1601465     2.87   0.004     1.109839    1.742945
+                           4  |   1.131529     .14851     0.94   0.346     .8748784    1.463469
+                           5  |   1.269097   .1386126     2.18   0.029     1.024532    1.572043
+                           6  |   1.057918   .1420235     0.42   0.675     .8131671    1.376335
+                           7  |   1.140793   .1220527     1.23   0.218     .9249903    1.406942
+                              |
+cluster_architecture__methods |   1.126805   .0777016     1.73   0.083     .9843556    1.289869
+        cluster_bi__analytics |   1.252077   .0645983     4.36   0.000     1.131658     1.38531
+  cluster_backend_development |   1.213263    .071391     3.29   0.001     1.081107    1.361575
+       cluster_certifications |   .7452837   .0842169    -2.60   0.009     .5972223     .930052
+      cluster_cloud_computing |   1.437471   .0827912     6.30   0.000     1.284027    1.609252
+     cluster_data_engineering |   .9548926   .0532235    -0.83   0.408     .8560724     1.06512
+     cluster_data_science__ml |   8.969969   .5550509    35.45   0.000      7.94547    10.12657
+   cluster_databases__storage |    .783777   .0434217    -4.40   0.000     .7031297    .8736743
+   cluster_devops__containers |   1.077524   .0615742     1.31   0.191     .9633538    1.205225
+         cluster_dynamic__web |   1.701475   .0946795     9.55   0.000     1.525668    1.897541
+  cluster_enterprise__managed |   .6780619   .0376105    -7.00   0.000     .6082122    .7559334
+ cluster_enterprise_platforms |   1.464992   .1481804     3.78   0.000      1.20154    1.786209
+ cluster_frontend_development |   1.628458   .0984989     8.06   0.000     1.446408    1.833422
+        cluster_generative_ai |   47.33102   4.080821    44.74   0.000     39.97204     56.0448
+      cluster_mobile__desktop |   .9229648   .0666609    -1.11   0.267     .8011379    1.063318
+           cluster_networking |   .9528803   .0550078    -0.84   0.403     .8509425     1.06703
+         cluster_os__embedded |   .7845547   .0576378    -3.30   0.001     .6793431    .9060607
+     cluster_scripting__shell |   .7879807   .0736161    -2.55   0.011     .6561349    .9463201
+   cluster_security__identity |   1.027711   .0578818     0.49   0.627     .9203017    1.147655
+  cluster_systems_programming |   .8969114   .0685972    -1.42   0.155     .7720551    1.041959
+cluster_testing_qa__debugging |   .9916341   .0498228    -0.17   0.867     .8986372    1.094255
+                              |
+               job_family_num |
+              DevOps & Cloud  |    .589339   .0800108    -3.89   0.000     .4516509    .7690019
+                  Management  |   .9892642   .1402953    -0.08   0.939     .7491982    1.306255
+                       Other  |   .5701804   .0618822    -5.18   0.000     .4609253    .7053327
+          Software Developer  |   .4551245   .0524393    -6.83   0.000     .3631241     .570434
+           Software Engineer  |   .8607377   .1026902    -1.26   0.209     .6812685    1.087485
+       Sr+ Software Engineer  |   .8270696   .1051882    -1.49   0.135     .6445916    1.061205
+                              |
+                  0.edu_logit |   1.259451   .0633349     4.59   0.000     1.141238    1.389908
+                              |
+                 exp_category |
+                           0  |    .761761   .0579796    -3.58   0.000      .656193    .8843128
+                           2  |   .8549016   .0583687    -2.30   0.022     .7478252    .9773096
+                           4  |   .8559379   .0557182    -2.39   0.017     .7534117    .9724162
+                              |
+                        _cons |   .0304374   .0084742   -12.54   0.000     .0176368    .0525285
+------------------------------+----------------------------------------------------------------
+2                             |
+                   country_id |
+                          IN  |   .1611425   .0475178    -6.19   0.000      .090408     .287219
+                          US  |   1.112448   .3259209     0.36   0.716     .6264661     1.97543
+                              |
+              sector_nace_num |
+                           J  |   1.358615   .1614006     2.58   0.010     1.076404    1.714815
+                           K  |   1.173477   .1954393     0.96   0.337     .8466609    1.626447
+                           M  |   1.299025   .2611809     1.30   0.193     .8759429    1.926458
+                       Other  |   .9989396    .158374    -0.01   0.995     .7321296    1.362983
+                           Q  |   1.403983   .3021624     1.58   0.115     .9208053    2.140699
+                     Unknown  |   1.655786   .2621758     3.18   0.001     1.214019    2.258306
+                              |
+                     type_cat |
+                           1  |   .8779912   .1304926    -0.88   0.381     .6561139      1.1749
+                           2  |   .8368154   .1263428    -1.18   0.238     .6224649    1.124979
+                           3  |   .8623635   .2112911    -0.60   0.546     .5334996    1.393948
+                              |
+                     size_cat |
+                           1  |   .9585608   .1316413    -0.31   0.758     .7323561    1.254634
+                           2  |   1.228092     .18928     1.33   0.183     .9079026    1.661203
+                           3  |   1.135818   .1976869     0.73   0.464     .8075303    1.597566
+                           4  |    .748938   .1499043    -1.44   0.149     .5059095    1.108712
+                           5  |   1.101341   .1770896     0.60   0.548     .8036242    1.509351
+                           6  |   1.428959   .2697089     1.89   0.059     .9870966    2.068615
+                           7  |   1.364663   .2089827     2.03   0.042     1.010819    1.842372
+                              |
+cluster_architecture__methods |   .9155684   .0848582    -0.95   0.341     .7634813    1.097952
+        cluster_bi__analytics |   1.270516   .0926191     3.28   0.001     1.101358    1.465655
+  cluster_backend_development |    .980312   .0799193    -0.24   0.807     .8355465    1.150159
+       cluster_certifications |   .5292623   .0903872    -3.73   0.000     .3787068    .7396712
+      cluster_cloud_computing |   1.509809   .1236565     5.03   0.000     1.285899    1.772708
+     cluster_data_engineering |   1.538443   .1191572     5.56   0.000     1.321762    1.790645
+     cluster_data_science__ml |   46.94674   3.492962    51.73   0.000     40.57643    54.31717
+   cluster_databases__storage |   .7360653   .0583551    -3.87   0.000     .6301345    .8598039
+   cluster_devops__containers |   1.103932   .0878587     1.24   0.214     .9444905    1.290289
+         cluster_dynamic__web |   2.762861   .2312918    12.14   0.000     2.344774    3.255495
+  cluster_enterprise__managed |    .599002   .0466578    -6.58   0.000     .5141929    .6977992
+ cluster_enterprise_platforms |   .8233776   .1191811    -1.34   0.179     .6199985    1.093472
+ cluster_frontend_development |    1.00362   .0803597     0.05   0.964     .8578551    1.174154
+        cluster_generative_ai |   69.45242   7.004619    42.05   0.000     56.99536    84.63213
+      cluster_mobile__desktop |   .8168392   .0932211    -1.77   0.076     .6531214    1.021596
+           cluster_networking |   .9770161   .0796859    -0.29   0.776     .8326784    1.146373
+         cluster_os__embedded |   .7096283   .0729587    -3.34   0.001     .5801186    .8680507
+     cluster_scripting__shell |   .5851403   .0808712    -3.88   0.000     .4462899    .7671902
+   cluster_security__identity |    .941926   .0756219    -0.75   0.456     .8047826     1.10244
+  cluster_systems_programming |   1.837218    .175774     6.36   0.000     1.523081    2.216147
+cluster_testing_qa__debugging |   .8715432   .0608284    -1.97   0.049     .7601166    .9993039
+                              |
+               job_family_num |
+              DevOps & Cloud  |   .2186995   .0366706    -9.07   0.000     .1574424    .3037901
+                  Management  |   .7003191    .112753    -2.21   0.027     .5107997     .960155
+                       Other  |   .1585386   .0196131   -14.89   0.000     .1244032    .2020406
+          Software Developer  |    .165018   .0221626   -13.42   0.000      .126827    .2147094
+           Software Engineer  |   .4715346   .0619236    -5.72   0.000     .3645279     .609953
+       Sr+ Software Engineer  |   .4751254    .068751    -5.14   0.000     .3577986    .6309251
+                              |
+                  0.edu_logit |   1.098792   .0788697     1.31   0.189     .9545916    1.264776
+                              |
+                 exp_category |
+                           0  |   1.195309    .122889     1.74   0.083     .9771668    1.462149
+                           2  |   .9422264   .0911137    -0.62   0.538     .7795496    1.138851
+                           4  |   1.092794   .0999547     0.97   0.332     .9134425     1.30736
+                              |
+                        _cons |   .0245457   .0085129   -10.69   0.000     .0124383    .0484381
+-----------------------------------------------------------------------------------------------
+Note: _cons estimates baseline relative risk for each outcome.
+
+. estimates store pooled_mlogit
+
+. display _n "--- 6.2 Marginalni efekty Mlogit: P(AI Integration) ---"
+
+--- 6.2 Marginalni efekty Mlogit: P(AI Integration) ---
+
+. margins, dydx(*) predict(outcome(1))
+
+Average marginal effects                        Number of obs     =     32,279
+Model VCE    : OIM
+
+Expression   : Pr(ai_level==1), predict(outcome(1))
+dy/dx w.r.t. : 2.country_id 3.country_id 2.sector_nace_num 3.sector_nace_num 4.sector_nace_num 5.sector_nace_num 6.sector_nace_num 7.sector_nace_num 1.type_cat 2.type_cat 3.type_cat
+               1.size_cat 2.size_cat 3.size_cat 4.size_cat 5.size_cat 6.size_cat 7.size_cat cluster_architecture__methods cluster_bi__analytics cluster_backend_development
+               cluster_certifications cluster_cloud_computing cluster_data_engineering cluster_data_science__ml cluster_databases__storage cluster_devops__containers cluster_dynamic__web
+               cluster_enterprise__managed cluster_enterprise_platforms cluster_frontend_development cluster_generative_ai cluster_mobile__desktop cluster_networking cluster_os__embedded
+               cluster_scripting__shell cluster_security__identity cluster_systems_programming cluster_testing_qa__debugging 2.job_family_num 3.job_family_num 4.job_family_num
+               5.job_family_num 6.job_family_num 7.job_family_num 0.edu_logit 0.exp_category 2.exp_category 4.exp_category
+
+-----------------------------------------------------------------------------------------------
+                              |            Delta-method
+                              |      dy/dx   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+                   country_id |
+                          IN  |  -.0575242   .0152159    -3.78   0.000    -.0873468   -.0277015
+                          US  |   .0337584   .0154955     2.18   0.029     .0033877    .0641291
+                              |
+              sector_nace_num |
+                           J  |    .010055   .0046286     2.17   0.030     .0009831    .0191268
+                           K  |     .01202   .0064406     1.87   0.062    -.0006033    .0246433
+                           M  |   .0113483   .0080249     1.41   0.157    -.0043802    .0270769
+                       Other  |  -.0000335   .0057247    -0.01   0.995    -.0112536    .0111867
+                           Q  |   .0249251   .0089917     2.77   0.006     .0073016    .0425485
+                     Unknown  |   .0223356   .0066275     3.37   0.001      .009346    .0353253
+                              |
+                     type_cat |
+                           1  |   .0019022   .0060633     0.31   0.754    -.0099817    .0137861
+                           2  |   .0028482   .0061507     0.46   0.643     -.009207    .0149033
+                           3  |    .006263   .0097285     0.64   0.520    -.0128046    .0253306
+                              |
+                     size_cat |
+                           1  |  -.0077305   .0051707    -1.50   0.135     -.017865     .002404
+                           2  |   .0078033   .0062409     1.25   0.211    -.0044287    .0200353
+                           3  |   .0196021   .0071945     2.72   0.006     .0055012     .033703
+                           4  |   .0116259   .0077781     1.49   0.135    -.0036189    .0268708
+                           5  |   .0137071   .0065493     2.09   0.036     .0008707    .0265436
+                           6  |  -.0017683   .0075801    -0.23   0.816     -.016625    .0130884
+                           7  |    .003534   .0061763     0.57   0.567    -.0085713    .0156392
+                              |
+cluster_architecture__methods |   .0086742   .0040605     2.14   0.033     .0007158    .0166326
+        cluster_bi__analytics |    .010485   .0030146     3.48   0.001     .0045765    .0163936
+  cluster_backend_development |   .0122724   .0034598     3.55   0.000     .0054912    .0190535
+       cluster_certifications |  -.0090513   .0066303    -1.37   0.172    -.0220465    .0039439
+      cluster_cloud_computing |   .0165575   .0033789     4.90   0.000     .0099351      .02318
+     cluster_data_engineering |  -.0090743   .0032295    -2.81   0.005     -.015404   -.0027446
+     cluster_data_science__ml |   .0805119   .0031493    25.56   0.000     .0743393    .0866845
+   cluster_databases__storage |  -.0106859   .0032389    -3.30   0.001    -.0170339   -.0043378
+   cluster_devops__containers |   .0032033   .0033415     0.96   0.338    -.0033459    .0097525
+         cluster_dynamic__web |   .0182965   .0033151     5.52   0.000     .0117991     .024794
+  cluster_enterprise__managed |  -.0166972   .0032443    -5.15   0.000     -.023056   -.0103384
+ cluster_enterprise_platforms |   .0264778   .0057343     4.62   0.000     .0152386    .0377169
+ cluster_frontend_development |   .0301815   .0035627     8.47   0.000     .0231987    .0371644
+        cluster_generative_ai |   .1779886   .0043391    41.02   0.000     .1694842    .1864931
+      cluster_mobile__desktop |  -.0020525   .0043239    -0.47   0.635    -.0105271    .0064222
+           cluster_networking |  -.0026572   .0033834    -0.79   0.432    -.0092885    .0039741
+         cluster_os__embedded |  -.0100969    .004369    -2.31   0.021      -.01866   -.0015337
+     cluster_scripting__shell |  -.0070448   .0055509    -1.27   0.204    -.0179243    .0038346
+   cluster_security__identity |   .0025576   .0032899     0.78   0.437    -.0038905    .0090057
+  cluster_systems_programming |  -.0155178   .0044754    -3.47   0.001    -.0242895   -.0067461
+cluster_testing_qa__debugging |    .001462    .002937     0.50   0.619    -.0042944    .0072184
+                              |
+               job_family_num |
+              DevOps & Cloud  |  -.0107455    .008738    -1.23   0.219    -.0278718    .0063807
+                  Management  |   .0062035   .0098893     0.63   0.530    -.0131792    .0255863
+                       Other  |  -.0085182   .0072759    -1.17   0.242    -.0227787    .0057423
+          Software Developer  |  -.0219819    .007395    -2.97   0.003    -.0364759   -.0074879
+           Software Engineer  |   .0029067   .0081063     0.36   0.720    -.0129813    .0187947
+       Sr+ Software Engineer  |  -.0001432   .0085132    -0.02   0.987    -.0168288    .0165423
+                              |
+                  0.edu_logit |   .0130948   .0030102     4.35   0.000      .007195    .0189946
+                              |
+                 exp_category |
+                           0  |  -.0190335    .004181    -4.55   0.000    -.0272282   -.0108389
+                           2  |  -.0090327   .0040271    -2.24   0.025    -.0169257   -.0011397
+                           4  |  -.0110648   .0037592    -2.94   0.003    -.0184326    -.003697
+-----------------------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. display _n "--- 6.3 Marginalni efekty Mlogit: P(Applied/Core AI) ---"
+
+--- 6.3 Marginalni efekty Mlogit: P(Applied/Core AI) ---
+
+. margins, dydx(*) predict(outcome(2))
+
+Average marginal effects                        Number of obs     =     32,279
+Model VCE    : OIM
+
+Expression   : Pr(ai_level==2), predict(outcome(2))
+dy/dx w.r.t. : 2.country_id 3.country_id 2.sector_nace_num 3.sector_nace_num 4.sector_nace_num 5.sector_nace_num 6.sector_nace_num 7.sector_nace_num 1.type_cat 2.type_cat 3.type_cat
+               1.size_cat 2.size_cat 3.size_cat 4.size_cat 5.size_cat 6.size_cat 7.size_cat cluster_architecture__methods cluster_bi__analytics cluster_backend_development
+               cluster_certifications cluster_cloud_computing cluster_data_engineering cluster_data_science__ml cluster_databases__storage cluster_devops__containers cluster_dynamic__web
+               cluster_enterprise__managed cluster_enterprise_platforms cluster_frontend_development cluster_generative_ai cluster_mobile__desktop cluster_networking cluster_os__embedded
+               cluster_scripting__shell cluster_security__identity cluster_systems_programming cluster_testing_qa__debugging 2.job_family_num 3.job_family_num 4.job_family_num
+               5.job_family_num 6.job_family_num 7.job_family_num 0.edu_logit 0.exp_category 2.exp_category 4.exp_category
+
+-----------------------------------------------------------------------------------------------
+                              |            Delta-method
+                              |      dy/dx   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+                   country_id |
+                          IN  |  -.0326969   .0104658    -3.12   0.002    -.0532095   -.0121843
+                          US  |  -.0036009   .0106097    -0.34   0.734    -.0243955    .0171938
+                              |
+              sector_nace_num |
+                           J  |   .0058659   .0033114     1.77   0.076    -.0006244    .0123561
+                           K  |   .0013806   .0046505     0.30   0.767    -.0077343    .0104954
+                           M  |   .0043059   .0057557     0.75   0.454    -.0069751    .0155869
+                       Other  |  -.0000191   .0043197    -0.00   0.996    -.0084854    .0084473
+                           Q  |   .0034375   .0062558     0.55   0.583    -.0088236    .0156986
+                     Unknown  |   .0088315   .0046779     1.89   0.059    -.0003371    .0180001
+                              |
+                     type_cat |
+                           1  |  -.0041879   .0046267    -0.91   0.365     -.013256    .0048802
+                           2  |  -.0057388   .0046554    -1.23   0.218    -.0148632    .0033855
+                           3  |  -.0056908   .0073094    -0.78   0.436     -.020017    .0086354
+                              |
+                     size_cat |
+                           1  |   .0007147   .0039397     0.18   0.856    -.0070069    .0084363
+                           2  |   .0039166   .0045622     0.86   0.391    -.0050251    .0128583
+                           3  |  -.0009292   .0050525    -0.18   0.854    -.0108319    .0089735
+                           4  |  -.0099081   .0052694    -1.88   0.060    -.0202358    .0004197
+                           5  |  -.0004929   .0046468    -0.11   0.916    -.0096005    .0086147
+                           6  |   .0107369   .0059032     1.82   0.069    -.0008331    .0223069
+                           7  |   .0080395   .0046217     1.74   0.082    -.0010189    .0170979
+                              |
+cluster_architecture__methods |  -.0044868    .002759    -1.63   0.104    -.0098943    .0009208
+        cluster_bi__analytics |   .0042626   .0021518     1.98   0.048     .0000452    .0084801
+  cluster_backend_development |  -.0034112   .0024213    -1.41   0.159     -.008157    .0013345
+       cluster_certifications |  -.0157041   .0050654    -3.10   0.002    -.0256322    -.005776
+      cluster_cloud_computing |   .0076802   .0024275     3.16   0.002     .0029224    .0124379
+     cluster_data_engineering |   .0141683   .0022659     6.25   0.000     .0097271    .0186094
+     cluster_data_science__ml |   .0890079   .0019685    45.22   0.000     .0851498     .092866
+   cluster_databases__storage |  -.0060917   .0023426    -2.60   0.009    -.0106831   -.0015002
+   cluster_devops__containers |   .0020225   .0023526     0.86   0.390    -.0025885    .0066335
+         cluster_dynamic__web |   .0241899   .0025151     9.62   0.000     .0192604    .0291193
+  cluster_enterprise__managed |  -.0104609   .0023019    -4.54   0.000    -.0149726   -.0059492
+ cluster_enterprise_platforms |  -.0115987   .0041464    -2.80   0.005    -.0197255   -.0034719
+ cluster_frontend_development |  -.0069194    .002372    -2.92   0.004    -.0115685   -.0022702
+        cluster_generative_ai |   .0772957   .0024025    32.17   0.000      .072587    .0820045
+      cluster_mobile__desktop |  -.0051854   .0034384    -1.51   0.132    -.0119246    .0015538
+           cluster_networking |  -.0000328   .0024165    -0.01   0.989    -.0047691    .0047036
+         cluster_os__embedded |  -.0072525   .0030907    -2.35   0.019    -.0133102   -.0011948
+     cluster_scripting__shell |  -.0133615   .0041471    -3.22   0.001    -.0214897   -.0052333
+   cluster_security__identity |  -.0022695   .0023709    -0.96   0.338    -.0069165    .0023774
+  cluster_systems_programming |   .0206349   .0028269     7.30   0.000     .0150942    .0261756
+cluster_testing_qa__debugging |  -.0041885   .0020626    -2.03   0.042    -.0082311   -.0001458
+                              |
+               job_family_num |
+              DevOps & Cloud  |  -.0531517   .0061601    -8.63   0.000    -.0652253   -.0410782
+                  Management  |  -.0178861   .0071991    -2.48   0.013     -.031996   -.0037761
+                       Other  |  -.0615421   .0051632   -11.92   0.000    -.0716618   -.0514225
+          Software Developer  |  -.0576806   .0052757   -10.93   0.000    -.0680208   -.0473404
+           Software Engineer  |  -.0325303   .0057183    -5.69   0.000     -.043738   -.0213227
+       Sr+ Software Engineer  |  -.0315288   .0061029    -5.17   0.000    -.0434902   -.0195673
+                              |
+                  0.edu_logit |  -.0003984   .0021379    -0.19   0.852    -.0045887    .0037919
+                              |
+                 exp_category |
+                           0  |   .0096463   .0032103     3.00   0.003     .0033543    .0159383
+                           2  |   .0004405   .0028114     0.16   0.875    -.0050697    .0059507
+                           4  |   .0050557   .0027246     1.86   0.064    -.0002844    .0103958
+-----------------------------------------------------------------------------------------------
+Note: dy/dx for factor levels is the discrete change from the base level.
+
+. 
+. 
+. * ==============================================================================
+. * ZÁVĚR
+. * ==============================================================================
+. display _n "=============================================================="
+
+==============================================================
+
+. display "CROSS-COUNTRY ANALYZA DOKONCENA"
+CROSS-COUNTRY ANALYZA DOKONCENA
+
+. display "=============================================================="
+==============================================================
+
+. estimates table pooled_model_b interaction_model, star stats(N r2 r2_a)
+
+----------------------------------------------
+    Variable | pooled_mode~b   interaction~l  
+-------------+--------------------------------
+cluster_ar~s |  .00613846       .00617909     
+cluster_bi~s | -.02424848***   -.02427136***  
+cluster_ba~t | -.00356023      -.00356423     
+cluster_ce~s |  .00818677       .00817013     
+cluster_cl~g |  .03123281***    .03119565***  
+cluster_da~g |  .01799474**     .01798849**   
+cluster_da~l |  .00001746        .0000529     
+cluster_da~e |  -.0125453*     -.01257915*    
+cluster_de~s |  .03790596***    .03792508***  
+cluster_dy~b |   .0106553       .01064271     
+cluster_en~d |  .00335714       .00340619     
+cluster_en~s | -.01059426      -.01053803     
+cluster_fr~t |   .0021734        .0021418     
+cluster_ge~i | -.00229309      -.00239019     
+cluster_mo~p | -.01774388**    -.01772596**   
+cluster_ne~g |  .01376601*      .01377067*    
+cluster_os~d |  .00228917       .00222682     
+cluster_sc~l | -.00374388      -.00367703     
+cluster_se~y |  .02510173***    .02512735***  
+cluster_sy~g |  .06263008***     .0627075***  
+cluster_te~g |  .00141126       .00140948     
+             |
+    ai_level |
+          1  |  .08442917***    .18032978     
+          2  |  .11585575***    .15079958     
+             |
+  country_id |
+         IN  | -2.2691581***   -2.2520264***  
+         US  |  .65547788***    .67269996***  
+             |
+location_m~m |
+          2  |  (omitted)       (omitted)     
+          3  | -.23437395***   -.23443557***  
+          4  | -.13666062***   -.13667479***  
+          5  |  -.1831985***   -.18324112***  
+          6  | -.12482506***   -.12485434***  
+          7  |  (omitted)       (omitted)     
+             |
+sector_nac~m |
+          J  | -.00312401      -.00312783     
+          K  | -.01946878*     -.01946756*    
+          M  |  .00449501       .00444315     
+      Other  | -.04251152***    -.0425527***  
+          Q  |   -.016982      -.01697695     
+    Unknown  |   .0051164       .00513628     
+             |
+   is_remote |  .10870311***    .10876531***  
+             |
+    type_cat |
+          1  | -.04846526***   -.04844153***  
+          2  | -.05801518***   -.05800025***  
+          3  |   -.099423***   -.09940122***  
+             |
+    size_cat |
+          1  | -.04166761***   -.04164734***  
+          2  | -.05996527***   -.05993316***  
+          3  | -.04964575***   -.04964244***  
+          4  | -.00602921      -.00602093     
+          5  | -.00410239      -.00407928     
+          6  |  -.0072008      -.00724916     
+          7  |  .00731075       .00733718     
+             |
+job_family~m |
+DevOps & ..  | -.00245583      -.00218882     
+ Management  |  .00650855       .00680545     
+      Other  | -.09012184***   -.08990291***  
+Software ..  | -.10244245***   -.10215541***  
+Software ..  | -.00412083      -.00377773     
+Sr+ Softw..  |  .06093226***    .06107494***  
+             |
+     edu_ols |
+          1  | -.06014177***   -.06019925***  
+          2  | -.13029934***   -.12991242***  
+          3  | -.02592818***   -.02598933***  
+          4  |  .06765821***    .06711579***  
+             |
+exp_category |
+          0  | -.05801799***   -.05797341***  
+          2  | -.17455798***    -.1745802***  
+             |
+exp_category |
+          4  |  .10991176***     .1099143***  
+             |
+  country_id#|
+    ai_level |
+       IN#1  |                 -.10251436     
+       IN#2  |                 -.02975215     
+             |
+  country_id#|
+    ai_level |
+       US#1  |                 -.09540921     
+       US#2  |                 -.03666857     
+             |
+       _cons |  11.219723***    11.202343***  
+-------------+--------------------------------
+           N |      23897           23897     
+          r2 |  .93566185       .93566387     
+        r2_a |  .93550261        .9354938     
+----------------------------------------------
+      legend: * p<0.05; ** p<0.01; *** p<0.001
+
+. display _n "--- Mlogit vysledky ---"
+
+--- Mlogit vysledky ---
+
+. estimates table pooled_mlogit, star stats(N ll chi2)
+
+------------------------------
+    Variable | pooled_mlogit  
+-------------+----------------
+0            |
+  country_id |
+         IN  |  (omitted)     
+         US  |  (omitted)     
+             |
+sector_nac~m |
+          J  |  (omitted)     
+          K  |  (omitted)     
+          M  |  (omitted)     
+      Other  |  (omitted)     
+          Q  |  (omitted)     
+    Unknown  |  (omitted)     
+             |
+    type_cat |
+          1  |  (omitted)     
+          2  |  (omitted)     
+          3  |  (omitted)     
+             |
+    size_cat |
+          1  |  (omitted)     
+          2  |  (omitted)     
+          3  |  (omitted)     
+          4  |  (omitted)     
+          5  |  (omitted)     
+          6  |  (omitted)     
+          7  |  (omitted)     
+             |
+cluster_ar~s |  (omitted)     
+cluster_bi~s |  (omitted)     
+cluster_ba~t |  (omitted)     
+cluster_ce~s |  (omitted)     
+cluster_cl~g |  (omitted)     
+cluster_da~g |  (omitted)     
+cluster_da~l |  (omitted)     
+cluster_da~e |  (omitted)     
+cluster_de~s |  (omitted)     
+cluster_dy~b |  (omitted)     
+cluster_en~d |  (omitted)     
+cluster_en~s |  (omitted)     
+cluster_fr~t |  (omitted)     
+cluster_ge~i |  (omitted)     
+cluster_mo~p |  (omitted)     
+cluster_ne~g |  (omitted)     
+cluster_os~d |  (omitted)     
+cluster_sc~l |  (omitted)     
+cluster_se~y |  (omitted)     
+cluster_sy~g |  (omitted)     
+cluster_te~g |  (omitted)     
+             |
+job_family~m |
+DevOps & ..  |  (omitted)     
+ Management  |  (omitted)     
+      Other  |  (omitted)     
+Software ..  |  (omitted)     
+Software ..  |  (omitted)     
+Sr+ Softw..  |  (omitted)     
+             |
+ 0.edu_logit |  (omitted)     
+             |
+exp_category |
+          0  |  (omitted)     
+          2  |  (omitted)     
+             |
+exp_category |
+          4  |  (omitted)     
+             |
+       _cons |  (omitted)     
+-------------+----------------
+1            |
+             |
+  country_id |
+         IN  | -1.7660056***  
+         US  |  .44674246     
+             |
+sector_nac~m |
+          J  |  .24605706**   
+          K  |  .24401964*    
+          M  |  .25650668     
+      Other  | -.00087026     
+          Q  |  .47867372***  
+    Unknown  |  .47842472***  
+             |
+    type_cat |
+          1  |  .00017724     
+          2  |  .00430416     
+          3  |  .06516078     
+             |
+    size_cat |
+          1  | -.14643436     
+          2  |   .1738443     
+          3  |  .32989557**   
+          4  |  .12356957     
+          5  |  .23830592*    
+          6  |  .05630281     
+          7  |  .13172333     
+             |
+cluster_ar~s |  .11938617     
+cluster_bi~s |  .22480383***  
+cluster_ba~t |  .19331347**   
+cluster_ce~s |  -.2939903**   
+cluster_cl~g |  .36288531***  
+cluster_da~g | -.04615643     
+cluster_da~l |  2.1938822***  
+cluster_da~e | -.24363076***  
+cluster_de~s |  .07466586     
+cluster_dy~b |  .53149575***  
+cluster_en~d | -.38851671***  
+cluster_en~s |  .38184995***  
+cluster_fr~t |  .48763375***  
+cluster_ge~i |  3.8571658***  
+cluster_mo~p | -.08016423     
+cluster_ne~g | -.04826597     
+cluster_os~d |   -.242639***  
+cluster_sc~l | -.23828166*    
+cluster_se~y |  .02733368     
+cluster_sy~g | -.10879819     
+cluster_te~g | -.00840111     
+             |
+job_family~m |
+DevOps & ..  | -.52875374***  
+ Management  |  -.0107938     
+      Other  |  -.5618025***  
+Software ..  | -.78718417***  
+Software ..  | -.14996543     
+Sr+ Softw..  | -.18986647     
+             |
+ 0.edu_logit |  .23067555***  
+             |
+exp_category |
+          0  | -.27212236***  
+          2  | -.15676885*    
+             |
+exp_category |
+          4  |  -.1555574*    
+             |
+       _cons | -3.4920839***  
+-------------+----------------
+2            |
+             |
+  country_id |
+         IN  | -1.8254663***  
+         US  |  .10656261     
+             |
+sector_nac~m |
+          J  |  .30646555**   
+          K  |  .15997136     
+          M  |  .26161433     
+      Other  | -.00106093     
+          Q  |  .33931299     
+    Unknown  |  .50427574**   
+             |
+    type_cat |
+          1  |  -.1301187     
+          2  | -.17815175     
+          3  | -.14807841     
+             |
+    size_cat |
+          1  | -.04232225     
+          2  |  .20546186     
+          3  |   .1273532     
+          4  |  -.2890991     
+          5  |  .09652808     
+          6  |  .35694607     
+          7  |   .3109075*    
+             |
+cluster_ar~s | -.08821018     
+cluster_bi~s |  .23942316**   
+cluster_ba~t | -.01988438     
+cluster_ce~s | -.63627121***  
+cluster_cl~g |  .41198312***  
+cluster_da~g |  .43077081***  
+cluster_da~l |  3.8490138***  
+cluster_da~e | -.30643647***  
+cluster_de~s |  .09887811     
+cluster_dy~b |  1.0162667***  
+cluster_en~d |  -.5124904***  
+cluster_en~s | -.19434033     
+cluster_fr~t |  .00361384     
+cluster_ge~i |  4.2406419***  
+cluster_mo~p | -.20231305     
+cluster_ne~g | -.02325219     
+cluster_os~d | -.34301396***  
+cluster_sc~l | -.53590357***  
+cluster_se~y | -.05982861     
+cluster_sy~g |  .60825269***  
+cluster_te~g |  -.1374899*    
+             |
+job_family~m |
+DevOps & ..  | -1.5200569***  
+ Management  | -.35621914*    
+      Other  |  -1.841757***  
+Software ..  | -1.8017008***  
+Software ..  | -.75176281***  
+Sr+ Softw..  | -.74417661***  
+             |
+ 0.edu_logit |  .09421172     
+             |
+exp_category |
+          0  |   .1784048     
+          2  | -.05950965     
+             |
+exp_category |
+          4  |  .08873741     
+             |
+       _cons | -3.7072205***  
+-------------+----------------
+Statistics   |                
+           N |      32279     
+          ll | -9722.8155     
+        chi2 |  13239.296     
+------------------------------
+legend: * p<0.05; ** p<0.01; *** p<0.001
+
+. log close
+      name:  <unnamed>
+       log:  C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata\output/comparative_run__1_Apr_2026_22-42-42/ai_skills_comparative_analysis.log
+  log type:  text
+ closed on:   1 Apr 2026, 22:46:12
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
