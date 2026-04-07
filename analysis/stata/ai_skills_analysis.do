@@ -101,7 +101,7 @@ label variable has_ai "AI Job (desc_tier_llm in {ai_integration, applied_ai})"
 * --- 3.3 Vzdělání (Hybridní) ---
 * Vytvoříme 'education_hybrid' z edulevel_llm (primární) a edu_level_det (fallback)
 * POZOR: OLS (mzdový) model požaduje GRANULÁRNÍ vzdělání (4 úrovně),
-*        Logit/Mlogit model požaduje BINÁRNÍ (sloučení HS+Associate kvůli malé n).
+*        Mlogit model požaduje BINÁRNÍ (sloučení HS+Associate kvůli malé n).
 
 * Krok 1: Normalizujeme edulevel_llm na lowercase a sjednotíme hodnoty
 gen education_hybrid = lower(edulevel_llm)
@@ -132,7 +132,7 @@ label define edu_ols_lbl 0 "Missing" 1 "High School" 2 "Associate" 3 "Bachelor" 
 label values edu_ols edu_ols_lbl
 label variable edu_ols "Vzdelani (granularni pro OLS)"
 
-* --- 3.3b edu_logit: Binární proměnná pro Logit/Mlogit ---
+* --- 3.3b edu_logit: Binární proměnná pro Mlogit ---
 * Úrovně: 0=Missing/HS/Associate, 1=Bachelor+
 * Sloučení Associate+HS kvůli malému počtu pozorování v AI buňkách
 gen edu_logit = .
@@ -141,7 +141,7 @@ replace edu_logit = 1 if inlist(education_hybrid, "bachelor", "master")
 
 label define edu_logit_lbl 0 "No Degree / Missing" 1 "Bachelor or Higher"
 label values edu_logit edu_logit_lbl
-label variable edu_logit "Vzdelani (binarni pro Logit)"
+label variable edu_logit "Vzdelani (binarni pro Mlogit)"
 
 * Zpětná kompatibilita: edu_cat = edu_logit (pro staré deskriptivní tabulky)
 gen edu_cat = edu_logit
@@ -732,9 +732,9 @@ estimates table model_a model_b, star stats(N r2 r2_a)
 
 
 * ==============================================================================
-* 6B. PRAVDĚPODOBNOSTNÍ MODELY (Logit + Multinomiální Logit)
+* 6B. PRAVDĚPODOBNOSTNÍ MODELY (Multinomiální Logit)
 * ==============================================================================
-* DV: has_ai (binární) a ai_level (multinomiální: 0=None, 1=AI Integration, 2=Applied/Core AI)
+* DV: ai_level (multinomiální: 0=None, 1=AI Integration, 2=Applied/Core AI)
 * Cíl: Zjistit, jaké firmy a na jaké pozice nejčastěji vyžadují AI dovednosti?
 * DŮLEŽITÉ: Proměnná is_remote zde NENÍ zahrnuta (is_remote je spíše výsledek než příčina AI požadavku).
 *
@@ -745,7 +745,7 @@ estimates table model_a model_b, star stats(N r2 r2_a)
 * potreba instrumentalni promenna nebo kvazi-experiment.
 
 display _n "=============================================================="
-display "6B. PRAVDEPODOBNOSTNI MODELY — LOGIT / MLOGIT"
+display "6B. PRAVDEPODOBNOSTNI MODELY — MULTINOMIALNI LOGIT"
 display "=============================================================="
 
 * -----------------------------------------------------------------------
@@ -804,7 +804,7 @@ display _n "--- 6B.3c Marginalni efekty Mlogit M3: P(Applied/Core AI) ---"
 margins, dydx(*) predict(outcome(2))
 
 * -----------------------------------------------------------------------
-* Srovnávací tabulky Logit a Mlogit modelů
+* Srovnávací tabulky Mlogit modelů
 * -----------------------------------------------------------------------
 display _n "--- 6B.4 Porovnani Mlogit modelu 1, 2, 3 ---"
 estimates table mlogit_m1 mlogit_m2 mlogit_m3, star stats(N ll chi2)
@@ -873,7 +873,7 @@ display _n "--- 6B.5 Porovnani Mlogit M3 vs M3a vs M3b ---"
 estimates table mlogit_m3 mlogit_m3a mlogit_m3b, star stats(N ll chi2)
 
 * -----------------------------------------------------------------------
-* CITLIVOSTNÍ ANALÝZA: Logit/Mlogit BEZ cluster_generative_ai a cluster_data_science__ml
+* CITLIVOSTNÍ ANALÝZA: Mlogit BEZ cluster_generative_ai a cluster_data_science__ml
 * -----------------------------------------------------------------------
 * Test cirkularity: cluster_generative_ai a cluster_data_science__ml primo implikuji
 * AI pozadavek (GPT, LLM, TensorFlow, PyTorch...). Vyradime je a porovname.
@@ -884,7 +884,7 @@ estimates table mlogit_m3 mlogit_m3a mlogit_m3b, star stats(N ll chi2)
 *   rename _excl_dsml cluster_data_science__ml
 
 display _n "=============================================================="
-display "6C. CITLIVOSTNI ANALYZA — LOGIT/MLOGIT BEZ GenAI A DS/ML CLUSTERU"
+display "6C. CITLIVOSTNI ANALYZA — MLOGIT BEZ GenAI A DS/ML CLUSTERU"
 display "=============================================================="
 
 rename cluster_generative_ai _excl_genai
