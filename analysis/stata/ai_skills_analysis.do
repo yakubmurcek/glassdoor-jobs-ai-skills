@@ -94,8 +94,10 @@ label variable has_ai "AI Job (desc_tier_llm in {ai_integration, applied_ai})"
 
 * --- 3.3 Vzdělání (Hybridní) ---
 * Vytvoříme 'education_hybrid' z edulevel_llm (primární) a edu_level_det (fallback)
-* POZOR: OLS (mzdový) model požaduje GRANULÁRNÍ vzdělání (4 úrovně),
-*        Mlogit model požaduje BINÁRNÍ (sloučení HS+Associate kvůli malé n).
+* POZOR: OLS (mzdový) model používá GRANULÁRNÍ vzdělání (edu_ols, 5 úrovní),
+*        Mlogit model používá 3-úrovňové (edu_logit: Missing / HS+Assoc / BA+).
+*        Missing je v obou samostatná kategorie — sloučení s "bez titulu" by
+*        zkreslovalo závěry, protože AI inzeráty mají významně vyšší missingness.
 
 * Krok 1: Normalizujeme edulevel_llm na lowercase a sjednotíme hodnoty
 gen education_hybrid = lower(edulevel_llm)
@@ -126,21 +128,24 @@ label define edu_ols_lbl 0 "Missing" 1 "High School" 2 "Associate" 3 "Bachelor" 
 label values edu_ols edu_ols_lbl
 label variable edu_ols "Vzdelani (granularni pro OLS)"
 
-* --- 3.3b edu_logit: Binární proměnná pro Mlogit ---
-* Úrovně: 0=Missing/HS/Associate, 1=Bachelor+
-* Sloučení Associate+HS kvůli malému počtu pozorování v AI buňkách
+* --- 3.3b edu_logit: 3-úrovňová proměnná pro Mlogit ---
+* Úrovně: 0=Missing (neuvedeno), 1=HS/Associate (bez BA), 2=Bachelor+
+* Missing je ODDELENA kategorie — sloucovani s "bez titulu" by zkreslovalo
+* zavery, protoze AI inzeraty maji vyrazne vic chybejiciho vzdelani (43.6 % vs 33.6 %).
+* HS a Associate slouceny kvuli malemu poctu pozorovani v AI bunkach.
 gen edu_logit = .
-replace edu_logit = 0 if inlist(education_hybrid, "missing", "", "highschool", "associate")
-replace edu_logit = 1 if inlist(education_hybrid, "bachelor", "master")
+replace edu_logit = 0 if inlist(education_hybrid, "missing", "")
+replace edu_logit = 1 if inlist(education_hybrid, "highschool", "associate")
+replace edu_logit = 2 if inlist(education_hybrid, "bachelor", "master")
 
-label define edu_logit_lbl 0 "No Degree / Missing" 1 "Bachelor or Higher"
+label define edu_logit_lbl 0 "Missing" 1 "HS / Associate" 2 "Bachelor or Higher"
 label values edu_logit edu_logit_lbl
-label variable edu_logit "Vzdelani (binarni pro Mlogit)"
+label variable edu_logit "Vzdelani (3 urovne pro Mlogit)"
 
 * Zpětná kompatibilita: edu_cat = edu_logit (pro staré deskriptivní tabulky)
 gen edu_cat = edu_logit
 label values edu_cat edu_logit_lbl
-label variable edu_cat "Pozadovane vzdelani (Binary)"
+label variable edu_cat "Pozadovane vzdelani (3 urovne)"
 
 * --- 3.4 Zkušenosti ---
 * experience_min_llm by měl být již numerický, ale pro jistotu
@@ -316,11 +321,14 @@ display _n "Podil pozic s AI pozadavky: " %5.2f (`n_ai'/`n_total')*100 "%"
 * --- 4.2 Požadované vzdělání ---
 display _n "--- 4.2 Distribuce vzdelavacich pozadavku ---"
 tab edu_cat, missing
-tab edu_cat if edu_cat > 0
+display _n "Granularni distribuce vzdelani (vcetne Missing):"
+tab edu_ols, missing
 
-* Porovnání vzdělání podle AI tier
-display _n "Vzdelani x AI tier (kontingencni tabulka):"
-tab edu_cat ai_tier_num if edu_cat > 0, chi2 column
+* Porovnání vzdělání podle AI tier (3 urovne + Missing jako vlastni kategorie)
+display _n "Vzdelani x AI tier (kontingencni tabulka, 3 urovne):"
+tab edu_cat ai_tier_num, chi2 column
+display _n "Granularni vzdelani x AI tier (pro detail):"
+tab edu_ols ai_tier_num, chi2 column
 
 * --- 4.3 Požadované zkušenosti ---
 display _n "--- 4.3 Distribuce pozadavku na zkusenosti ---"
@@ -410,15 +418,48 @@ display _n "Seniority x AI tier (radkova %):"
 tab exp_category ai_level, row chi2
 
 * --- 4.15 Diagnostika chybejicich platu ---
-* Test zda missingness platu je systematicka (selection bias)
-display _n "--- 4.15 Diagnostika chybejicich platu ---"
+* POZN: nesignifikance testu nize NEZNAMENA absenci selection bias (ne MCAR).
+* Testujeme pouze, zda missingness platu souvisi s AI tierem — ne s dalsimi
+* observables. Viz sekce 4.15b nize, kde modelujeme missingness proti vice
+* promennym, abychom ukazali, ze data NEJSOU MCAR.
+display _n "--- 4.15 Diagnostika chybejicich platu (podle AI) ---"
 gen has_salary = (salary_mid != .)
 label variable has_salary "Ma uvedeny plat (1=ano)"
 display _n "Chybejici platy x AI flag:"
 tab has_salary has_ai, chi2 row
 display _n "Chybejici platy x AI tier:"
 tab has_salary desc_tier_llm, chi2 row
-display "Test zda AI pozice maji systematicky jiny podil chybejicich platu"
+display "Pozn: nesignifikance zde znamena pouze, ze missingness se nelisi"
+display "napric AI tiery — nikoli, ze neexistuje selection bias obecne."
+
+* --- 4.15b Missingness platu x dalsi observables ---
+* Ukazka, ze missingness platu NENI MCAR: lisi se napric regiony,
+* sektory, velikosti firmy i remote statusem. Formalne testujeme logitem.
+display _n "--- 4.15b Missingness platu x observables (ne-MCAR diagnostika) ---"
+display _n "has_salary x region:"
+tab has_salary region_num, chi2 row
+display _n "has_salary x company size:"
+tab has_salary size_cat, chi2 row
+display _n "has_salary x sector (top-level):"
+tab has_salary sector_nace_num, chi2 row
+display _n "has_salary x remote:"
+tab has_salary is_remote, chi2 row
+
+display _n "--- 4.15c Logit modelu missingness: has_salary ~ observables ---"
+display "Pokud jsou prediktory spolecne signifikantni, data NEJSOU MCAR."
+logit has_salary ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    i.size_cat ///
+    i.type_cat ///
+    is_remote ///
+    i.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category, vce(robust)
+display _n "Wald test spolecne signifikance vsech observables (krome AI):"
+testparm i.sector_nace_num i.region_num i.size_cat i.type_cat is_remote ///
+    i.job_family_num i.edu_logit i.exp_category
 
 
 * ==============================================================================
@@ -686,20 +727,12 @@ regress ln_salary ///
 display "Testujeme zda AI premie se lisi podle seniority"
 testparm i.ai_level#ib3.exp_category
 
-* --- 6.3 Srovnání modelů A vs B (F-test nested models) ---
+* --- 6.3 Srovnání modelů A vs B (Wald F-test nested models) ---
 display _n "--- 6.3 Srovnani OLS modelu A vs B ---"
-display "F-test (na standardnich chybach): testuje zda edu + exp + job_family vyznamne zlepsuje model"
-
-quietly regress ln_salary ///
-    cluster_* ///
-    i.ai_level ///
-    i.sector_nace_num ///
-    i.region_num ///
-    is_remote ///
-    i.type_cat ///
-    i.size_cat ///
-    if ln_salary != .
-estimates store model_a_lr
+display "Wald F-test na robustnich SE: testuje zda edu + exp + job_family vyznamne"
+display "zlepsuje model oproti zakladni specifikaci (cluster_* + firm profile)."
+display "Pouzivame testparm po jedine regresi s plnou specifikaci a vce(robust),"
+display "coz je korektni pristup pri heteroskedasticite (na rozdil od lrtest)."
 
 quietly regress ln_salary ///
     cluster_* ///
@@ -712,11 +745,10 @@ quietly regress ln_salary ///
     i.job_family_num ///
     i.edu_ols ///
     ib3.exp_category ///
-    if ln_salary != .
-estimates store model_b_lr
+    if ln_salary != ., vce(robust)
 
-lrtest model_a_lr model_b_lr
-estimates drop model_a_lr model_b_lr
+display _n "Wald F-test: spolecna signifikance pridanych bloku (job_family + edu + exp)"
+testparm i.job_family_num i.edu_ols i.exp_category
 
 * --- 6.4 Porovnávací tabulka OLS modelů ---
 display _n "--- 6.4 Porovnani koeficientu OLS Model A vs B ---"
@@ -760,7 +792,7 @@ display _n "--- 6B.2a Mlogit Model 2: Profil role a cloveka ---"
 mlogit ai_level ///
     cluster_* ///
     i.job_family_num ///
-    ib1.edu_logit ///
+    ib2.edu_logit ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m2
 display _n "--- 6B.2b Marginalni efekty Mlogit M2: P(AI Integration) ---"
@@ -780,7 +812,7 @@ mlogit ai_level ///
     i.region_num ///
     cluster_* ///
     i.job_family_num ///
-    ib1.edu_logit ///
+    ib2.edu_logit ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m3
 display _n "--- 6B.3b Marginalni efekty Mlogit M3: P(AI Integration) ---"
@@ -798,11 +830,11 @@ estimates table mlogit_m1 mlogit_m2 mlogit_m3, star stats(N ll chi2)
 display _n "--- 6B.6 Hausman test IIA (Model 3) ---"
 quietly mlogit ai_level ///
     i.sector_nace_num i.type_cat i.size_cat i.region_num ///
-    cluster_* i.job_family_num ib1.edu_logit ib3.exp_category, baseoutcome(0)
+    cluster_* i.job_family_num ib2.edu_logit ib3.exp_category, baseoutcome(0)
 estimates store hausman_full
 quietly mlogit ai_level ///
     i.sector_nace_num i.type_cat i.size_cat i.region_num ///
-    cluster_* i.job_family_num ib1.edu_logit ib3.exp_category ///
+    cluster_* i.job_family_num ib2.edu_logit ib3.exp_category ///
     if ai_level != 1, baseoutcome(0)
 estimates store hausman_reduced
 capture noisily hausman hausman_reduced hausman_full, alleqs constant
@@ -825,7 +857,7 @@ mlogit ai_level ///
     i.size_cat ///
     i.region_num ///
     cluster_* ///
-    ib1.edu_logit ///
+    ib2.edu_logit ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m3a
 display _n "--- 6B.7b Marginalni efekty Mlogit M3a: P(AI Integration) ---"
@@ -844,7 +876,7 @@ mlogit ai_level ///
     i.size_cat ///
     i.region_num ///
     cluster_* ///
-    ib1.edu_logit, baseoutcome(0) rrr
+    ib2.edu_logit, baseoutcome(0) rrr
 estimates store mlogit_m3b
 display _n "--- 6B.8b Marginalni efekty Mlogit M3b: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
@@ -883,7 +915,7 @@ mlogit ai_level ///
     i.region_num ///
     cluster_* ///
     i.job_family_num ///
-    ib1.edu_logit ///
+    ib2.edu_logit ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m3_nocirc
 display _n "--- 6C.1b Marginalni efekty Mlogit M3 nocirc: P(AI Integration) ---"
