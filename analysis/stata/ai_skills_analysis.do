@@ -2,21 +2,15 @@
 * AI SKILLS IN IT JOB POSTINGS - STATA ANALYSIS
 * ==============================================================================
 * Dataset: us_relevant_ai_stata.csv
-* Autor: [Yakub Murcek]
+* Autor: Yakub Murcek
 * Datum: Leden 2026
-* 
-* Tento do-file obsahuje kompletní analýzu datasetu IT pracovních inzerátů
-* s fokusem na požadavky na AI dovednosti.
-*
-* TESTOVÁNO PRO: STATA 15.1 (IC/SE verze)
+* Stata 15.1 (IC/SE)
 ********************************************************************************
 
 * ==============================================================================
 * 1. NASTAVENÍ PROSTŘEDÍ
 * ==============================================================================
-* Vyčistíme paměť a nastavíme working directory
-* Toto je důležité pro reprodukovatelnost - každý běh začíná čistě
-* AUTO-SETUP: Pokus o automatické nastavení složky
+* Pokus o automatické nastavení working directory
 capture {
     local userprofile : environment USERPROFILE
     * Převod zpětných lomítek na dopředná pro jistotu
@@ -157,7 +151,7 @@ label variable experience_min_llm "Min. pozadovane roky zkusenosti"
 * Missing = neuvedeno v inzerátu (samostatná kategorie, jako u vzdělání)
 gen exp_category = .
 replace exp_category = 0 if experience_min_llm == .
-* Slouceni Entry s Junior a Expert se Senior
+* Slouceni Entry+Junior a Senior+Expert do spolecnych kategorii
 replace exp_category = 2 if experience_min_llm >= 0 & experience_min_llm <= 2
 replace exp_category = 3 if experience_min_llm > 2 & experience_min_llm <= 5
 replace exp_category = 4 if experience_min_llm > 5 & experience_min_llm < .
@@ -278,7 +272,7 @@ drop cluster_data_analysis__stats
 drop cluster_tools__editors
 
 * --- 3.16 Počet hard skills na pozici (kontinuální proměnná) ---
-* Přesunuto sem z sekce 7 — potřebujeme pro deskriptivní i regresní analýzy
+* Přesunuto sem ze sekce 7 — potřebujeme pro deskriptivní i regresní analýzy
 gen skill_count = 1 + length(hardskills) - length(subinstr(hardskills, ",", "", .))
 replace skill_count = 0 if hardskills == ""
 label variable skill_count "Pocet pozadovanych hard skills"
@@ -300,14 +294,14 @@ label variable company_id "ID firmy (pro cluster SE)"
 * ==============================================================================
 * 4. DESKRIPTIVNÍ STATISTIKA
 * ==============================================================================
-* Základní přehled datasetu - toto jde typicky do první tabulky v diplomce
+* Základní přehled datasetu
 
 display _n "=============================================================="
 display "4. DESKRIPTIVNI STATISTIKA"
 display "=============================================================="
 
 * --- 4.1 Frekvence AI tier klasifikace ---
-* KLÍČOVÁ TABULKA: Kolik % pozic vyžaduje AI dovednosti?
+* Kolik % pozic vyzaduje AI dovednosti?
 display _n "--- 4.1 Distribuce AI pozadavku v IT pozicich ---"
 tab desc_tier_llm, missing
 tab desc_tier_llm if desc_tier_llm != "missing", sort
@@ -339,7 +333,7 @@ tab exp_category ai_tier_num, chi2 column
 display _n "--- 4.4 Distribuce platu ---"
 summarize salary_mid, detail
 
-* Platy podle AI tier - DŮLEŽITÉ pro argument o "AI premium"
+* Platy podle AI tier — vychozi cisla pro argument o "AI premium"
 display _n "Plat podle AI tier:"
 tabstat salary_mid, by(desc_tier_llm) statistics(count mean sd min p25 p50 p75 max)
 
@@ -408,7 +402,7 @@ display _n "Seniority x AI tier:"
 tab exp_category ai_level, column chi2
 
 * --- 4.14c Seniority x AI (radkova procenta — % AI penetrace v kazde urovni) ---
-* Pro Word tabulky: kazdy radek (seniority level) sumi do 100%
+* Pro Word tabulky: kazdy radek (seniority level) se scita do 100 %
 display _n "--- 4.14c Seniority x AI (radkova procenta) ---"
 display _n "Seniority x has_ai (radkova %):"
 tab exp_category has_ai, row chi2
@@ -428,15 +422,14 @@ display "Test zda AI pozice maji systematicky jiny podil chybejicich platu"
 
 
 * ==============================================================================
-* 5. ANALYTICKÉ TESTY - HYPOTÉZY
+* 5. ANALYTICKÉ TESTY — HYPOTÉZY
 * ==============================================================================
-* Statistické testy pro ověření hypotéz diplomové práce
 
 display _n "=============================================================="
 display "5. STATISTICKE TESTY"
 display "=============================================================="
 
-* --- 5.1 T-test: Liší se platy AI vs non-AI pozic? ---
+* --- 5.1 T-test: Plat AI vs non-AI ---
 * H0: Průměrný plat AI pozic = průměrný plat non-AI pozic
 * H1: Průměrné platy se liší
 
@@ -446,7 +439,7 @@ ttest salary_mid, by(has_ai)
 display _n "--- 5.1b Welch t-test (nerovne variance) ---"
 ttest salary_mid, by(has_ai) unequal
 
-* Efekt size (Cohenovo d) - důležité pro interpretaci praktické významnosti
+* Cohenovo d (effect size)
 quietly summarize salary_mid if has_ai == 0
 local mean_no_ai = r(mean)
 local sd_no_ai = r(sd)
@@ -461,22 +454,21 @@ local n_ai = r(N)
 local sd_pooled = sqrt(((`n_no_ai'-1)*`sd_no_ai'^2 + (`n_ai'-1)*`sd_ai'^2) / (`n_no_ai'+`n_ai'-2))
 local cohens_d = (`mean_ai' - `mean_no_ai') / `sd_pooled'
 
-display _n "Cohenovo d (effect size): " %5.3f `cohens_d'
-display "Interpretace: |d| < 0.2 = maly, 0.2-0.8 = stredni, > 0.8 = velky efekt"
+display _n "Cohenovo d: " %5.3f `cohens_d'
+* Interpretace: |d| < 0.2 = maly, 0.2-0.8 = stredni, > 0.8 = velky efekt
 
-* --- 5.2 ANOVA: Liší se platy mezi AI tiers? ---
-* Testuje rozdíly mezi none, ai_integration, ai_focused
+* --- 5.2 ANOVA: Plat podle AI tier ---
+* Rozdíly mezi none, ai_integration, applied_ai
 
 display _n "--- 5.2a ANOVA: Plat podle AI tier ---"
 oneway salary_mid ai_tier_num, tabulate bonferroni
 
+* Neparametrická kontrola (Bartlett test je signifikantní, variance nejsou rovné)
 display _n "--- 5.2b Robustni ANOVA (Kruskal-Wallis) ---"
-display "Bartlett test je signifikantni → neparametricky test jako robustnostni kontrola"
 kwallis salary_mid, by(ai_tier_num)
 
-* --- 5.3 Chi-square: Vzdělání a AI požadavky ---
-* Jsou AI pozice náročnější na vzdělání?
-
+* --- 5.3 Chi-square: Vzdelani x AI tier ---
+* Jsou AI pozice narocnejsi na vzdelani?
 display _n "--- 5.3 Chi-square: Vzdelani x AI tier ---"
 tab edu_cat has_ai, chi2 expected
 display _n "Granularni vzdelani x AI (pro informaci):"
@@ -494,18 +486,18 @@ ranksum salary_mid, by(has_ai)
 
 
 * ==============================================================================
-* 6. REGRESNÍ ANALÝZA — EKONOMETRICKÉ MODELY
+* 6. REGRESNÍ ANALÝZA — OLS MODELY
 * ==============================================================================
-* Závěsná rovnice: log(mzda)
-* Závorka = Model B (plný s lidským kapitálem), bez závorky = Model A (firemní základ)
+* Závislá proměnná: ln_salary
+* Model A = firemní profil; Model B = Model A + lidský kapitál (edu, exp, job_family)
 
 display _n "=============================================================="
 display "6. REGRESNI ANALYZA — OLS MODELY"
 display "=============================================================="
 
-* --- 6.0 Příprava: log transformace (již vytvořeno v sekci 3.18) ---
+* --- 6.0 Kontrola log transformace (ln_salary vytvořeno v sekci 3.18) ---
+* Koeficient b v log modelu: (exp(b)-1)*100 = % zmena platu
 summarize ln_salary, detail
-display _n "Pozn: koeficient b v log modelu = (exp(b)-1)*100 % zmena platu"
 
 * --- 6.1 Model A: Základní OLS (Firemní a technologický profil) ---
 * DV: ln_salary
@@ -584,8 +576,8 @@ vif
 * Puvodni robustnostni kontroly nasleduji v 6.2c-d
 * -----------------------------------------------------------------------
 
-* --- 6.2e Model B bez job_family (test mediace — job_family muze byt mediator) ---
-* job_family muze byt mediator AI pozadavku — oba modely ukazuji zajimave vysledky
+* --- 6.2e Model B bez job_family (test mediace) ---
+* job_family muze byt mediator AI pozadavku (napr. "ML Engineer" v sobe primo kóduje AI skill).
 display _n "--- 6.2e Model B bez job_family ---"
 display "ln(plat) ~ Model B - job_family (test zda job_family mediuje AI premii)"
 regress ln_salary ///
@@ -735,14 +727,10 @@ estimates table model_a model_b, star stats(N r2 r2_a)
 * 6B. PRAVDĚPODOBNOSTNÍ MODELY (Multinomiální Logit)
 * ==============================================================================
 * DV: ai_level (multinomiální: 0=None, 1=AI Integration, 2=Applied/Core AI)
-* Cíl: Zjistit, jaké firmy a na jaké pozice nejčastěji vyžadují AI dovednosti?
-* DŮLEŽITÉ: Proměnná is_remote zde NENÍ zahrnuta (is_remote je spíše výsledek než příčina AI požadavku).
+* is_remote zde NENÍ zahrnuta (je spíše výsledek než příčina AI požadavku).
 *
-* POZN PRO OBHAJOBU: cluster_* jsou extrahovány z textu inzeratu,
-* ze ktereho LLM zaroven pridelil ai_level. Model je exploratorni,
-* nikoliv kauzalni — cilem je identifikovat asociovane dovednostni
-* profily, ne prokazovat kauzalitu. Pro kauzalni inferenci by byl
-* potreba instrumentalni promenna nebo kvazi-experiment.
+* Model je exploratorní, nikoliv kauzální: cluster_* jsou extrahovány
+* ze stejného textu inzerátu, ze kterého LLM přidělil ai_level.
 
 display _n "=============================================================="
 display "6B. PRAVDEPODOBNOSTNI MODELY — MULTINOMIALNI LOGIT"
@@ -751,8 +739,7 @@ display "=============================================================="
 * -----------------------------------------------------------------------
 * MODEL 1: Základní profil firmy (Sektor, Typ, Velikost, Lokace)
 * -----------------------------------------------------------------------
-* Cíl: Jaký typ firmy, v jakém sektoru a lokalitě požaduje AI?
-
+* Jaký typ firmy a v jaké lokalitě vyžaduje AI?
 display _n "--- 6B.1a Mlogit Model 1: Profil firmy ---"
 mlogit ai_level ///
     i.sector_nace_num ///
@@ -768,8 +755,7 @@ margins, dydx(*) predict(outcome(2))
 * -----------------------------------------------------------------------
 * MODEL 2: Profil role a člověka (Skills, Pozice, Vzdělání, Praxe)
 * -----------------------------------------------------------------------
-* Cíl: Souvisí požadavek na AI s typem dovedností a profilem uchazeče?
-
+* Souvisí požadavek na AI s typem dovedností a profilem uchazeče?
 display _n "--- 6B.2a Mlogit Model 2: Profil role a cloveka ---"
 mlogit ai_level ///
     cluster_* ///
@@ -785,8 +771,7 @@ margins, dydx(*) predict(outcome(2))
 * -----------------------------------------------------------------------
 * MODEL 3: Kompletní (Model 1 + Model 2)
 * -----------------------------------------------------------------------
-* Cíl: Kompletní pohled — jak firemní profil, tak profil role a člověka
-
+* Firemní profil i profil role a uchazeče dohromady.
 display _n "--- 6B.3a Mlogit Model 3: Kompletni ---"
 mlogit ai_level ///
     i.sector_nace_num ///
@@ -876,10 +861,10 @@ estimates table mlogit_m3 mlogit_m3a mlogit_m3b, star stats(N ll chi2)
 * CITLIVOSTNÍ ANALÝZA: Mlogit BEZ cluster_generative_ai a cluster_data_science__ml
 * -----------------------------------------------------------------------
 * Test cirkularity: cluster_generative_ai a cluster_data_science__ml primo implikuji
-* AI pozadavek (GPT, LLM, TensorFlow, PyTorch...). Vyradime je a porovname.
-* Technika: docasne prejmenovani, aby je cluster_* wildcard nezachytil.
-* POZOR: Pokud kod mezi rename a unrename selze, promenne zustanou prejmenovane
-* a zbytek do-filu nepujde spustit! V pripade chyby rucne spustte:
+* AI pozadavek (GPT, LLM, TensorFlow, PyTorch...). Vyradime je pres docasne prejmenovani,
+* aby je cluster_* wildcard nezachytil.
+* POZOR: pokud kod selze mezi rename a unrename, promenne zustanou prejmenovane
+* a zbytek do-filu nepujde spustit. V pripade chyby rucne spustte:
 *   rename _excl_genai cluster_generative_ai
 *   rename _excl_dsml cluster_data_science__ml
 
@@ -910,7 +895,7 @@ margins, dydx(*) predict(outcome(2))
 rename _excl_genai cluster_generative_ai
 rename _excl_dsml cluster_data_science__ml
 
-* Srovnani: jak moc se zmeni ostatni koeficienty bez cirkularnich prediktoru?
+* Srovnani koeficientu s a bez cirkularnich prediktoru
 display _n "--- 6C.2 Porovnani Mlogit M3 vs M3-nocirc ---"
 estimates table mlogit_m3 mlogit_m3_nocirc, star stats(N ll chi2)
 
@@ -924,16 +909,15 @@ display _n "=============================================================="
 display "7. ANALYZA HARD SKILLS"
 display "=============================================================="
 
-* Poznámka: hardskills je textový sloupec s čárkami oddělenými skills
-* Pro detailní analýzu je lepší použít Python k vytvoření dummy proměnných
-* Zde ukážeme základní exploraci
-* POZN: skill_count je jiz vytvoren v sekci 3.16 (priprava dat)
+* hardskills je textovy sloupec s carkami oddelenymi skills; pro detailni
+* analyzu (dummy promenne per skill) je lepsi pouzit Python.
+* skill_count je jiz vytvoren v sekci 3.16
 
 display _n "--- 7.1 Pocet skills na pozici ---"
 summarize skill_count, detail
 tabstat skill_count, by(desc_tier_llm) statistics(count mean sd min max)
 
-* T-test: Vyžadují AI pozice více skills?
+* Vyžadují AI pozice více skills než non-AI pozice?
 display _n "--- 7.2a T-test: Pocet skills AI vs non-AI (rovne variance) ---"
 ttest skill_count, by(has_ai)
 
@@ -944,7 +928,6 @@ ttest skill_count, by(has_ai) unequal
 * ==============================================================================
 * 8. EXPORTY PRO TABULKY A GRAFY
 * ==============================================================================
-* Příprava dat pro publikovatelné tabulky
 
 display _n "=============================================================="
 display "8. EXPORTY"
@@ -961,7 +944,6 @@ export delimited desc_tier_llm salary_mid experience_min_llm edulevel_llm state 
 * ==============================================================================
 * 9. VIZUALIZACE
 * ==============================================================================
-* Základní grafy pro diplomovou práci
 
 display _n "=============================================================="
 display "9. VIZUALIZACE"
@@ -1002,14 +984,9 @@ display _n "=============================================================="
 display "ANALYZA DOKONCENA"
 display "=============================================================="
 display "Vystupy ulozeny do: $outdir"
-display "Log soubor: $outdir/ai_skills_analysis_`time_string'.log"
+display "Log soubor: $outdir/ai_skills_analysis.log"
 
 * Ulož zpracovaný dataset pro další práci
 save "$outdir/ai_skills_processed.dta", replace
 
-* Zavři log
 log close
-
-* ==============================================================================
-* KONEC DO-FILU
-* ==============================================================================
