@@ -1,14 +1,10 @@
 ********************************************************************************
-* AI SKILLS IN IT JOB POSTINGS - COMPARATIVE STATA ANALYSIS (US VS DE VS IN)
+* AI SKILLS IN IT JOB POSTINGS — COMPARATIVE STATA ANALYSIS (US vs DE vs IN)
 * ==============================================================================
 * Datasets: us_relevant_ai_stata.csv, de_relevant_ai_stata.csv, in_relevant_ai_stata.csv
-* Autor: [Yakub Murcek]
-* Datum: Leden 2026/Duben 2026
-* 
-* Tento do-file obsahuje POOLED (sdilenou) analyzu datasetu IT pracovnich inzeratu
-* pro USA, Nemecko a Indii, s cilem zkoumat vliv zeme na AI mzdove premie.
-*
-* TESTOVANO PRO: STATA 15.1 (IC/SE verze)
+* Autor: Yakub Murcek
+* Datum: Leden 2026 / Duben 2026
+* Stata 15.1 (IC/SE)
 ********************************************************************************
 
 * ==============================================================================
@@ -102,14 +98,10 @@ replace desc_tier_llm = "missing" if desc_tier_llm == ""
 replace desc_tier_llm = "applied_ai" if desc_tier_llm == "core_ai"
 encode desc_tier_llm, generate(ai_tier_num)
 
-gen skills_combined = lower(skills_ai_det + " " + desc_ai_llm)
-gen skills_no_buzz = ustrregexra(skills_combined, "(?i)\b(ai|ml|artificial intelligence|machine learning|genai)\b", "")
-gen skills_cleaned = subinstr(skills_no_buzz, ",", "", .)
-replace skills_cleaned = subinstr(skills_cleaned, " ", "", .)
-replace skills_cleaned = subinstr(skills_cleaned, ";", "", .)
-
-gen has_ai = ((desc_tier_llm != "none" & desc_tier_llm != "missing") & length(skills_cleaned) > 1)
-label variable has_ai "AI Job (Tier + Valid Skills, no buzzwords)"
+* has_ai is a simple alias of "tier is a real AI tier".
+* Counts equal ai_integration + applied_ai exactly — same logic as ai_tier_num / ai_level.
+gen has_ai = (desc_tier_llm != "none" & desc_tier_llm != "missing")
+label variable has_ai "AI Job (desc_tier_llm in {ai_integration, applied_ai})"
 
 * Vzdelani
 gen education_hybrid = lower(edulevel_llm)
@@ -259,7 +251,7 @@ display _n "--- 4.3 Chybejici mzdova data podle zeme (% platu reportovanych) ---
 gen has_salary = (salary_mid != .)
 tab country has_salary, row chi2
 
-display _n "--- 4.4 Prumerny vzdelavaci narok podle zemes ---"
+display _n "--- 4.4 Prumerny vzdelavaci narok podle zeme ---"
 tab country edu_logit, row chi2
 
 
@@ -289,16 +281,13 @@ regress ln_salary ///
 estimates store pooled_model_b
 
 
-* --- 5.2 INTERAKCNI MODEL: AI mzdova premie podla zeme ---
-* KLICOVA ANALYZA PRO DIPLOMKU: Pta se, zdali "wage premium za znalost AI"
-* se statisticky signifikantne lisi podle toho, jestli pracujete v US, DE, nebo IN.
-* Pouzivame GRADOVANY ai_level (0=zadny AI, 1=AI integrace, 2=Applied/Core AI),
-* ktery je informativnejsi nez binarni has_ai a prokazal signifikanci v Modelu B.
+* --- 5.2 Interakcni model: AI mzdova premie podle zeme ---
+* Testuje, zda se wage premium za AI znalosti statisticky lisi mezi US, DE a IN.
+* Pouzivame gradovany ai_level (0=zadny AI, 1=AI integrace, 2=Applied/Core AI);
+* je informativnejsi nez binarni has_ai a prokazal signifikanci v Modelu B.
+* Base level country = DE (abecedne), base level ai_level = 0.
 
-display _n "--- 5.2 Interakcni Model: Wage AI Premium (ai_level) lomeno zemi ---"
-display "Base level pro country je definovan Stata (abecedne = DE)."
-display "Base level pro ai_level = 0 (zadna AI). Interakce testuje, zda se"
-display "gradovana AI premie statisticky lisi mezi DE, IN a US."
+display _n "--- 5.2 Interakcni Model: AI Premium (ai_level) x zeme ---"
 
 regress ln_salary ///
     cluster_* ///
