@@ -91,27 +91,12 @@ replace desc_tier_llm = "applied_ai" if desc_tier_llm == "core_ai"
 
 encode desc_tier_llm, generate(ai_tier_num)
 
-* --- 3.2 AI Flag (Strict Intersection + Buzzword Filter) ---
-* 1. Sloučime zdroje skills do jednoho retezce pro kontrolu
-gen skills_combined = lower(skills_ai_det + " " + desc_ai_llm)
-
-* 2. Odstranime obecne buzzwords (AI, ML, Artificial Intelligence atd.)
-* Pouzivame regex s word boundaries \b aby se smazalo jen "AI" a ne "OpenAI"
-gen skills_no_buzz = ustrregexra(skills_combined, "(?i)\b(ai|ml|artificial intelligence|machine learning|genai)\b", "")
-
-* 3. Odstranime interpunkci (carky, mezery), abychom zarucili ze zbyva neco realneho
-gen skills_cleaned = subinstr(skills_no_buzz, ",", "", .)
-replace skills_cleaned = subinstr(skills_cleaned, " ", "", .)
-replace skills_cleaned = subinstr(skills_cleaned, ";", "", .)
-
-* 4. Definice has_ai_flag
-* Tier != None A ZAROVEN zbyly nejake specificke skills (delka > 1 znaku)
-gen has_ai_flag = ((desc_tier_llm != "none" & desc_tier_llm != "missing") & length(skills_cleaned) > 1)
-
-label variable has_ai_flag "AI Job (Tier + Valid Skills, no buzzwords)"
-
-* Kompatibilita pro starší skripty (volitelné)
-gen has_ai = has_ai_flag 
+* --- 3.2 AI Flag (consistent with tier classification) ---
+* has_ai is a simple alias of "tier is a real AI tier".
+* Counts therefore equal ai_integration + applied_ai exactly,
+* and match the totals used by ai_tier_num / ai_level downstream.
+gen has_ai = (desc_tier_llm != "none" & desc_tier_llm != "missing")
+label variable has_ai "AI Job (desc_tier_llm in {ai_integration, applied_ai})"
 
 * --- 3.3 Vzdělání (Hybridní) ---
 * Vytvoříme 'education_hybrid' z edulevel_llm (primární) a edu_level_det (fallback)
