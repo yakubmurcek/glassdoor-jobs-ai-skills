@@ -1,0 +1,91 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata\output/run__7_Apr_2026_09-26-11/ai_skills_analysis.log
+  log type:  text
+ opened on:   7 Apr 2026, 09:26:11
+
+. 
+. 
+. * ==============================================================================
+. * 2. IMPORT DAT
+. * ==============================================================================
+. * Používáme soubor 'us_relevant_ai_stata.csv'
+. import delimited "$datadir/us_relevant_ai_stata.csv", delimiter(";") clear varnames(1) encoding(utf8)
+--Break--
+r(1);
+
+end of do-file
+
+--Break--
+r(1);
+
+. set max_memory 8g
+
+. set max_memory 8g, permanently
+(set max_memory preference recorded)
+
+. do "C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata\ai_skills_analysis.do"
+
+. ********************************************************************************
+. * AI SKILLS IN IT JOB POSTINGS - STATA ANALYSIS
+. * ==============================================================================
+. * Dataset: us_relevant_ai_stata.csv
+. * Autor: [Yakub Murcek]
+. * Datum: Leden 2026
+. * 
+. * Tento do-file obsahuje kompletní analýzu datasetu IT pracovních inzerátů
+. * s fokusem na požadavky na AI dovednosti.
+. *
+. * TESTOVÁNO PRO: STATA 15.1 (IC/SE verze)
+. ********************************************************************************
+. 
+. * ==============================================================================
+. * 1. NASTAVENÍ PROSTŘEDÍ
+. * ==============================================================================
+. * Vyčistíme paměť a nastavíme working directory
+. * Toto je důležité pro reprodukovatelnost - každý běh začíná čistě
+. * AUTO-SETUP: Pokus o automatické nastavení složky
+. capture {
+
+. if _rc {
+.     display as text "Pozor: Nepodařilo se automaticky nastavit složku. Ujistěte se, že jste v 'analysis/stata'"
+. }
+
+. display "Aktuální pracovní složka: " c(pwd)
+Aktuální pracovní složka: C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata
+
+. 
+. version 15.1                              
+
+. clear all
+
+. set more off                              
+
+. set max_memory 8g, permanently            
+(set max_memory preference recorded)
+
+. 
+. * Generovani casoveho razitka pro unikatni nazev slozky
+. local c_date = c(current_date)
+
+. local c_time = c(current_time)
+
+. local time_string = subinstr("`c_date'_`c_time'", " ", "_", .)
+
+. local time_string = subinstr("`time_string'", ":", "-", .)
+
+. 
+. * Nastav cestu k datům - UPRAV PODLE SVÉ STRUKTURY
+. global datadir "../../data/outputs"
+
+. global outdir "./output/run_`time_string'"
+
+. 
+. * Vytvoř output složku pokud neexistuje
+. capture mkdir "./output"
+
+. capture mkdir "$outdir"
+
+. 
+. * Log file - zaznamenává veškerý výstup pro pozdější kontrolu
+. capture log close
