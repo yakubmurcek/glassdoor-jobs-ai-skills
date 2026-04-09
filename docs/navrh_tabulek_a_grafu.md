@@ -5,20 +5,19 @@ Tento dokument obsahuje návrh na vizualizaci výsledků analýzy pro kapitolu "
 ## 1. Rozvržení tabulek a grafů dle kapitol
 
 ### 5.1 Deskriptivní statistika
-* **Graf 1: Distribuce ročních platů napříč úrovněmi AI (Boxplot)** 
+* **Graf 1: Distribuce ročních platů napříč úrovněmi AI (Křivka hustoty / KDE)** 
   * **Umístění:** Sekce 5.1.2.
-  * **Cíl:** Vizualizovat vzestup mediánu a průměru mezd (Applied AI > AI Integration > None) i s rozptylem platů.
-  * **Tip:** Doporučuje se graf nahoře oříznout (např. omezit osu Y na max. 300 000 USD), aby extrémní odlehlé hodnoty nezploštily vizualizované "krabičky".
+  * **Cíl:** Vizuálně zachytit komplexní posun mzdové masy k vyšším částkám u AI pozic.
+  * **Vzhled:** Elegantní překryvný graf hustoty se 3 vrstvami. Pomocí poloprůhledných moderních barev krásně ukazuje, jak se střed distribuce u AI dovedností masivně posouvá doprava. Je to esteticky i analyticky mnohem silnější než standardní boxplot.
 
 * **Graf 2: Podíl AI inzerátů podle *Job Family***
   * **Umístění:** Sekce 5.1.5.
-  * **Cíl:** Nahradit zdlouhavý text o podílu AI pozic v různých profesích.
-  * **Vzhled:** Horizontální sloupcový graf (bar chart), seřazený sestupně (na prvním místě např. *Data & AI* s 55 %, na dalších *Software Engineers* s 26 %, atd.).
+  * **Cíl:** Nahradit zdlouhavý text sestupným žebříčkem na základě čistých vizualizovatelných dat z vygenerovaného CSV.
 
-* **Graf 3: Podíl inzerátů nabízejících remote práci (Seskupený sloupcový graf)**
+* **Graf 3: Podíl inzerátů nabízejících remote práci**
   * **Umístění:** Sekce 5.1.4.
-  * **Cíl:** Rychlé vizuální porovnání (Remote 37,4 % pro AI pozice vs. 26,1 % pro non-AI pozice). 
-  * **Vzhled:** Dva jasně odlišené sloupce (AI vs non-AI).
+  * **Cíl:** Rychlé vizuální porovnání (např. vysoká flexibilita pro AI pozice vs. zbytek). 
+  * **Vzhled:** Čisté sloupce (bez rušivého šedého/modrého gridu typického pro Statu) navázané na sémantické popisky ("Běžné pozice" / "AI pozice").
 
 * **Graf 4: Kompozice seniority podle úrovně AI (Skládaný 100% sloupcový graf)**
   * **Umístění:** Sekce 5.1.5.
@@ -48,10 +47,10 @@ Tento dokument obsahuje návrh na vizualizaci výsledků analýzy pro kapitolu "
   * **Cíl:** Převést abstraktní logaritmické procentuální nárůsty na čtivé predikované dolarové rozdíly ("Adjusted Predictions at means").
   * **Vzhled:** Bodové průměry pro tři AI úrovně na ose X a predikovaný plat na ose Y s chybovými úsečkami (95 % CI). Laický čtenář rovnou uvidí absolutní zisk z AI, protože efekt koeficientu je očištěn od ostatních zkreslení.
 
-* **Graf 7: Klesající výnosy ze zkušeností (Kvadratická křivka z Mincerova modelu)**
+* **Graf 7: Vývoj křivky platu napříč senioritou (Marginsplot vrstvený podle AI)**
   * **Umístění:** Sekce 5.3.5.
-  * **Cíl:** Ukázat efekt let praxe na plat a dokázat vizuálně zpomalení nárůstu mzdy (diminishing returns).
-  * **Vzhled:** Liniový graf závislosti predikovaného platu (Y) vůči rokům požadované praxe na ose X. Můžeme vykreslit dvě křivky (pozice s AI a bez AI), aby bylo vidět posunutí mzdové hladiny o danou prémii napříč veškerou praxí.
+  * **Cíl:** Odkrýt vzorec rozevírajících se mzdových nůžek, ve kterém plat za AI roste rapidněji s rostoucí praxí. 
+  * **Vzhled:** Liniový interakční graf. Neobsahuje pouze 1 křivku, nýbrž 3 separátní průběhy (pro "No AI", "AI Integration" a "Applied/Core AI"). Na první pohled vynikne fakt, že startovní pozice absolventa s i bez AI dovedností se od sebe tolik neliší, ale diametrální předěl přijde na Seniorních pozicích. Tento marginsplot kombinuje akademickou přesnost (`margins i.ai_level#i.exp_category`) a minimalistické bílé provedení.
 
 ### 5.4 a 5.5 Determinanty AI požadavku a dovednostní profil
 * **Tabulka 3: Porovnání dovednostních profilů (Multinomiální logit - marginální efekty)**

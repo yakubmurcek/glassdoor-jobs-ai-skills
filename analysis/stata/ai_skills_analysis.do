@@ -477,18 +477,34 @@ testparm i.sector_nace_num i.region_num i.size_cat i.type_cat is_remote ///
 * --- 4.16 Vykresleni a export deskriptivnich grafu ---
 display _n "--- 4.16 Export CSV a grafu pro vizualizace ---"
 
+* Graf 1: KDE Distribuce platů (Elegantní překryvná křivka hustoty)
+twoway (kdensity salary_mid if ai_level==0, recast(area) fcolor(gs12%50) lcolor(gs10) lwidth(thin)) ///
+       (kdensity salary_mid if ai_level==1, recast(area) fcolor(ebblue%50) lcolor(ebblue) lwidth(medium)) ///
+       (kdensity salary_mid if ai_level==2, recast(area) fcolor(navy%40) lcolor(navy) lwidth(medthick)), ///
+       title("Rozdělení ročních platů podle úrovně AI", color(black) size(medium)) ///
+       xtitle("Roční plat (USD)", size(small)) ytitle("Hustota", size(small)) ///
+       legend(order(1 "Bez AI" 2 "AI Integration" 3 "Applied/Core AI") region(lcolor(white))) ///
+       graphregion(color(white)) bgcolor(white) plotregion(fcolor(white) lcolor(white)) ///
+       xlabel(50000(50000)300000, format(%9.0fc)) xscale(range(20000 350000))
+graph export "$outdir/Graf_1_platova_hustota.png", replace
+
 * Graf 2: Job Family
 preserve
 collapse (mean) percent_ai=has_ai, by(job_family)
 export delimited "$outdir/Graf_2_job_family_ai.csv", replace
 restore
 
-* Graf 3: Remote by AI
-graph bar (mean) is_remote, over(has_ai) title("Podil inzeratu s moznosti remote prace") ///
-    ytitle("Procentualni zastoupeni")
+* Graf 3: Remote by AI (Zcela od základu profesionálně nastavený design)
+graph bar (mean) is_remote, over(has_ai, relabel(1 "Běžné pozice" 2 "AI pozice")) ///
+    title("Podíl inzerátů s možností práce na dálku (Remote)", size(medium)) ///
+    ytitle("Podíl (v %)", size(small)) ///
+    bar(1, fcolor(navy) lcolor(white)) ///
+    blabel(bar, format(%9.2f) size(small) color(black)) ///
+    graphregion(color(white)) bgcolor(white) plotregion(fcolor(white) lcolor(white)) ///
+    ylab(0(0.1)0.5, format(%9.1f) glcolor(gs14))
 graph export "$outdir/Graf_3_remote_ai.png", replace
 
-* Graf 4: Seniorita by AI (Export surových křížových dat na stack bar chart v excelu)
+* Graf 4: Seniorita by AI
 preserve
 contract exp_category ai_level
 export delimited "$outdir/Graf_4_seniority_by_ai.csv", replace
@@ -933,27 +949,36 @@ esttab model_a model_b using "$outdir/Tabulka_2_ols_models.rtf", replace ///
     title("Tabulka: OLS Mzdove modely determinantu log(platu)") ///
     addnotes("Robustni standardni chyby v zavorkach.")
 
-* Graf 5: Forest plot z Modelu B
+* Graf 5: Forest plot z Modelu B (Čistý akademický design s body)
 estimates restore model_b
-coefplot, keep(*ai_level* *exp_category* is_remote *region_num*) ///
+coefplot, keep(*ai_level* *exp_category* *edu_ols* is_remote *region_num*) ///
+    drop(_cons) ///
+    coeflabels(is_remote="Remote práce") ///
     xline(0, lpattern(dash) lcolor(red)) ///
     sort ///
-    title("Hierarchie efektu v OLS Modelu platu (Zakladni faktory)") ///
-    xtitle("Procentualni premie (Koeficient)")
+    title("Hierarchie mzdových efektů (OLS)", size(medium)) ///
+    xtitle("Relativní mzdová prémie", size(small)) ///
+    msymbol(O) msize(small) mcolor(navy) ciopts(lcolor(navy) lwidth(thin)) ///
+    graphregion(color(white) margin(l=5 r=5)) bgcolor(white) plotregion(fcolor(white) lcolor(white))
 graph export "$outdir/Graf_5_coefplot_ols.png", replace
 
-* Graf 6: Predikovane prumerne platy podle AI (marginsplot)
+* Graf 6: Predikovane prumerne platy podle AI (marginsplot s intervaly spolehlivosti)
 estimates restore model_b
 quietly margins i.ai_level
-marginsplot, title("Predikovane prumerne platy podle urovne AI") ///
-    xtitle("Uroven AI pozadavku") ytitle("log(Prumerny rocni plat)")
+marginsplot, title("Predikované průměrné platy očištěné od zkreslení", size(medium)) ///
+    xtitle("Úroveň požadavků AI dovedností", size(small)) ytitle("Předpokládaný log(Plat)", size(small)) ///
+    plotopts(msymbol(O) mcolor(navy) lcolor(navy)) ///
+    ciopts(lcolor(ebblue)) ///
+    graphregion(color(white)) bgcolor(white) plotregion(fcolor(white) lcolor(white))
 graph export "$outdir/Graf_6_margins_ai.png", replace
 
-* Graf 7: Efekt seniority na plat
+* Graf 7: Vývoj křivky platu napříč senioritou (separováno pro AI)
 estimates restore model_b
-quietly margins exp_category
-marginsplot, title("Efekt kategorie praxe na predikovany plat") ///
-    xtitle("Seniorita") ytitle("log(Prumerny rocni plat)")
+quietly margins i.ai_level#i.exp_category
+marginsplot, title("Růst mzdy podle praxe (AI vs Běžné role)", size(medium)) ///
+    xtitle("", size(small)) ytitle("Předpokládaný log(Plat)", size(small)) ///
+    graphregion(color(white)) bgcolor(white) plotregion(fcolor(white) lcolor(white)) ///
+    legend(title("Úroveň role") region(lcolor(white)))
 graph export "$outdir/Graf_7_margins_seniority.png", replace
 
 display _n "!!! ZASTAVENI NAKAZANE UZIVATELEM PO OLS SEKCICH !!!"
