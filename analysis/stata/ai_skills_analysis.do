@@ -474,6 +474,26 @@ display _n "Wald test spolecne signifikance vsech observables (krome AI):"
 testparm i.sector_nace_num i.region_num i.size_cat i.type_cat is_remote ///
     i.job_family_num i.edu_logit i.exp_category
 
+* --- 4.16 Vykresleni a export deskriptivnich grafu ---
+display _n "--- 4.16 Export CSV a grafu pro vizualizace ---"
+
+* Graf 2: Job Family
+preserve
+collapse (mean) percent_ai=has_ai, by(job_family)
+export delimited "$outdir/Graf_2_job_family_ai.csv", replace
+restore
+
+* Graf 3: Remote by AI
+graph bar (mean) is_remote, over(has_ai) title("Podil inzeratu s moznosti remote prace") ///
+    ytitle("Procentualni zastoupeni")
+graph export "$outdir/Graf_3_remote_ai.png", replace
+
+* Graf 4: Seniorita by AI (Export surových křížových dat na stack bar chart v excelu)
+preserve
+contract exp_category ai_level
+export delimited "$outdir/Graf_4_seniority_by_ai.csv", replace
+restore
+
 
 * ==============================================================================
 * 5. ANALYTICKÉ TESTY — HYPOTÉZY
@@ -900,6 +920,44 @@ display _n "OLS Model C AI koeficienty (pro srovnani):"
 estimates restore model_c
 display "  AI Integration:  " _b[1.ai_level]
 display "  Applied/Core AI: " _b[2.ai_level]
+
+* --- 6.8 Export tabulek a grafů OLS modelů ---
+display _n "--- 6.8 Export regresnich tabulek a grafu ---"
+capture ssc install estout
+capture ssc install coefplot
+
+* Tabulka 2: Export OLS tabulky (Model A a Model B)
+esttab model_a model_b using "$outdir/Tabulka_2_ols_models.rtf", replace ///
+    label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+    keep(*ai_level* is_remote *edu_ols* *exp_category*) ///
+    title("Tabulka: OLS Mzdove modely determinantu log(platu)") ///
+    addnotes("Robustni standardni chyby v zavorkach.")
+
+* Graf 5: Forest plot z Modelu B
+estimates restore model_b
+coefplot, keep(*ai_level* *exp_category* is_remote *region_num*) ///
+    xline(0, lpattern(dash) lcolor(red)) ///
+    sort ///
+    title("Hierarchie efektu v OLS Modelu platu (Zakladni faktory)") ///
+    xtitle("Procentualni premie (Koeficient)")
+graph export "$outdir/Graf_5_coefplot_ols.png", replace
+
+* Graf 6: Predikovane prumerne platy podle AI (marginsplot)
+estimates restore model_b
+quietly margins i.ai_level
+marginsplot, title("Predikovane prumerne platy podle urovne AI") ///
+    xtitle("Uroven AI pozadavku") ytitle("log(Prumerny rocni plat)")
+graph export "$outdir/Graf_6_margins_ai.png", replace
+
+* Graf 7: Efekt seniority na plat
+estimates restore model_b
+quietly margins exp_category
+marginsplot, title("Efekt kategorie praxe na predikovany plat") ///
+    xtitle("Seniorita") ytitle("log(Prumerny rocni plat)")
+graph export "$outdir/Graf_7_margins_seniority.png", replace
+
+display _n "!!! ZASTAVENI NAKAZANE UZIVATELEM PO OLS SEKCICH !!!"
+exit
 
 
 * ==============================================================================
