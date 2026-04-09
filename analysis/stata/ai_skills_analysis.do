@@ -543,7 +543,8 @@ ranksum salary_mid, by(has_ai)
 * 6. REGRESNÍ ANALÝZA — OLS MODELY
 * ==============================================================================
 * Závislá proměnná: ln_salary
-* Model A = firemní profil; Model B = Model A + lidský kapitál (edu, exp, job_family)
+* Model A = firemní profil; Model B = Model A + lidský kapitál (edu, exp)
+* Model C = Model B + technické dovednosti (cluster_*) + pozice (job_family)
 
 display _n "=============================================================="
 display "6. REGRESNI ANALYZA — OLS MODELY"
@@ -553,15 +554,14 @@ display "=============================================================="
 * Koeficient b v log modelu: (exp(b)-1)*100 = % zmena platu
 summarize ln_salary, detail
 
-* --- 6.1 Model A: Základní OLS (Firemní a technologický profil) ---
+* --- 6.1 Model A: Základní OLS (Firemní profil) ---
 * DV: ln_salary
-* IV: cluster_* (soft/hard skills bločky), i.ai_level, i.sector_nace_num, i.region_num, is_remote, i.type_cat, i.size_cat
+* IV: i.ai_level, i.sector_nace_num, i.region_num, is_remote, i.type_cat, i.size_cat
 
-display _n "--- 6.1 Model A: Zakladni OLS ---"
-display "ln(plat) ~ cluster_* + AI_level + sektor + region + remote + typ_firmy + velikost_firmy"
+display _n "--- 6.1 Model A: Zakladni OLS (Firemni profil) ---"
+display "ln(plat) ~ AI_level + sektor + region + remote + typ_firmy + velikost_firmy"
 
 regress ln_salary ///
-    cluster_* ///
     i.ai_level ///
     i.sector_nace_num ///
     i.region_num ///
@@ -576,7 +576,6 @@ display _n "Model A: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
 * --- 6.1b VIF diagnostika Model A ---
 display _n "--- 6.1b VIF diagnostika Model A ---"
 quietly regress ln_salary ///
-    cluster_* ///
     i.ai_level ///
     i.sector_nace_num ///
     i.region_num ///
@@ -586,19 +585,17 @@ quietly regress ln_salary ///
     if ln_salary != .
 vif
 
-* --- 6.2 Model B: Rozšířený OLS (Lidský kapitál a přesná pozice) ---
-display _n "--- 6.2 Model B: Rozsireny OLS (Profil uchazece) ---"
-display "ln(plat) ~ Model A + job_family_num + edu_ols + exp_category"
+* --- 6.2 Model B: Lidský kapitál ---
+display _n "--- 6.2 Model B: Lidsky kapital ---"
+display "ln(plat) ~ Model A + edu_ols + exp_category"
 
 regress ln_salary ///
-    cluster_* ///
     i.ai_level ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
     i.type_cat ///
     i.size_cat ///
-    i.job_family_num ///
     i.edu_ols ///
     ib3.exp_category ///
     if ln_salary != ., vce(robust)
@@ -609,6 +606,40 @@ display _n "Model B: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
 * --- 6.2b VIF diagnostika Model B ---
 display _n "--- 6.2b VIF diagnostika Model B ---"
 quietly regress ln_salary ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    i.edu_ols ///
+    ib3.exp_category ///
+    if ln_salary != .
+vif
+
+* --- 6.3 Model C: Plný model (technické dovednosti + pozice) ---
+display _n "--- 6.3 Model C: Plny model (tech skills + pozice) ---"
+display "ln(plat) ~ Model B + cluster_* + job_family_num"
+
+regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    i.job_family_num ///
+    i.edu_ols ///
+    ib3.exp_category ///
+    if ln_salary != ., vce(robust)
+
+estimates store model_c
+display _n "Model C: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+
+* --- 6.3b VIF diagnostika Model C ---
+display _n "--- 6.3b VIF diagnostika Model C ---"
+quietly regress ln_salary ///
     cluster_* ///
     i.ai_level ///
     i.sector_nace_num ///
@@ -623,17 +654,17 @@ quietly regress ln_salary ///
 vif
 
 * -----------------------------------------------------------------------
-* VARIANTY MODELU B
-* 6.2e-f: Model B bez job_family (test mediace)
-* 6.2g-h: Model B-Mincer (kontinualni zkusenosti)
-* 6.2i:   Srovnavaci tabulka vsech OLS modelu
-* Puvodni robustnostni kontroly nasleduji v 6.2c-d
+* VARIANTY MODELU C
+* 6.3e-f: Model C bez job_family (test mediace)
+* 6.3g-h: Model C-Mincer (kontinualni zkusenosti)
+* 6.3i:   Srovnavaci tabulka vsech OLS modelu
+* Puvodni robustnostni kontroly nasleduji v 6.3c-d
 * -----------------------------------------------------------------------
 
-* --- 6.2e Model B bez job_family (test mediace) ---
+* --- 6.3e Model C bez job_family (test mediace) ---
 * job_family muze byt mediator AI pozadavku (napr. "ML Engineer" v sobe primo kóduje AI skill).
-display _n "--- 6.2e Model B bez job_family ---"
-display "ln(plat) ~ Model B - job_family (test zda job_family mediuje AI premii)"
+display _n "--- 6.3e Model C bez job_family ---"
+display "ln(plat) ~ Model C - job_family (test zda job_family mediuje AI premii)"
 regress ln_salary ///
     cluster_* ///
     i.ai_level ///
@@ -645,11 +676,11 @@ regress ln_salary ///
     i.edu_ols ///
     ib3.exp_category ///
     if ln_salary != ., vce(robust)
-estimates store model_b_nojf
-display _n "Model B-nojf: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+estimates store model_c_nojf
+display _n "Model C-nojf: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
 
-* VIF pro Model B-nojf
-display _n "--- 6.2f VIF diagnostika Model B bez job_family ---"
+* VIF pro Model C-nojf
+display _n "--- 6.3f VIF diagnostika Model C bez job_family ---"
 quietly regress ln_salary ///
     cluster_* ///
     i.ai_level ///
@@ -663,16 +694,16 @@ quietly regress ln_salary ///
     if ln_salary != .
 vif
 
-* --- 6.2g Model B s kontinualni zkusenosti (Mincerova specifikace) ---
+* --- 6.3g Model C s kontinualni zkusenosti (Mincerova specifikace) ---
 * Pridavame experience_min_llm + experience_sq misto kategoricke exp_category
 * — kontinualni promenna pro spravnou specifikaci Mincerovy rovnice
-* POZOR: Tento model MA JINY VZOREK nez Model B! Model B pouziva exp_category,
-* kde missing zkusenosti = kategorie 0 (zachovano v regresi). Model B-Mincer
+* POZOR: Tento model MA JINY VZOREK nez Model C! Model C pouziva exp_category,
+* kde missing zkusenosti = kategorie 0 (zachovano v regresi). Model C-Mincer
 * pouziva kontinualni experience_min_llm, kde missing = . (Stata automaticky
-* dropne). Proto N v B-Mincer bude nizsi. Porovnani R2 je orientacni.
-display _n "--- 6.2g Model B s Mincerovou specifikaci (experience + experience^2) ---"
-display "ln(plat) ~ Model B s kontinualni experience misto kategoricke"
-display "POZN: Jiny vzorek — missing experience = dropped (vs. kategorie v Model B)"
+* dropne). Proto N v C-Mincer bude nizsi. Porovnani R2 je orientacni.
+display _n "--- 6.3g Model C s Mincerovou specifikaci (experience + experience^2) ---"
+display "ln(plat) ~ Model C s kontinualni experience misto kategoricke"
+display "POZN: Jiny vzorek — missing experience = dropped (vs. kategorie v Model C)"
 regress ln_salary ///
     cluster_* ///
     i.ai_level ///
@@ -685,11 +716,11 @@ regress ln_salary ///
     i.edu_ols ///
     experience_min_llm experience_sq ///
     if ln_salary != ., vce(robust)
-estimates store model_b_mincer
-display _n "Model B-Mincer: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+estimates store model_c_mincer
+display _n "Model C-Mincer: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
 
-* VIF pro Model B-Mincer
-display _n "--- 6.2h VIF diagnostika Model B Mincer ---"
+* VIF pro Model C-Mincer
+display _n "--- 6.3h VIF diagnostika Model C Mincer ---"
 quietly regress ln_salary ///
     cluster_* ///
     i.ai_level ///
@@ -704,13 +735,13 @@ quietly regress ln_salary ///
     if ln_salary != .
 vif
 
-* --- 6.2i Srovnavaci tabulka vsech OLS modelu ---
-display _n "--- 6.2i Porovnani vsech OLS modelu ---"
-estimates table model_a model_b_nojf model_b model_b_mincer, star stats(N r2 r2_a)
+* --- 6.3i Srovnavaci tabulka vsech OLS modelu ---
+display _n "--- 6.3i Porovnani vsech OLS modelu ---"
+estimates table model_a model_b model_c_nojf model_c model_c_mincer, star stats(N r2 r2_a)
 
-* --- 6.2c Robustnostni kontrola: Clusterovane SE ---
+* --- 6.3c Robustnostni kontrola: Clusterovane SE ---
 * Vice inzeratu od stejne firmy → korelovane chyby. Testujeme zda se SE meni.
-display _n "--- 6.2c Robustnostni kontrola: Clusterovane SE ---"
+display _n "--- 6.3c Robustnostni kontrola: Clusterovane SE ---"
 regress ln_salary ///
     cluster_* ///
     i.ai_level ///
@@ -723,13 +754,13 @@ regress ln_salary ///
     i.edu_ols ///
     ib3.exp_category ///
     if ln_salary != ., vce(cluster company_id)
-estimates store model_b_cluster
-display _n "Porovnani: robust SE (Model B) vs cluster SE pro AI koeficienty"
-estimates table model_b model_b_cluster, star stats(N r2 r2_a)
+estimates store model_c_cluster
+display _n "Porovnani: robust SE (Model C) vs cluster SE pro AI koeficienty"
+estimates table model_c model_c_cluster, star stats(N r2 r2_a)
 
-* --- 6.2d Interakcni efekt: AI x zkusenosti ---
+* --- 6.3d Interakcni efekt: AI x zkusenosti ---
 * Testujeme zda AI premie se lisi podle seniority
-display _n "--- 6.2d Interakcni efekt: AI x zkusenosti ---"
+display _n "--- 6.3d Interakcni efekt: AI x zkusenosti ---"
 regress ln_salary ///
     cluster_* ///
     i.ai_level##ib3.exp_category ///
@@ -740,12 +771,11 @@ regress ln_salary ///
 display "Testujeme zda AI premie se lisi podle seniority"
 testparm i.ai_level#ib3.exp_category
 
-* --- 6.3 Srovnání modelů A vs B (Wald F-test nested models) ---
-display _n "--- 6.3 Srovnani OLS modelu A vs B ---"
-display "Wald F-test na robustnich SE: testuje zda edu + exp + job_family vyznamne"
-display "zlepsuje model oproti zakladni specifikaci (cluster_* + firm profile)."
-display "Pouzivame testparm po jedine regresi s plnou specifikaci a vce(robust),"
-display "coz je korektni pristup pri heteroskedasticite (na rozdil od lrtest)."
+* --- 6.4 Srovnání modelů A vs B vs C (Wald F-testy nested models) ---
+display _n "--- 6.4 Srovnani OLS modelu A vs B vs C ---"
+display "Wald F-testy na robustnich SE: testuje zda pridane bloky vyznamne"
+display "zlepsuje model. Pouzivame testparm po jedine regresi s plnou specifikaci"
+display "a vce(robust), coz je korektni pristup pri heteroskedasticite."
 
 quietly regress ln_salary ///
     cluster_* ///
@@ -760,25 +790,28 @@ quietly regress ln_salary ///
     ib3.exp_category ///
     if ln_salary != ., vce(robust)
 
-display _n "Wald F-test: spolecna signifikance pridanych bloku (job_family + edu + exp)"
-testparm i.job_family_num i.edu_ols i.exp_category
+display _n "Wald F-test A->B: spolecna signifikance lidského kapitálu (edu + exp)"
+testparm i.edu_ols i.exp_category
 
-* --- 6.4 Porovnávací tabulka OLS modelů ---
-display _n "--- 6.4 Porovnani koeficientu OLS Model A vs B ---"
-estimates table model_a model_b, star stats(N r2 r2_a)
+display _n "Wald F-test B->C: spolecna signifikance tech skills + pozice (cluster_* + job_family)"
+testparm cluster_* i.job_family_num
+
+* --- 6.5 Porovnávací tabulka OLS modelů ---
+display _n "--- 6.5 Porovnani koeficientu OLS Model A vs B vs C ---"
+estimates table model_a model_b model_c, star stats(N r2 r2_a)
 
 
-* --- 6.5 Citlivostni analyza OLS: BEZ GenAI a DS/ML clusteru ---
+* --- 6.6 Citlivostni analyza OLS: BEZ GenAI a DS/ML clusteru ---
 * Test cirkularity: cluster_generative_ai a cluster_data_science__ml primo
-* implikuji AI pozadavek. Vyradime je a porovname s plnym modelem B.
+* implikuji AI pozadavek. Vyradime je a porovname s plnym modelem C.
 display _n "=============================================================="
-display "6.5 CITLIVOSTNI ANALYZA — OLS BEZ GenAI A DS/ML CLUSTERU"
+display "6.6 CITLIVOSTNI ANALYZA — OLS BEZ GenAI A DS/ML CLUSTERU"
 display "=============================================================="
 
 rename cluster_generative_ai _excl_genai_ols
 rename cluster_data_science__ml _excl_dsml_ols
 
-display _n "--- 6.5a Model B bez GenAI a DS/ML ---"
+display _n "--- 6.6a Model C bez GenAI a DS/ML ---"
 regress ln_salary ///
     cluster_* ///
     i.ai_level ///
@@ -791,29 +824,29 @@ regress ln_salary ///
     i.edu_ols ///
     ib3.exp_category ///
     if ln_salary != ., vce(robust)
-estimates store model_b_nocirc
-display _n "Model B-nocirc: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+estimates store model_c_nocirc
+display _n "Model C-nocirc: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
 
 rename _excl_genai_ols cluster_generative_ai
 rename _excl_dsml_ols cluster_data_science__ml
 
-display _n "--- 6.5b Porovnani OLS Model B vs Model B-nocirc ---"
+display _n "--- 6.6b Porovnani OLS Model C vs Model C-nocirc ---"
 display "Pokud se koeficienty ai_level vyznamne nelisi, AI premie neni"
 display "artefaktem cirkularniho zarazeni GenAI/DS-ML clusteru."
-estimates table model_b model_b_nocirc, star stats(N r2 r2_a)
+estimates table model_c model_c_nocirc, star stats(N r2 r2_a)
 
 
-* --- 6.6 Heckman korekce selekce vzorku (robustnostni kontrola) ---
+* --- 6.7 Heckman korekce selekce vzorku (robustnostni kontrola) ---
 * Sekce 4.15c ukazala, ze missingness platu NENI MCAR — chybejici platy
 * souvisi s regionem, sektorem, velikosti firmy a dalsimi observables.
 * Podmineni na ln_salary != . proto muze zavest selection bias.
 *
 * Pouzivame Heckmanuv model (MLE):
 *   Selection: probit has_salary ~ observables
-*   Outcome:   ln_salary ~ Model B specifikace
+*   Outcome:   ln_salary ~ Model C specifikace
 *
 * Identifikacni strategie: Outcome rovnice obsahuje STEJNE promenne jako
-* Model B (vcetne type_cat a size_cat). Selection rovnice pridava navic
+* Model C (vcetne type_cat a size_cat). Selection rovnice pridava navic
 * VSECHNY promenne — identifikace pochazi z nelinearity probit modelu
 * (funkcionalni forma). Toto je konzervativni pristup: nespolehame se na
 * potencialne spornou exkluzni restrikci (type_cat a size_cat ovlivnuji
@@ -826,10 +859,10 @@ estimates table model_b model_b_nocirc, star stats(N r2 r2_a)
 * vyznamne zkreslene a lze je interpretovat bez korekce.
 
 display _n "=============================================================="
-display "6.6 HECKMAN KOREKCE SELEKCE VZORKU"
+display "6.7 HECKMAN KOREKCE SELEKCE VZORKU"
 display "=============================================================="
 
-display _n "--- 6.6a Heckman MLE (Model B specifikace, bez exkluzni restrikce) ---"
+display _n "--- 6.7a Heckman MLE (Model C specifikace, bez exkluzni restrikce) ---"
 display "Identifikace z funkcionalni formy (probit nelinearita)."
 display "Outcome i selection rovnice obsahuji stejne promenne + type_cat, size_cat."
 heckman ln_salary ///
@@ -856,15 +889,15 @@ heckman ln_salary ///
     vce(robust)
 estimates store model_heckman
 
-display _n "--- 6.6b Klicove koeficienty: OLS Model B vs Heckman ---"
+display _n "--- 6.7b Klicove koeficienty: OLS Model C vs Heckman ---"
 display "Porovnavame AI premii a hlavni prediktory."
 display "Pokud lambda (mills) neni signifikantni, selection bias je zanedbatelny."
 display _n "Heckman AI koeficienty:"
 estimates restore model_heckman
 display "  AI Integration:  " _b[ln_salary:1.ai_level]
 display "  Applied/Core AI: " _b[ln_salary:2.ai_level]
-display _n "OLS Model B AI koeficienty (pro srovnani):"
-estimates restore model_b
+display _n "OLS Model C AI koeficienty (pro srovnani):"
+estimates restore model_c
 display "  AI Integration:  " _b[1.ai_level]
 display "  Applied/Core AI: " _b[2.ai_level]
 

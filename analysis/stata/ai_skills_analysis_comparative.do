@@ -265,8 +265,8 @@ display "=============================================================="
 * rozdily a menove kurzy mezi zememi, zahrnujeme dummy promennou pro zemi
 * i.country_id, ktera tento fixni rozdil pohlti do zkraceni (intercept).
 
-* --- 5.1 Baseline "Slouceny" Model B (s fixed effects na zemi) ---
-display _n "--- 5.1 Baseline Slouceny Model B (s country FEs) ---"
+* --- 5.1 Baseline "Slouceny" Model C (s fixed effects na zemi) ---
+display _n "--- 5.1 Baseline Slouceny Model C (s country FEs) ---"
 regress ln_salary ///
     cluster_* ///
     i.ai_level ///
@@ -278,13 +278,13 @@ regress ln_salary ///
     i.job_family_num ///
     i.edu_ols ib3.exp_category ///
     if ln_salary != ., vce(robust)
-estimates store pooled_model_b
+estimates store pooled_model_c
 
 
 * --- 5.2 Interakcni model: AI mzdova premie podle zeme ---
 * Testuje, zda se wage premium za AI znalosti statisticky lisi mezi US, DE a IN.
 * Pouzivame gradovany ai_level (0=zadny AI, 1=AI integrace, 2=Applied/Core AI);
-* je informativnejsi nez binarni has_ai a prokazal signifikanci v Modelu B.
+* je informativnejsi nez binarni has_ai a prokazal signifikanci v Modelu C.
 * Base level country = DE (abecedne), base level ai_level = 0.
 
 display _n "--- 5.2 Interakcni Model: AI Premium (ai_level) x zeme ---"
@@ -332,7 +332,7 @@ margins, dydx(*) predict(outcome(2))
 display _n "=============================================================="
 display "CROSS-COUNTRY ANALYZA DOKONCENA"
 display "=============================================================="
-estimates table pooled_model_b interaction_model, star stats(N r2 r2_a)
+estimates table pooled_model_c interaction_model, star stats(N r2 r2_a)
 display _n "--- Mlogit vysledky ---"
 estimates table pooled_mlogit, star stats(N ll chi2)
 log close
