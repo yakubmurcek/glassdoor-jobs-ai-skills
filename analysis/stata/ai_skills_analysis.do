@@ -808,15 +808,19 @@ estimates table model_b model_b_nocirc, star stats(N r2 r2_a)
 * souvisi s regionem, sektorem, velikosti firmy a dalsimi observables.
 * Podmineni na ln_salary != . proto muze zavest selection bias.
 *
-* Pouzivame Heckmanuv dvoustupnovy model (heckman):
-*   1. stupen (selection): probit has_salary ~ observables
-*   2. stupen (outcome):   ln_salary ~ Model B specifikace
+* Pouzivame Heckmanuv model (MLE):
+*   Selection: probit has_salary ~ observables
+*   Outcome:   ln_salary ~ Model B specifikace
 *
-* Exkluzni restrikce: type_cat a size_cat — typ a velikost firmy predikuji
-* transparentnost platove politiky (vetsim a verejnym firmam regulace narizuje
-* zverejnovat platy), ale nemaji primy vliv na uroven platu po kontrole
-* sektoru, regionu, pozice a zkusenosti. Toto je standardni identifikacni
-* strategie v literature o mzdovych studich z job postings (Deming & Kahn 2018).
+* Identifikacni strategie: Outcome rovnice obsahuje STEJNE promenne jako
+* Model B (vcetne type_cat a size_cat). Selection rovnice pridava navic
+* VSECHNY promenne — identifikace pochazi z nelinearity probit modelu
+* (funkcionalni forma). Toto je konzervativni pristup: nespolehame se na
+* potencialne spornou exkluzni restrikci (type_cat a size_cat ovlivnuji
+* jak zverejneni, tak uroven platu).
+*
+* Pouzivame MLE misto twostep — MLE omezuje rho na [-1, 1] a produkuje
+* efektivnejsi odhady. Twostep muze produkovat rho mimo rozsah.
 *
 * POZN: Pokud lambda (mills ratio) je nesignifikantni, OLS odhady nejsou
 * vyznamne zkreslene a lze je interpretovat bez korekce.
@@ -825,13 +829,17 @@ display _n "=============================================================="
 display "6.6 HECKMAN KOREKCE SELEKCE VZORKU"
 display "=============================================================="
 
-display _n "--- 6.6a Heckman dvoustupnovy model (Model B specifikace) ---"
+display _n "--- 6.6a Heckman MLE (Model B specifikace, bez exkluzni restrikce) ---"
+display "Identifikace z funkcionalni formy (probit nelinearita)."
+display "Outcome i selection rovnice obsahuji stejne promenne + type_cat, size_cat."
 heckman ln_salary ///
     cluster_* ///
     i.ai_level ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
+    i.type_cat ///
+    i.size_cat ///
     i.job_family_num ///
     i.edu_ols ///
     ib3.exp_category, ///
@@ -845,13 +853,20 @@ heckman ln_salary ///
         i.job_family_num ///
         ib2.edu_logit ///
         ib3.exp_category) ///
-    twostep
+    vce(robust)
 estimates store model_heckman
 
-display _n "--- 6.6b Porovnani OLS Model B vs Heckman ---"
-display "Pokud lambda (mills ratio) neni signifikantni, OLS odhady"
-display "nejsou vyznamne zkreslene selection biasem."
-estimates table model_b model_heckman, star stats(N)
+display _n "--- 6.6b Klicove koeficienty: OLS Model B vs Heckman ---"
+display "Porovnavame AI premii a hlavni prediktory."
+display "Pokud lambda (mills) neni signifikantni, selection bias je zanedbatelny."
+display _n "Heckman AI koeficienty:"
+estimates restore model_heckman
+display "  AI Integration:  " _b[ln_salary:1.ai_level]
+display "  Applied/Core AI: " _b[ln_salary:2.ai_level]
+display _n "OLS Model B AI koeficienty (pro srovnani):"
+estimates restore model_b
+display "  AI Integration:  " _b[1.ai_level]
+display "  Applied/Core AI: " _b[2.ai_level]
 
 
 * ==============================================================================
