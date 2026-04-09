@@ -768,6 +768,92 @@ display _n "--- 6.4 Porovnani koeficientu OLS Model A vs B ---"
 estimates table model_a model_b, star stats(N r2 r2_a)
 
 
+* --- 6.5 Citlivostni analyza OLS: BEZ GenAI a DS/ML clusteru ---
+* Test cirkularity: cluster_generative_ai a cluster_data_science__ml primo
+* implikuji AI pozadavek. Vyradime je a porovname s plnym modelem B.
+display _n "=============================================================="
+display "6.5 CITLIVOSTNI ANALYZA — OLS BEZ GenAI A DS/ML CLUSTERU"
+display "=============================================================="
+
+rename cluster_generative_ai _excl_genai_ols
+rename cluster_data_science__ml _excl_dsml_ols
+
+display _n "--- 6.5a Model B bez GenAI a DS/ML ---"
+regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.type_cat ///
+    i.size_cat ///
+    i.job_family_num ///
+    i.edu_ols ///
+    ib3.exp_category ///
+    if ln_salary != ., vce(robust)
+estimates store model_b_nocirc
+display _n "Model B-nocirc: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+
+rename _excl_genai_ols cluster_generative_ai
+rename _excl_dsml_ols cluster_data_science__ml
+
+display _n "--- 6.5b Porovnani OLS Model B vs Model B-nocirc ---"
+display "Pokud se koeficienty ai_level vyznamne nelisi, AI premie neni"
+display "artefaktem cirkularniho zarazeni GenAI/DS-ML clusteru."
+estimates table model_b model_b_nocirc, star stats(N r2 r2_a)
+
+
+* --- 6.6 Heckman korekce selekce vzorku (robustnostni kontrola) ---
+* Sekce 4.15c ukazala, ze missingness platu NENI MCAR — chybejici platy
+* souvisi s regionem, sektorem, velikosti firmy a dalsimi observables.
+* Podmineni na ln_salary != . proto muze zavest selection bias.
+*
+* Pouzivame Heckmanuv dvoustupnovy model (heckman):
+*   1. stupen (selection): probit has_salary ~ observables
+*   2. stupen (outcome):   ln_salary ~ Model B specifikace
+*
+* Exkluzni restrikce: type_cat a size_cat — typ a velikost firmy predikuji
+* transparentnost platove politiky (vetsim a verejnym firmam regulace narizuje
+* zverejnovat platy), ale nemaji primy vliv na uroven platu po kontrole
+* sektoru, regionu, pozice a zkusenosti. Toto je standardni identifikacni
+* strategie v literature o mzdovych studich z job postings (Deming & Kahn 2018).
+*
+* POZN: Pokud lambda (mills ratio) je nesignifikantni, OLS odhady nejsou
+* vyznamne zkreslene a lze je interpretovat bez korekce.
+
+display _n "=============================================================="
+display "6.6 HECKMAN KOREKCE SELEKCE VZORKU"
+display "=============================================================="
+
+display _n "--- 6.6a Heckman dvoustupnovy model (Model B specifikace) ---"
+heckman ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    i.sector_nace_num ///
+    i.region_num ///
+    is_remote ///
+    i.job_family_num ///
+    i.edu_ols ///
+    ib3.exp_category, ///
+    select(has_salary = ///
+        i.ai_level ///
+        i.sector_nace_num ///
+        i.region_num ///
+        is_remote ///
+        i.type_cat ///
+        i.size_cat ///
+        i.job_family_num ///
+        ib2.edu_logit ///
+        ib3.exp_category) ///
+    twostep
+estimates store model_heckman
+
+display _n "--- 6.6b Porovnani OLS Model B vs Heckman ---"
+display "Pokud lambda (mills ratio) neni signifikantni, OLS odhady"
+display "nejsou vyznamne zkreslene selection biasem."
+estimates table model_b model_heckman, star stats(N)
+
+
 * ==============================================================================
 * 6A. PRAVDĚPODOBNOSTNÍ MODELY — BINÁRNÍ LOGIT (has_ai)
 * ==============================================================================
@@ -793,7 +879,7 @@ logit has_ai ///
     i.sector_nace_num ///
     i.type_cat ///
     i.size_cat ///
-    i.region_num, or
+    i.region_num, or vce(robust)
 estimates store logit_m1
 display _n "--- 6A.1b AME Logit M1 ---"
 margins, dydx(*)
@@ -804,7 +890,7 @@ logit has_ai ///
     cluster_* ///
     i.job_family_num ///
     ib2.edu_logit ///
-    ib3.exp_category, or
+    ib3.exp_category, or vce(robust)
 estimates store logit_m2
 display _n "--- 6A.2b AME Logit M2 ---"
 margins, dydx(*)
@@ -819,7 +905,7 @@ logit has_ai ///
     cluster_* ///
     i.job_family_num ///
     ib2.edu_logit ///
-    ib3.exp_category, or
+    ib3.exp_category, or vce(robust)
 estimates store logit_m3
 display _n "--- 6A.3b AME Logit M3 ---"
 margins, dydx(*)
@@ -855,7 +941,7 @@ logit has_ai ///
     cluster_* ///
     i.job_family_num ///
     ib2.edu_logit ///
-    ib3.exp_category, or
+    ib3.exp_category, or vce(robust)
 estimates store logit_m3_nocirc
 display _n "--- 6A.5b AME Logit M3 nocirc ---"
 margins, dydx(*)
@@ -895,7 +981,7 @@ mlogit ai_level ///
     i.sector_nace_num ///
     i.type_cat ///
     i.size_cat ///
-    i.region_num, baseoutcome(0) rrr
+    i.region_num, baseoutcome(0) rrr vce(robust)
 estimates store mlogit_m1
 display _n "--- 6B.1b Marginalni efekty Mlogit M1: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
@@ -910,7 +996,7 @@ display _n "--- 6B.2a Mlogit Model 2: Profil role a cloveka ---"
 mlogit ai_level ///
     cluster_* ///
     i.job_family_num ///
-    ib3.exp_category, baseoutcome(0) rrr
+    ib3.exp_category, baseoutcome(0) rrr vce(robust)
 estimates store mlogit_m2
 display _n "--- 6B.2b Marginalni efekty Mlogit M2: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
@@ -929,7 +1015,7 @@ mlogit ai_level ///
     i.region_num ///
     cluster_* ///
     i.job_family_num ///
-    ib3.exp_category, baseoutcome(0) rrr
+    ib3.exp_category, baseoutcome(0) rrr vce(robust)
 estimates store mlogit_m3
 display _n "--- 6B.3b Marginalni efekty Mlogit M3: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
@@ -973,7 +1059,7 @@ mlogit ai_level ///
     i.size_cat ///
     i.region_num ///
     cluster_* ///
-    ib3.exp_category, baseoutcome(0) rrr
+    ib3.exp_category, baseoutcome(0) rrr vce(robust)
 estimates store mlogit_m3a
 display _n "--- 6B.7b Marginalni efekty Mlogit M3a: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
@@ -990,7 +1076,7 @@ mlogit ai_level ///
     i.type_cat ///
     i.size_cat ///
     i.region_num ///
-    cluster_*, baseoutcome(0) rrr
+    cluster_*, baseoutcome(0) rrr vce(robust)
 estimates store mlogit_m3b
 display _n "--- 6B.8b Marginalni efekty Mlogit M3b: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
@@ -1029,7 +1115,7 @@ mlogit ai_level ///
     i.region_num ///
     cluster_* ///
     i.job_family_num ///
-    ib3.exp_category, baseoutcome(0) rrr
+    ib3.exp_category, baseoutcome(0) rrr vce(robust)
 estimates store mlogit_m3_nocirc
 display _n "--- 6C.1b Marginalni efekty Mlogit M3 nocirc: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
