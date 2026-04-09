@@ -94,11 +94,12 @@ label variable has_ai "AI Job (desc_tier_llm in {ai_integration, applied_ai})"
 
 * --- 3.3 Vzdělání (Hybridní) ---
 * Vytvoříme 'education_hybrid' z edulevel_llm (primární) a edu_level_det (fallback)
-* POZOR: OLS (mzdový) model používá GRANULÁRNÍ vzdělání (edu_ols, 5 úrovní),
-*        Mlogit model používá 2-úrovňové (edu_logit: Below_BA_or_Missing / BA+),
-*        viz důvod v sekci 3.3b — HS/Assoc × Applied AI mělo jen 23 pozorování.
-*        Missing je v obou samostatná kategorie — sloučení s "bez titulu" by
-*        zkreslovalo závěry, protože AI inzeráty mají významně vyšší missingness.
+* POZOR: OLS (mzdový) model používá GRANULÁRNÍ vzdělání (edu_ols, 5 úrovní).
+*        Binární logit (§6A) používá 3-úrovňové edu_logit (Missing / HS+Assoc / BA+)
+*        — buňky jsou OK (min = HS/Assoc × has_ai=1 = 68).
+*        Mlogit (§6B/6C) NEMÁ edu kontrolu — HS/Assoc × Applied AI = 23 obs
+*        je pod prahem 50 pro stabilní mlogit odhad (B4 diagnostika potvrdila
+*        zanedbatelný dopad: ΔR² = 0.09 pp, max ΔAME = 0.2 pb).
 
 * Krok 1: Normalizujeme edulevel_llm na lowercase a sjednotíme hodnoty
 gen education_hybrid = lower(edulevel_llm)
@@ -129,29 +130,23 @@ label define edu_ols_lbl 0 "Missing" 1 "High School" 2 "Associate" 3 "Bachelor" 
 label values edu_ols edu_ols_lbl
 label variable edu_ols "Vzdelani (granularni pro OLS)"
 
-* --- 3.3b edu_logit: 2-úrovňová proměnná pro Mlogit ---
-* Úrovně: 0 = Below BA or Missing (neuvedeno NEBO HS/Associate), 1 = Bachelor+
-* Reference v mlogit: ib1.edu_logit (Bachelor+).
+* --- 3.3b edu_logit: 3-úrovňová proměnná pro binární logit (§6A) a has_salary logit (§4.15c) ---
+* Úrovně: 0 = Missing, 1 = HS / Associate, 2 = Bachelor+
+* Reference: ib2.edu_logit (Bachelor+).
 *
-* Proč 2 úrovně místo 3 (puvodne Missing / HS+Assoc / BA+):
-*   Krizova tabulka edu_logit_3level x ai_tier_num (log run 7-Apr-2026 14-04-33,
-*   r. 642–667) ukazuje, ze HS/Associate × Applied AI = 23 a × AI Integration = 45.
-*   Obe bunky jsou pod hranici 50 pozorovani potrebnou pro stabilni odhady v
-*   multinomialnich modelech (viz § 5.1.1 prakticka_cast). Zhrubnuti na 2 urovne
-*   posune nejmensi bunku Below_BA_or_Missing × Applied AI na 534+23 = 557 (>>50).
-*
-* Semanticka interpretace: dummy "Below_BA_or_Missing" je dominovana missingness
-* signalem (713 HS/Assoc vs 6 364 Missing → ~90 % nove kategorie je Missing).
-* Mlogit AME pro tuto dummy se proto interpretuje jako "BA+ vs unknown/below BA",
-* nikoliv jako ciste "BA+ vs sub-BA". Pro popisnou analyzu vzdelani v § 5.1.3
-* pouzivame dale granularni edu_ols (5 urovni), kde tato kompromisnost neni nutna.
+* V mlogit (§6B/6C) NENI pouzita — HS/Associate × Applied AI = 23 obs
+* porusuje pravidlo 50 obs/bunku. V binarnim logitu je tento problem
+* odstranen, protoze HS/Assoc × has_ai=1 = 45+23 = 68 (>50).
+* Diagnostika M3 vs M3_noedu (run 9-Apr-2026) potvrdila, ze vyrazeni
+* edu z mlogit je bezpecne: ΔR² = 0.09 pp, max ΔAME = 0.2 pb.
 gen edu_logit = .
-replace edu_logit = 0 if inlist(education_hybrid, "missing", "", "highschool", "associate")
-replace edu_logit = 1 if inlist(education_hybrid, "bachelor", "master")
+replace edu_logit = 0 if inlist(education_hybrid, "missing", "")
+replace edu_logit = 1 if inlist(education_hybrid, "highschool", "associate")
+replace edu_logit = 2 if inlist(education_hybrid, "bachelor", "master")
 
-label define edu_logit_lbl 0 "Below BA or Missing" 1 "Bachelor or Higher"
+label define edu_logit_lbl 0 "Missing" 1 "HS / Associate" 2 "Bachelor or Higher"
 label values edu_logit edu_logit_lbl
-label variable edu_logit "Vzdelani (2 urovne pro Mlogit)"
+label variable edu_logit "Vzdelani (3 urovne pro binarni logit)"
 
 * Deskriptivni 3-urovnova promenna pro § 5.1.3 (NEZAVISLA na edu_logit).
 * Drzime ji 3-urovnovou (Missing / HS+Assoc / BA+), aby v § 5.1.3 zustal
@@ -473,7 +468,7 @@ logit has_salary ///
     i.type_cat ///
     is_remote ///
     i.job_family_num ///
-    ib1.edu_logit ///
+    ib2.edu_logit ///
     ib3.exp_category, vce(robust)
 display _n "Wald test spolecne signifikance vsech observables (krome AI):"
 testparm i.sector_nace_num i.region_num i.size_cat i.type_cat is_remote ///
@@ -774,10 +769,115 @@ estimates table model_a model_b, star stats(N r2 r2_a)
 
 
 * ==============================================================================
+* 6A. PRAVDĚPODOBNOSTNÍ MODELY — BINÁRNÍ LOGIT (has_ai)
+* ==============================================================================
+* DV: has_ai (0 = none, 1 = AI Integration NEBO Applied/Core AI)
+* Vyuziti: § 5.4 (inkrementalni modely M1–M3 + AME) a § 5.5.2 (nocirc citlivostni).
+*
+* Proc binarni logit vedle mlogit v § 5.5.3:
+*   - § 5.4 odpovida na otazku "ktere charakteristiky predikuji AI pozadavek
+*     jako takovy" — jedna pravdepodobnost, jeden AME per prediktor.
+*   - § 5.5.3 odpovida na otazku "ktere charakteristiky rozlisuji 'pouzivani
+*     AI' od 'vyvoje AI'" — dve ruzne pravdepodobnosti, dva AMEs per prediktor.
+* Oba modely jsou komplementarni, ne redundantni.
+*
+* edu_logit (3 urovne) je zahrnuta — v binarnim logitu vsechny bunky >= 68.
+
+display _n "=============================================================="
+display "6A. BINARNI LOGIT MODELY"
+display "=============================================================="
+
+* --- 6A.1 Model 1: Profil firmy ---
+display _n "--- 6A.1a Logit Model 1: Profil firmy ---"
+logit has_ai ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num, or
+estimates store logit_m1
+display _n "--- 6A.1b AME Logit M1 ---"
+margins, dydx(*)
+
+* --- 6A.2 Model 2: Profil role a uchazeče ---
+display _n "--- 6A.2a Logit Model 2: Profil role a uchazece ---"
+logit has_ai ///
+    cluster_* ///
+    i.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category, or
+estimates store logit_m2
+display _n "--- 6A.2b AME Logit M2 ---"
+margins, dydx(*)
+
+* --- 6A.3 Model 3: Kompletní ---
+display _n "--- 6A.3a Logit Model 3: Kompletni ---"
+logit has_ai ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category, or
+estimates store logit_m3
+display _n "--- 6A.3b AME Logit M3 ---"
+margins, dydx(*)
+
+* --- 6A.3c Hosmer-Lemeshow goodness-of-fit na M3 ---
+display _n "--- 6A.3c Hosmer-Lemeshow goodness-of-fit (Logit M3) ---"
+quietly logit has_ai ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category
+estat gof, group(10)
+
+* --- 6A.4 Porovnání Logit modelů 1, 2, 3 ---
+display _n "--- 6A.4 Porovnani Logit modelu 1, 2, 3 ---"
+estimates table logit_m1 logit_m2 logit_m3, star stats(N ll chi2 r2_p)
+
+* --- 6A.5 Citlivostní analýza: Logit M3 BEZ GenAI a DS/ML ---
+* Pro § 5.5.2 — test cirkularity v binarnim logitu.
+rename cluster_generative_ai _excl_genai_logit
+rename cluster_data_science__ml _excl_dsml_logit
+
+display _n "--- 6A.5a Logit M3 nocirc ---"
+logit has_ai ///
+    i.sector_nace_num ///
+    i.type_cat ///
+    i.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category, or
+estimates store logit_m3_nocirc
+display _n "--- 6A.5b AME Logit M3 nocirc ---"
+margins, dydx(*)
+
+display _n "--- 6A.5c Porovnani Logit M3 vs Logit M3 nocirc ---"
+estimates table logit_m3 logit_m3_nocirc, star stats(N ll chi2 r2_p)
+
+rename _excl_genai_logit cluster_generative_ai
+rename _excl_dsml_logit cluster_data_science__ml
+
+
+* ==============================================================================
 * 6B. PRAVDĚPODOBNOSTNÍ MODELY (Multinomiální Logit)
 * ==============================================================================
 * DV: ai_level (multinomiální: 0=None, 1=AI Integration, 2=Applied/Core AI)
 * is_remote zde NENÍ zahrnuta (je spíše výsledek než příčina AI požadavku).
+*
+* POZN: edu_logit zde NENI zahrnuta — HS/Associate × Applied AI = 23 obs
+* porusuje pravidlo 50 obs/bunku pro stabilni mlogit odhad.
+* Diagnostika (run 9-Apr-2026) potvrdila zanedbatelny dopad vyrazeni:
+* ΔPseudo R² = 0.09 pp, max ΔAME = 0.2 pb. Vzdelani je kontrolovano
+* v binarnim logitu (§6A) a v OLS (§6.1–6.3).
 *
 * Model je exploratorní, nikoliv kauzální: cluster_* jsou extrahovány
 * ze stejného textu inzerátu, ze kterého LLM přidělil ai_level.
@@ -810,7 +910,6 @@ display _n "--- 6B.2a Mlogit Model 2: Profil role a cloveka ---"
 mlogit ai_level ///
     cluster_* ///
     i.job_family_num ///
-    ib1.edu_logit ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m2
 display _n "--- 6B.2b Marginalni efekty Mlogit M2: P(AI Integration) ---"
@@ -830,43 +929,12 @@ mlogit ai_level ///
     i.region_num ///
     cluster_* ///
     i.job_family_num ///
-    ib1.edu_logit ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m3
 display _n "--- 6B.3b Marginalni efekty Mlogit M3: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
 display _n "--- 6B.3c Marginalni efekty Mlogit M3: P(Applied/Core AI) ---"
 margins, dydx(*) predict(outcome(2))
-
-* -----------------------------------------------------------------------
-* DIAGNOSTIKA: Mlogit M3 BEZ edu_logit (rozhodovaci test)
-* -----------------------------------------------------------------------
-* Ucel: Zjistit, zda je legitimni zcela vyradit edu_logit z mlogit kvuli
-* problemu s malymi bunkami (HS/Associate × Applied AI mel v puvodnim
-* 3-urovnovem edu_logit jen 23 pozorovani — pod prahem 50).
-*
-* Rozhodovaci pravidlo:
-*   Pokud Pseudo R² poklesne o <= 1 pb A marginalni efekty klicovych skill
-*   clusteru (GenAI, DS/ML, Cloud, Dynamic Web) se posunou o < 0.5 pb oproti
-*   M3 (s 2-urovnovym edu_logit), pak edu_logit z mlogit trvale odstranime
-*   a v thesis explicitne uvedeme duvod.
-display _n "--- 6B.3d DIAGNOSTIKA: Mlogit M3 BEZ edu_logit ---"
-mlogit ai_level ///
-    i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
-    i.region_num ///
-    cluster_* ///
-    i.job_family_num ///
-    ib3.exp_category, baseoutcome(0) rrr
-estimates store mlogit_m3_noedu
-display _n "--- 6B.3e Marginalni efekty Mlogit M3 noedu: P(AI Integration) ---"
-margins, dydx(*) predict(outcome(1))
-display _n "--- 6B.3f Marginalni efekty Mlogit M3 noedu: P(Applied/Core AI) ---"
-margins, dydx(*) predict(outcome(2))
-
-display _n "--- 6B.3g Porovnani M3 vs M3_noedu (Pseudo R², LL, koeficienty) ---"
-estimates table mlogit_m3 mlogit_m3_noedu, star stats(N ll chi2 r2_p)
 
 * -----------------------------------------------------------------------
 * Srovnávací tabulky Mlogit modelů
@@ -878,11 +946,11 @@ estimates table mlogit_m1 mlogit_m2 mlogit_m3, star stats(N ll chi2)
 display _n "--- 6B.6 Hausman test IIA (Model 3) ---"
 quietly mlogit ai_level ///
     i.sector_nace_num i.type_cat i.size_cat i.region_num ///
-    cluster_* i.job_family_num ib1.edu_logit ib3.exp_category, baseoutcome(0)
+    cluster_* i.job_family_num ib3.exp_category, baseoutcome(0)
 estimates store hausman_full
 quietly mlogit ai_level ///
     i.sector_nace_num i.type_cat i.size_cat i.region_num ///
-    cluster_* i.job_family_num ib1.edu_logit ib3.exp_category ///
+    cluster_* i.job_family_num ib3.exp_category ///
     if ai_level != 1, baseoutcome(0)
 estimates store hausman_reduced
 capture noisily hausman hausman_reduced hausman_full, alleqs constant
@@ -905,7 +973,6 @@ mlogit ai_level ///
     i.size_cat ///
     i.region_num ///
     cluster_* ///
-    ib1.edu_logit ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m3a
 display _n "--- 6B.7b Marginalni efekty Mlogit M3a: P(AI Integration) ---"
@@ -923,8 +990,7 @@ mlogit ai_level ///
     i.type_cat ///
     i.size_cat ///
     i.region_num ///
-    cluster_* ///
-    ib1.edu_logit, baseoutcome(0) rrr
+    cluster_*, baseoutcome(0) rrr
 estimates store mlogit_m3b
 display _n "--- 6B.8b Marginalni efekty Mlogit M3b: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
@@ -963,7 +1029,6 @@ mlogit ai_level ///
     i.region_num ///
     cluster_* ///
     i.job_family_num ///
-    ib1.edu_logit ///
     ib3.exp_category, baseoutcome(0) rrr
 estimates store mlogit_m3_nocirc
 display _n "--- 6C.1b Marginalni efekty Mlogit M3 nocirc: P(AI Integration) ---"
