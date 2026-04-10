@@ -942,12 +942,22 @@ display _n "--- 6.8 Export regresnich tabulek a grafu ---"
 capture ssc install estout
 capture ssc install coefplot
 
-* Tabulka 2: Export OLS tabulky (Model A a Model B)
-esttab model_a model_b using "$outdir/Tabulka_2_ols_models.rtf", replace ///
+* Tabulka: Hlavni OLS regresni tabulka pro diplomku
+* Modely: A (firemni profil), B (+ lidsky kapital), C-nojf (+ skills), C (+ skills + job family)
+* Vedouci doporucuje reportovat B vs C pro ukazku efektu job_family na AI premii
+esttab model_a model_b model_c_nojf model_c using "$outdir/Tabulka_OLS_hlavni.rtf", replace ///
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
-    keep(*ai_level* is_remote *edu_ols* *exp_category*) ///
-    title("Tabulka: OLS Mzdove modely determinantu log(platu)") ///
-    addnotes("Robustni standardni chyby v zavorkach.")
+    drop(_cons) ///
+    order(1.ai_level 2.ai_level is_remote *.edu_ols *.exp_category) ///
+    indicate("NACE sektor = *.sector_nace_num" "Region = *.region_num" ///
+        "Typ firmy = *.type_cat" "Velikost firmy = *.size_cat" ///
+        "Skill clustery = cluster_*" "Job Family = *.job_family_num") ///
+    stats(N r2 r2_a, fmt(0 3 3) labels("N" "R2" "Adj. R2")) ///
+    mtitles("Model A" "Model B" "C (bez JF)" "Model C") ///
+    title("Determinanty log(platu) v IT pozicich (OLS)") ///
+    addnotes("Robustni standardni chyby v zavorkach." ///
+        "Zavisle promenna: ln(rocni plat v USD)." ///
+        "Reference: AI level = None, Vzdelani = Missing, Zkusenosti = Mid (3-5 let).")
 
 * Graf 5: Forest plot z Modelu B (Čistý akademický design s body)
 estimates restore model_b
@@ -981,15 +991,23 @@ marginsplot, title("Růst mzdy podle praxe (AI vs Běžné role)", size(medium))
     legend(title("Úroveň role") region(lcolor(white)))
 graph export "$outdir/Graf_7_margins_seniority.png", replace
 
-display _n "!!! ZASTAVENI NAKAZANE UZIVATELEM PO OLS SEKCICH !!!"
-exit
 
+
+* --- Vyrazeni cirkularnich clusteru pro logit/mlogit ---
+* cluster_generative_ai a cluster_data_science__ml primo implikuji AI pozadavek
+* (GPT, LLM, TensorFlow, PyTorch...). V logit/mlogit, kde DV = AI tier,
+* jsou tautologicke — vyrazujeme je ze vsech logit/mlogit modelu.
+* V OLS (DV = ln_salary) zustavaji jako legitimni prediktory.
+rename cluster_generative_ai _excl_genai_logit
+rename cluster_data_science__ml _excl_dsml_logit
 
 * ==============================================================================
 * 6A. PRAVDĚPODOBNOSTNÍ MODELY — BINÁRNÍ LOGIT (has_ai)
 * ==============================================================================
 * DV: has_ai (0 = none, 1 = AI Integration NEBO Applied/Core AI)
-* Vyuziti: § 5.4 (inkrementalni modely M1–M3 + AME) a § 5.5.2 (nocirc citlivostni).
+* Vyuziti: § 5.4 (inkrementalni modely M1–M3 + AME).
+* POZN: cluster_generative_ai a cluster_data_science__ml jsou vyrazeny
+* (tautologicke s DV) — viz rename pred touto sekci.
 *
 * Proc binarni logit vedle mlogit v § 5.5.3:
 *   - § 5.4 odpovida na otazku "ktere charakteristiky predikuji AI pozadavek
@@ -1058,30 +1076,24 @@ estat gof, group(10)
 display _n "--- 6A.4 Porovnani Logit modelu 1, 2, 3 ---"
 estimates table logit_m1 logit_m2 logit_m3, star stats(N ll chi2 r2_p)
 
-* --- 6A.5 Citlivostní analýza: Logit M3 BEZ GenAI a DS/ML ---
-* Pro § 5.5.2 — test cirkularity v binarnim logitu.
-rename cluster_generative_ai _excl_genai_logit
-rename cluster_data_science__ml _excl_dsml_logit
-
-display _n "--- 6A.5a Logit M3 nocirc ---"
+* --- 6A.4b Logit M3 bez job_family (test mediace) ---
+* job_family muze byt mediator — primo v sobe zahrnuje typ dovednosti.
+* Porovnani s M3 ukaze, zda job_family mediuje efekty skill clusteru na P(AI).
+display _n "--- 6A.4b Logit Model 3 bez job_family (test mediace) ---"
 logit has_ai ///
     i.sector_nace_num ///
     i.type_cat ///
     i.size_cat ///
     i.region_num ///
     cluster_* ///
-    i.job_family_num ///
     ib2.edu_logit ///
     ib3.exp_category, or vce(robust)
-estimates store logit_m3_nocirc
-display _n "--- 6A.5b AME Logit M3 nocirc ---"
+estimates store logit_m3_nojf
+display _n "--- 6A.4c AME Logit M3 bez job_family ---"
 margins, dydx(*)
 
-display _n "--- 6A.5c Porovnani Logit M3 vs Logit M3 nocirc ---"
-estimates table logit_m3 logit_m3_nocirc, star stats(N ll chi2 r2_p)
-
-rename _excl_genai_logit cluster_generative_ai
-rename _excl_dsml_logit cluster_data_science__ml
+display _n "--- 6A.4d Porovnani Logit M3 vs M3 bez job_family ---"
+estimates table logit_m3 logit_m3_nojf, star stats(N ll chi2 r2_p)
 
 
 * ==============================================================================
@@ -1220,46 +1232,9 @@ margins, dydx(*) predict(outcome(2))
 display _n "--- 6B.5 Porovnani Mlogit M3 vs M3a vs M3b ---"
 estimates table mlogit_m3 mlogit_m3a mlogit_m3b, star stats(N ll chi2)
 
-* -----------------------------------------------------------------------
-* CITLIVOSTNÍ ANALÝZA: Mlogit BEZ cluster_generative_ai a cluster_data_science__ml
-* -----------------------------------------------------------------------
-* Test cirkularity: cluster_generative_ai a cluster_data_science__ml primo implikuji
-* AI pozadavek (GPT, LLM, TensorFlow, PyTorch...). Vyradime je pres docasne prejmenovani,
-* aby je cluster_* wildcard nezachytil.
-* POZOR: pokud kod selze mezi rename a unrename, promenne zustanou prejmenovane
-* a zbytek do-filu nepujde spustit. V pripade chyby rucne spustte:
-*   rename _excl_genai cluster_generative_ai
-*   rename _excl_dsml cluster_data_science__ml
-
-display _n "=============================================================="
-display "6C. CITLIVOSTNI ANALYZA — MLOGIT BEZ GenAI A DS/ML CLUSTERU"
-display "=============================================================="
-
-rename cluster_generative_ai _excl_genai
-rename cluster_data_science__ml _excl_dsml
-
-display _n "--- 6C.1a Mlogit M3 bez GenAI a DS/ML ---"
-mlogit ai_level ///
-    i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
-    i.region_num ///
-    cluster_* ///
-    i.job_family_num ///
-    ib3.exp_category, baseoutcome(0) rrr vce(robust)
-estimates store mlogit_m3_nocirc
-display _n "--- 6C.1b Marginalni efekty Mlogit M3 nocirc: P(AI Integration) ---"
-margins, dydx(*) predict(outcome(1))
-display _n "--- 6C.1c Marginalni efekty Mlogit M3 nocirc: P(Applied/Core AI) ---"
-margins, dydx(*) predict(outcome(2))
-
-* Vratit prejmenovane clustery
-rename _excl_genai cluster_generative_ai
-rename _excl_dsml cluster_data_science__ml
-
-* Srovnani koeficientu s a bez cirkularnich prediktoru
-display _n "--- 6C.2 Porovnani Mlogit M3 vs M3-nocirc ---"
-estimates table mlogit_m3 mlogit_m3_nocirc, star stats(N ll chi2)
+* Vratit vyrazene clustery (potrebne pro sekci 7+ a export)
+rename _excl_genai_logit cluster_generative_ai
+rename _excl_dsml_logit cluster_data_science__ml
 
 
 * ==============================================================================

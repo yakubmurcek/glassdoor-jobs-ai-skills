@@ -32,41 +32,76 @@ Tento dokument obsahuje návrh na vizualizaci výsledků analýzy pro kapitolu "
 * V této sekci se tabulky většinou nedoporučují, pokud k tomu není speciální důvod. Výsledky jednoduchých porovnání (t-testy, ANOVA) obvykle stačí popsat v textu i s příslušnými hodnotami (*t*, *p*, *d*).
 
 ### 5.3 AI prémie na platu (OLS regresní analýza)
-* **Tabulka 2: OLS modely vysvětlující mzdovou prémii za AI dovednosti**
-  * **Umístění:** Shrnutí sekcí 5.3.1 a 5.3.2.
-  * **Cíl:** Standardní ekonometrická tabulka reportující modely vedle sebe (Model A, Model B). 
-  * **Struktura:** Viditelné hlavní proměnné (úrovně AI, remote, praxe), zatímco technické doplňky (skill clusters) lze logicky skrýt ("Controls: Yes"). Obsahuje koeficienty a standardní chyby v závorkách.
+* **Tabulka 2: OLS modely determinantů log(platu) — hlavní hierarchická tabulka**
+  * **Umístění:** Shrnutí sekcí 5.3.1–5.3.3.
+  * **Cíl:** Standardní ekonometrická tabulka reportující 4 modely vedle sebe. Vedoucí doporučuje reportovat B vs C pro ukázku efektu job_family na AI prémii.
+  * **Struktura:**
+
+    | | Model A | Model B | C (bez JF) | Model C |
+    |---|---|---|---|---|
+    | AI Integration | β (SE) | β (SE) | β (SE) | β (SE) |
+    | Applied/Core AI | β (SE) | β (SE) | β (SE) | β (SE) |
+    | Remote | β (SE) | β (SE) | β (SE) | β (SE) |
+    | Vzdělání (4 kat.) | — | β (SE) | β (SE) | β (SE) |
+    | Zkušenosti (3 kat.) | — | β (SE) | β (SE) | β (SE) |
+    | NACE sektor | Yes | Yes | Yes | Yes |
+    | Region | Yes | Yes | Yes | Yes |
+    | Typ firmy | Yes | Yes | Yes | Yes |
+    | Velikost firmy | Yes | Yes | Yes | Yes |
+    | Skill clustery | — | — | Yes | Yes |
+    | Job Family | — | — | — | Yes |
+    | N | | | | |
+    | R² | | | | |
+    | Adj. R² | | | | |
+
+  * **Export v do-filu:** §6.8 → `Tabulka_OLS_hlavni.rtf`
+  * **Poznámka:** Reference: AI level = None, Vzdělání = Missing, Zkušenosti = Mid (3–5 let). Robustní SE.
 
 * **Graf 5: Hierarchie mzdových efektů (Koeficientový / Forest plot)**
   * **Umístění:** Sekce 5.3.3.
   * **Cíl:** Vizuálně srovnat relativní sílu AI prémie vůči jiným mzdovým charakteristikám.
   * **Vzhled:** Bodový regresní graf vybraných klíčových předpovědí (koeficienty z Modelu B s 95% intervaly spolehlivosti). To vizuálně doloží pointu, že klasický lidský kapitál a lokace mají větší vliv než samotná AI prémie.
+  * **Export v do-filu:** §6.8 → `Graf_5_coefplot_ols.png`
 
 * **Graf 6: Predikované průměrné platy podle AI úrovně (Marginsplot)**
   * **Umístění:** Diskuze po Modelu B.
-  * **Cíl:** Převést abstraktní logaritmické procentuální nárůsty na čtivé predikované dolarové rozdíly ("Adjusted Predictions at means").
-  * **Vzhled:** Bodové průměry pro tři AI úrovně na ose X a predikovaný plat na ose Y s chybovými úsečkami (95 % CI). Laický čtenář rovnou uvidí absolutní zisk z AI, protože efekt koeficientu je očištěn od ostatních zkreslení.
+  * **Cíl:** Převést abstraktní logaritmické procentuální nárůsty na čtivé predikované dolarové rozdíly (Adjusted Predictions).
+  * **Vzhled:** Bodové průměry pro tři AI úrovně na ose X a predikovaný plat na ose Y s chybovými úsečkami (95 % CI).
+  * **Export v do-filu:** §6.8 → `Graf_6_margins_ai.png`
 
 * **Graf 7: Vývoj křivky platu napříč senioritou (Marginsplot vrstvený podle AI)**
   * **Umístění:** Sekce 5.3.5.
   * **Cíl:** Odkrýt vzorec rozevírajících se mzdových nůžek, ve kterém plat za AI roste rapidněji s rostoucí praxí. 
-  * **Vzhled:** Liniový interakční graf. Neobsahuje pouze 1 křivku, nýbrž 3 separátní průběhy (pro "No AI", "AI Integration" a "Applied/Core AI"). Na první pohled vynikne fakt, že startovní pozice absolventa s i bez AI dovedností se od sebe tolik neliší, ale diametrální předěl přijde na Seniorních pozicích. Tento marginsplot kombinuje akademickou přesnost (`margins i.ai_level#i.exp_category`) a minimalistické bílé provedení.
+  * **Vzhled:** Liniový interakční graf. 3 separátní průběhy (pro „No AI", „AI Integration" a „Applied/Core AI").
+  * **Export v do-filu:** §6.8 → `Graf_7_margins_seniority.png`
 
-### 5.4 a 5.5 Determinanty AI požadavku a dovednostní profil
-* **Tabulka 3: Porovnání dovednostních profilů (Multinomiální logit - marginální efekty)**
-  * **Umístění:** Sekce 5.5.3 (používání AI vs. vývoj AI).
-  * **Cíl:** Ukázat odlišnosti dovedností napříč tierovaným AI.
-  * **Struktura:** V řádcích leží skill clustery. Dva hlavní sloupce vyjadřují marginální efekty (AME) pro zařazení inzerátu do *AI Integration* a do *Applied/Core AI*. Tabulka krásně ukáže, že vývojář potřebuje navíc fundamenty (*Systems Programming*, *Data Engineering*), zatímco konzumentovi stačí aplikační dovednosti (*Frontend*, *GenAI*).
+### 5.4 Determinanty AI požadavku (binární logistická regrese)
+* **Tabulka 3: Binární logit — AME determinantů P(AI požadavek)**
+  * **Umístění:** Sekce 5.4.
+  * **Cíl:** Ukázat, které charakteristiky (firma, skills, pozice) predikují, zda inzerát vůbec požaduje AI.
+  * **Struktura:** 4 sloupce: M1 (firma), M2 (role), M3 (kompletní), M3 bez JF (mediace). Řádky: AME jednotlivých prediktorů. Dole: N, Log-likelihood, Pseudo R².
+  * **Klíčová zjištění:** M3 vs M3-nojf ukáže mediační efekt job_family.
+  * **Zdroj v do-filu:** §6A.1–6A.4d (logit M1–M3 + M3-nojf, `margins, dydx(*)`)
+  * **POZN:** Clustery `cluster_generative_ai` a `cluster_data_science__ml` jsou vyřazeny (tautologické s DV = AI tier).
+
+### 5.5 Dovednostní profil AI: Používání vs. Vývoj (multinomiální logit)
+* **Tabulka 4: Multinomiální logit — AME pro P(AI Integration) a P(Applied/Core AI)**
+  * **Umístění:** Sekce 5.5.3.
+  * **Cíl:** Ukázat odlišnosti dovednostních profilů: které charakteristiky rozlišují „používání AI" od „vývoje AI".
+  * **Struktura:** V řádcích skill clustery a organizační charakteristiky. Dva hlavní sloupce vyjadřují AME pro *P(AI Integration)* a *P(Applied/Core AI)*. Kompletní model M3 + mediační modely M3a (bez JF) a M3b (bez JF + seniority).
+  * **Zdroj v do-filu:** §6B.1–6B.8 (mlogit M1–M3, M3a, M3b, `margins, dydx(*) predict(outcome(…))`)
+  * **POZN:** Clustery GenAI a DS/ML vyřazeny (viz výše). Vzdělání (edu_logit) není zahrnuto v mlogit kvůli nízkému n v buňce HS/Assoc × Applied AI (23 < 50).
 
 ### 5.6 Komparativní analýza zemí
-* **Graf 4: Penetrace AI požadavků na světových trzích**
+* **Graf 8: Penetrace AI požadavků na světových trzích**
   * **Umístění:** Sekce 5.6.1.
   * **Cíl:** Názorné rozlišení podílů jednotlivých států v poptávce o AI role.
-  * **Vzhled:** Skládaný 100% sloupcový graf (Stacked bar chart) ukáže podíly kategorií na trhu pro USA, Německo a Indii. Zvýrazní tak indický propad oproti západním trhům i strukturu poptávky.
+  * **Vzhled:** Skládaný 100% sloupcový graf (Stacked bar chart) pro USA, Německo a Indii.
 
-* **Tabulka 4: Test homogenity mezinárodní AI prémie**
-  * **Umístění:** Sekce 5.6.5 (může být odsunuta do případné přílohy).
-  * **Cíl:** Slouží k transparentnosti OLS regrese, která obsahuje fixní efekty i interakční efekty států na to, že mzdová prémie za AI se mezi nimi proporčně neliší.
+* **Tabulka 5: Test homogenity mezinárodní AI prémie (OLS interakce)**
+  * **Umístění:** Sekce 5.6.5 (může být odsunuta do přílohy).
+  * **Cíl:** Transparentnost OLS regrese s fixními efekty a interakcemi country × ai_level.
+  * **Zdroj v do-filu:** §5.2 v `ai_skills_analysis_comparative.do`
 
 ---
 
