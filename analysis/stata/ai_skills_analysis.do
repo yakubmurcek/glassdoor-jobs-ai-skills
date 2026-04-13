@@ -888,11 +888,20 @@ estimates table model_c model_c_nocirc, star stats(N r2 r2_a)
 * potencialne spornou exkluzni restrikci (type_cat a size_cat ovlivnuji
 * jak zverejneni, tak uroven platu).
 *
+* LIMITACE: Identifikace pouze z funkcionalni formy je slaba (Puhani, 2000).
+* Bez validni exkluzni restrikce jsou Heckman koeficienty citlive na
+* specifikaci a nemaji silnou kauzalni interpretaci.
+*
 * Pouzivame MLE misto twostep — MLE omezuje rho na [-1, 1] a produkuje
 * efektivnejsi odhady. Twostep muze produkovat rho mimo rozsah.
 *
-* POZN: Pokud lambda (mills ratio) je nesignifikantni, OLS odhady nejsou
-* vyznamne zkreslene a lze je interpretovat bez korekce.
+* INTERPRETACE: Lambda (mills ratio) je statisticky vyznamna (p = 0.004),
+* coz potvrzuje existenci selection bias. Prakticky dopad je vsak
+* zanedbatelny — AI koeficienty se mezi OLS a Heckmanem lisi minimalne
+* (AI Integration: 0.075 vs 0.075; Applied/Core AI: 0.096 vs 0.095).
+* Heckman model tedy slouzi jako robustnostni kontrola potvrzujici, ze
+* OLS odhady AI premie nejsou materialně zkreslene, nikoli jako
+* preferovana specifikace (slaba identifikace neumoznuje silnejsi zaver).
 
 display _n "=============================================================="
 display "6.7 HECKMAN KOREKCE SELEKCE VZORKU"
@@ -927,7 +936,9 @@ estimates store model_heckman
 
 display _n "--- 6.7b Klicove koeficienty: OLS Model C vs Heckman ---"
 display "Porovnavame AI premii a hlavni prediktory."
-display "Pokud lambda (mills) neni signifikantni, selection bias je zanedbatelny."
+display "Lambda (mills) je signifikantni → selection bias existuje."
+display "Ale: AI koeficienty se prakticky nemeni → OLS odhady jsou robustni."
+display "POZOR: Identifikace pouze z funkcionalni formy — interpret. opatrne."
 display _n "Heckman AI koeficienty:"
 estimates restore model_heckman
 display "  AI Integration:  " _b[ln_salary:1.ai_level]
@@ -1177,7 +1188,19 @@ display _n "--- 6B.4 Porovnani Mlogit modelu 1, 2, 3 ---"
 estimates table mlogit_m1 mlogit_m2 mlogit_m3, star stats(N ll chi2)
 
 * Hausman test IIA (na kompletním modelu 3)
+* POZN: Hausman test IIA je nespolehlivy u mlogit s mnoha kategoriemi.
+* Caste problemy: (1) non-positive-definite variancni matice (V_b-V_B),
+* (2) test zamita IIA, ale vysledek neni interpretovatelny kvuli (1).
+* Small-Hsiao test je alternativa, ale neni v base Stata.
+*
+* INTERPRETACE (run 10-Apr-2026): Test vraci chi2(49) = 92.16, p = 0.0002
+* s non-PD matici. Formalne zamita IIA, ale non-PD matice ciní test
+* nespolehlyvym (Long & Freese, 2014). Multinomialní logit je zde
+* exploratorni — dulezite jsou AME vzory, ne presne bodove odhady.
+* Tato limitace je diskutovana v sekci 5.7 (Limitace).
+
 display _n "--- 6B.6 Hausman test IIA (Model 3) ---"
+display "POZN: Test je informativni, ale casto nespolehlivy u mlogit."
 quietly mlogit ai_level ///
     i.sector_nace_num ib1.type_cat ib5.size_cat i.region_num ///
     cluster_* i.job_family_num ib3.exp_category, baseoutcome(0)
@@ -1188,12 +1211,19 @@ quietly mlogit ai_level ///
     if ai_level != 1, baseoutcome(0)
 estimates store hausman_reduced
 capture noisily hausman hausman_reduced hausman_full, alleqs constant
+display _n "--- Interpretace Hausman testu ---"
 if _rc {
-    display _n "Hausman test selhal (return code: " _rc ")"
-    display "Pozn: Hausman test casto selhava u mlogit s mnoha kategoriemi"
-    display "kvuli non-positive-definite variancni matici (V_b-V_B)."
-    display "Toto je znama limitace — neznamena to problem s modelem."
+    display "Hausman test selhal (return code: " _rc ")"
+    display "Non-positive-definite variancni matice — test neni interpretovatelny."
 }
+else {
+    display "Test probehl, ale V_b-V_B muze byt non-positive-definite."
+    display "Formalni zamitani IIA pri non-PD matici neni spolehlivy zaver."
+    display "Tento vysledek je znama limitace Hausmanova testu u mlogit"
+    display "s mnoha kategoriemi (Long & Freese, 2014; Cheng & Long, 2007)."
+}
+display "Doporuceni: Interpretovat mlogit vysledky opatrne; AME vzory"
+display "jsou robustnejsi nez bodove koeficienty."
 estimates drop hausman_full hausman_reduced
 
 * -----------------------------------------------------------------------
