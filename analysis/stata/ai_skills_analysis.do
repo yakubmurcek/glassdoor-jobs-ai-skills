@@ -1119,6 +1119,24 @@ quietly logit has_ai ///
     ib3.exp_category, vce(robust)
 linktest
 
+* --- 6A.3c2 Linktest s interakcemi (robustnostni kontrola misspecifikace) ---
+* Puvodni linktest ukazuje signifikantni _hatsq (p ~ 0.006).
+* Zkousime, zda pridani dvou teoreticky motivovanych interakci
+* (region × cloud_computing, size × dynamic_web) zlepsi specifikaci.
+display _n "--- 6A.3c2 Linktest s interakcemi (region#cloud, size#dynamic_web) ---"
+quietly logit has_ai ///
+    i.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category ///
+    i.region_num#c.cluster_cloud_computing ///
+    ib5.size_cat#c.cluster_dynamic__web, vce(robust)
+linktest
+
 * --- 6A.3d ROC krivka a AUC ---
 * AUC > 0.7 = prijatelna diskriminace, > 0.8 = dobra.
 display _n "--- 6A.3d ROC/AUC (Logit M3) ---"
@@ -1188,6 +1206,26 @@ margins, dydx(*)
 
 display _n "--- 6A.4d Porovnani Logit M3 vs M3 bez job_family ---"
 estimates table logit_m3 logit_m3_nojf, star stats(N ll chi2 r2_p)
+
+* --- 6A.4e Logit M3 bez job_family a bez seniority (test mediace) ---
+* job_family a seniorita mohou primo v sobe zahrnovat pozadavky na skills
+* — potencialni mediatory. Porovnani M3 vs M3-nojf vs M3-nojf-noexp ukaze,
+* zda tyto faktory mediuji efekty skill clusteru na P(AI).
+display _n "--- 6A.4e Logit Model 3 bez job_family a seniority (test mediace) ---"
+logit has_ai ///
+    i.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    ib2.edu_logit, or vce(robust)
+estimates store logit_m3_nojf_noexp
+
+display _n "--- 6A.4f AME Logit M3 bez job_family a seniority ---"
+margins, dydx(*)
+
+display _n "--- 6A.4g Porovnani Logit M3 vs M3-nojf vs M3-nojf-noexp ---"
+estimates table logit_m3 logit_m3_nojf logit_m3_nojf_noexp, star stats(N ll chi2 r2_p)
 
 * --- 6A.5 Robustnost: M3 na podvzorku se znamym vzdelanim ---
 * Testuje, zda velky podil Missing education (35.7%) nenarusuje koeficienty
