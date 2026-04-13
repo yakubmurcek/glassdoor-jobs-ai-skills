@@ -1104,8 +1104,57 @@ estimates store logit_m3
 display _n "--- 6A.3b AME Logit M3 ---"
 margins, dydx(*)
 
-* --- 6A.3c Hosmer-Lemeshow goodness-of-fit na M3 ---
-display _n "--- 6A.3c Hosmer-Lemeshow goodness-of-fit (Logit M3) ---"
+* --- 6A.3c Linktest (specification test) ---
+* Testuje spravnost funkcionalni formy. Pokud _hatsq je signifikantni,
+* model ma spatnou specifikaci (chybi kvadraticke cleny nebo interakce).
+display _n "--- 6A.3c Linktest (Logit M3) ---"
+quietly logit has_ai ///
+    i.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category, vce(robust)
+linktest
+
+* --- 6A.3d ROC krivka a AUC ---
+* AUC > 0.7 = prijatelna diskriminace, > 0.8 = dobra.
+display _n "--- 6A.3d ROC/AUC (Logit M3) ---"
+quietly logit has_ai ///
+    i.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category, vce(robust)
+lroc, saving("$outdir/Graf_roc_logit_m3.gph", replace)
+graph export "$outdir/Graf_roc_logit_m3.png", replace
+
+* --- 6A.3e Klasifikacni tabulka ---
+display _n "--- 6A.3e Classification table (Logit M3) ---"
+estat classification
+
+* --- 6A.3f VIF diagnostika (pres OLS proxy) ---
+* Logit nema primo VIF; pouzijeme OLS se stejnymi prediktory
+* jako proxy pro detekci multikolinearity.
+display _n "--- 6A.3f VIF diagnostika (Logit M3, OLS proxy) ---"
+quietly regress has_ai ///
+    i.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category, vce(robust)
+vif
+
+* --- 6A.3g Hosmer-Lemeshow goodness-of-fit na M3 ---
+display _n "--- 6A.3g Hosmer-Lemeshow goodness-of-fit (Logit M3) ---"
 quietly logit has_ai ///
     i.sector_nace_num ///
     ib1.type_cat ///
@@ -1139,6 +1188,25 @@ margins, dydx(*)
 
 display _n "--- 6A.4d Porovnani Logit M3 vs M3 bez job_family ---"
 estimates table logit_m3 logit_m3_nojf, star stats(N ll chi2 r2_p)
+
+* --- 6A.5 Robustnost: M3 na podvzorku se znamym vzdelanim ---
+* Testuje, zda velky podil Missing education (35.7%) nenarusuje koeficienty
+* ostatnich prediktoru. Pokud se koeficienty vyznamne nelisi, missing-indicator
+* metoda (Allison, 2001) je bezpecna.
+display _n "--- 6A.5a Logit M3 (podvzorek: known education only) ---"
+logit has_ai ///
+    i.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category if edu_logit != 0, or vce(robust)
+estimates store logit_m3_knownEdu
+
+display _n "--- 6A.5b Porovnani M3 (full) vs M3 (known education) ---"
+estimates table logit_m3 logit_m3_knownEdu, star stats(N ll chi2 r2_p)
 
 
 * ==============================================================================
