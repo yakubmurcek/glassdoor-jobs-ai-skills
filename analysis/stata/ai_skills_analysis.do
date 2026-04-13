@@ -477,16 +477,16 @@ testparm i.sector_nace_num i.region_num ib5.size_cat ib1.type_cat is_remote ///
 * --- 4.16 Vykresleni a export deskriptivnich grafu ---
 display _n "--- 4.16 Export CSV a grafu pro vizualizace ---"
 
-* Graf 1: KDE Distribuce platů (Elegantní překryvná křivka hustoty)
-twoway (kdensity salary_mid if ai_level==0, recast(area) fcolor(gs12%50) lcolor(gs10) lwidth(thin)) ///
-       (kdensity salary_mid if ai_level==1, recast(area) fcolor(ebblue%50) lcolor(ebblue) lwidth(medium)) ///
-       (kdensity salary_mid if ai_level==2, recast(area) fcolor(navy%40) lcolor(navy) lwidth(medthick)), ///
+* Graf 1: Distribuce platů - frekvence (Překryvný histogram)
+twoway (histogram salary_mid if ai_level==0, frequency fcolor(gs12%50) lcolor(gs10) lwidth(thin) width(15000)) ///
+       (histogram salary_mid if ai_level==1, frequency fcolor(ebblue%50) lcolor(ebblue) lwidth(medium) width(15000)) ///
+       (histogram salary_mid if ai_level==2, frequency fcolor(navy%40) lcolor(navy) lwidth(medthick) width(15000)), ///
        title("Rozdělení ročních platů podle úrovně AI", color(black) size(medium)) ///
-       xtitle("Roční plat (USD)", size(small)) ytitle("Hustota", size(small)) ///
+       xtitle("Roční plat (USD)", size(small)) ytitle("Frekvence", size(small)) ///
        legend(order(1 "Bez AI" 2 "AI Integration" 3 "Applied/Core AI") region(lcolor(white))) ///
        graphregion(color(white)) bgcolor(white) plotregion(fcolor(white) lcolor(white)) ///
        xlabel(50000(50000)300000, format(%9.0fc)) xscale(range(20000 350000))
-graph export "$outdir/Graf_1_platova_hustota.png", replace
+graph export "$outdir/Graf_1_platova_frekvence.png", replace
 
 * Graf 2: Job Family
 preserve
