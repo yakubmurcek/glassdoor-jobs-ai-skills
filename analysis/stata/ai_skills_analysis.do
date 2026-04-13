@@ -464,14 +464,14 @@ logit has_salary ///
     i.ai_level ///
     i.sector_nace_num ///
     i.region_num ///
-    i.size_cat ///
-    i.type_cat ///
+    ib5.size_cat ///
+    ib1.type_cat ///
     is_remote ///
     i.job_family_num ///
     ib2.edu_logit ///
     ib3.exp_category, vce(robust)
 display _n "Wald test spolecne signifikance vsech observables (krome AI):"
-testparm i.sector_nace_num i.region_num i.size_cat i.type_cat is_remote ///
+testparm i.sector_nace_num i.region_num ib5.size_cat ib1.type_cat is_remote ///
     i.job_family_num i.edu_logit i.exp_category
 
 * --- 4.16 Vykresleni a export deskriptivnich grafu ---
@@ -592,7 +592,7 @@ summarize ln_salary, detail
 
 * --- 6.1 Model A: Základní OLS (Firemní profil) ---
 * DV: ln_salary
-* IV: i.ai_level, i.sector_nace_num, i.region_num, is_remote, i.type_cat, i.size_cat
+* IV: i.ai_level, i.sector_nace_num, i.region_num, is_remote, ib1.type_cat, ib5.size_cat
 
 display _n "--- 6.1 Model A: Zakladni OLS (Firemni profil) ---"
 display "ln(plat) ~ AI_level + sektor + region + remote + typ_firmy + velikost_firmy"
@@ -602,8 +602,8 @@ regress ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     if ln_salary != ., vce(robust)
 
 estimates store model_a
@@ -616,8 +616,8 @@ quietly regress ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     if ln_salary != .
 vif
 
@@ -630,9 +630,9 @@ regress ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
-    i.edu_ols ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib3.edu_ols ///
     ib3.exp_category ///
     if ln_salary != ., vce(robust)
 
@@ -646,9 +646,9 @@ quietly regress ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
-    i.edu_ols ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib3.edu_ols ///
     ib3.exp_category ///
     if ln_salary != .
 vif
@@ -663,10 +663,10 @@ regress ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.job_family_num ///
-    i.edu_ols ///
+    ib3.edu_ols ///
     ib3.exp_category ///
     if ln_salary != ., vce(robust)
 
@@ -681,10 +681,10 @@ quietly regress ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.job_family_num ///
-    i.edu_ols ///
+    ib3.edu_ols ///
     ib3.exp_category ///
     if ln_salary != .
 vif
@@ -707,9 +707,9 @@ regress ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
-    i.edu_ols ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib3.edu_ols ///
     ib3.exp_category ///
     if ln_salary != ., vce(robust)
 estimates store model_c_nojf
@@ -723,9 +723,9 @@ quietly regress ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
-    i.edu_ols ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib3.edu_ols ///
     ib3.exp_category ///
     if ln_salary != .
 vif
@@ -746,10 +746,10 @@ regress ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.job_family_num ///
-    i.edu_ols ///
+    ib3.edu_ols ///
     experience_min_llm experience_sq ///
     if ln_salary != ., vce(robust)
 estimates store model_c_mincer
@@ -763,10 +763,10 @@ quietly regress ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.job_family_num ///
-    i.edu_ols ///
+    ib3.edu_ols ///
     experience_min_llm experience_sq ///
     if ln_salary != .
 vif
@@ -784,10 +784,10 @@ regress ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.job_family_num ///
-    i.edu_ols ///
+    ib3.edu_ols ///
     ib3.exp_category ///
     if ln_salary != ., vce(cluster company_id)
 estimates store model_c_cluster
@@ -801,8 +801,8 @@ regress ln_salary ///
     cluster_* ///
     i.ai_level##ib3.exp_category ///
     i.sector_nace_num i.region_num is_remote ///
-    i.type_cat i.size_cat ///
-    i.job_family_num i.edu_ols ///
+    ib1.type_cat ib5.size_cat ///
+    i.job_family_num ib3.edu_ols ///
     if ln_salary != ., vce(robust)
 display "Testujeme zda AI premie se lisi podle seniority"
 testparm i.ai_level#ib3.exp_category
@@ -819,15 +819,15 @@ quietly regress ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.job_family_num ///
-    i.edu_ols ///
+    ib3.edu_ols ///
     ib3.exp_category ///
     if ln_salary != ., vce(robust)
 
 display _n "Wald F-test A->B: spolecna signifikance lidského kapitálu (edu + exp)"
-testparm i.edu_ols i.exp_category
+testparm ib3.edu_ols i.exp_category
 
 display _n "Wald F-test B->C: spolecna signifikance tech skills + pozice (cluster_* + job_family)"
 testparm cluster_* i.job_family_num
@@ -854,10 +854,10 @@ regress ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.job_family_num ///
-    i.edu_ols ///
+    ib3.edu_ols ///
     ib3.exp_category ///
     if ln_salary != ., vce(robust)
 estimates store model_c_nocirc
@@ -907,18 +907,18 @@ heckman ln_salary ///
     i.sector_nace_num ///
     i.region_num ///
     is_remote ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.job_family_num ///
-    i.edu_ols ///
+    ib3.edu_ols ///
     ib3.exp_category, ///
     select(has_salary = ///
         i.ai_level ///
         i.sector_nace_num ///
         i.region_num ///
         is_remote ///
-        i.type_cat ///
-        i.size_cat ///
+        ib1.type_cat ///
+        ib5.size_cat ///
         i.job_family_num ///
         ib2.edu_logit ///
         ib3.exp_category) ///
@@ -949,15 +949,20 @@ esttab model_a model_b model_c_nojf model_c using "$outdir/Tabulka_OLS_hlavni.rt
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
     drop(_cons) ///
     order(1.ai_level 2.ai_level is_remote *.edu_ols *.exp_category) ///
+    refcat(1.ai_level "AI uroven (ref: None)" ///
+        0.edu_ols "Vzdelani (ref: Bachelor)" ///
+        0.exp_category "Zkusenosti (ref: Mid 3-5 let)" ///
+        0.size_cat "Velikost firmy (ref: 1001-5000)" ///
+        0.type_cat "Typ firmy (ref: Private/Subsidiary)", nolabel) ///
     indicate("NACE sektor = *.sector_nace_num" "Region = *.region_num" ///
-        "Typ firmy = *.type_cat" "Velikost firmy = *.size_cat" ///
         "Skill clustery = cluster_*" "Job Family = *.job_family_num") ///
     stats(N r2 r2_a, fmt(0 3 3) labels("N" "R2" "Adj. R2")) ///
     mtitles("Model A" "Model B" "C (bez JF)" "Model C") ///
     title("Determinanty log(platu) v IT pozicich (OLS)") ///
     addnotes("Robustni standardni chyby v zavorkach." ///
         "Zavisle promenna: ln(rocni plat v USD)." ///
-        "Reference: AI level = None, Vzdelani = Missing, Zkusenosti = Mid (3-5 let).")
+        "Referencni kategorie: AI level = None, Vzdelani = Bachelor, Zkusenosti = Mid (3-5 let)," ///
+        "Typ firmy = Private/Subsidiary, Velikost = 1001-5000.")
 
 * Graf 5: Forest plot z Modelu B (Čistý akademický design s body)
 estimates restore model_b
@@ -1026,8 +1031,8 @@ display "=============================================================="
 display _n "--- 6A.1a Logit Model 1: Profil firmy ---"
 logit has_ai ///
     i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.region_num, or vce(robust)
 estimates store logit_m1
 display _n "--- 6A.1b AME Logit M1 ---"
@@ -1048,8 +1053,8 @@ margins, dydx(*)
 display _n "--- 6A.3a Logit Model 3: Kompletni ---"
 logit has_ai ///
     i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.region_num ///
     cluster_* ///
     i.job_family_num ///
@@ -1063,8 +1068,8 @@ margins, dydx(*)
 display _n "--- 6A.3c Hosmer-Lemeshow goodness-of-fit (Logit M3) ---"
 quietly logit has_ai ///
     i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.region_num ///
     cluster_* ///
     i.job_family_num ///
@@ -1082,8 +1087,8 @@ estimates table logit_m1 logit_m2 logit_m3, star stats(N ll chi2 r2_p)
 display _n "--- 6A.4b Logit Model 3 bez job_family (test mediace) ---"
 logit has_ai ///
     i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.region_num ///
     cluster_* ///
     ib2.edu_logit ///
@@ -1122,8 +1127,8 @@ display "=============================================================="
 display _n "--- 6B.1a Mlogit Model 1: Profil firmy ---"
 mlogit ai_level ///
     i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.region_num, baseoutcome(0) rrr vce(robust)
 estimates store mlogit_m1
 display _n "--- 6B.1b Marginalni efekty Mlogit M1: P(AI Integration) ---"
@@ -1153,8 +1158,8 @@ margins, dydx(*) predict(outcome(2))
 display _n "--- 6B.3a Mlogit Model 3: Kompletni ---"
 mlogit ai_level ///
     i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.region_num ///
     cluster_* ///
     i.job_family_num ///
@@ -1174,11 +1179,11 @@ estimates table mlogit_m1 mlogit_m2 mlogit_m3, star stats(N ll chi2)
 * Hausman test IIA (na kompletním modelu 3)
 display _n "--- 6B.6 Hausman test IIA (Model 3) ---"
 quietly mlogit ai_level ///
-    i.sector_nace_num i.type_cat i.size_cat i.region_num ///
+    i.sector_nace_num ib1.type_cat ib5.size_cat i.region_num ///
     cluster_* i.job_family_num ib3.exp_category, baseoutcome(0)
 estimates store hausman_full
 quietly mlogit ai_level ///
-    i.sector_nace_num i.type_cat i.size_cat i.region_num ///
+    i.sector_nace_num ib1.type_cat ib5.size_cat i.region_num ///
     cluster_* i.job_family_num ib3.exp_category ///
     if ai_level != 1, baseoutcome(0)
 estimates store hausman_reduced
@@ -1198,8 +1203,8 @@ estimates drop hausman_full hausman_reduced
 display _n "--- 6B.7a Mlogit Model 3a: Kompletni bez job_family ---"
 mlogit ai_level ///
     i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.region_num ///
     cluster_* ///
     ib3.exp_category, baseoutcome(0) rrr vce(robust)
@@ -1216,8 +1221,8 @@ margins, dydx(*) predict(outcome(2))
 display _n "--- 6B.8a Mlogit Model 3b: Bez job_family a seniority ---"
 mlogit ai_level ///
     i.sector_nace_num ///
-    i.type_cat ///
-    i.size_cat ///
+    ib1.type_cat ///
+    ib5.size_cat ///
     i.region_num ///
     cluster_*, baseoutcome(0) rrr vce(robust)
 estimates store mlogit_m3b
