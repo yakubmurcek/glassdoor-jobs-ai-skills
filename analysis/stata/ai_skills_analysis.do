@@ -477,16 +477,33 @@ testparm i.sector_nace_num i.region_num ib5.size_cat ib1.type_cat is_remote ///
 * --- 4.16 Vykresleni a export deskriptivnich grafu ---
 display _n "--- 4.16 Export CSV a grafu pro vizualizace ---"
 
-* Graf 1: Distribuce platů - frekvence (Překryvný histogram)
-twoway (histogram salary_mid if ai_level==0, frequency fcolor(gs12%50) lcolor(gs10) lwidth(thin) width(15000)) ///
-       (histogram salary_mid if ai_level==1, frequency fcolor(ebblue%50) lcolor(ebblue) lwidth(medium) width(15000)) ///
-       (histogram salary_mid if ai_level==2, frequency fcolor(navy%40) lcolor(navy) lwidth(medthick) width(15000)), ///
+* Graf 1: KDE Distribuce platů - přeškálováno na frekvenci (hustota * N)
+* Generujeme KDE data pro každou skupinu a škálujeme hustotu -> frekvence
+quietly count if ai_level==0 & !missing(salary_mid)
+local n0 = r(N)
+kdensity salary_mid if ai_level==0, generate(kde_x0 kde_d0) nograph
+gen kde_f0 = kde_d0 * `n0'
+
+quietly count if ai_level==1 & !missing(salary_mid)
+local n1 = r(N)
+kdensity salary_mid if ai_level==1, generate(kde_x1 kde_d1) nograph
+gen kde_f1 = kde_d1 * `n1'
+
+quietly count if ai_level==2 & !missing(salary_mid)
+local n2 = r(N)
+kdensity salary_mid if ai_level==2, generate(kde_x2 kde_d2) nograph
+gen kde_f2 = kde_d2 * `n2'
+
+twoway (area kde_f0 kde_x0, fcolor(gs12%50) lcolor(gs10) lwidth(thin)) ///
+       (area kde_f1 kde_x1, fcolor(ebblue%50) lcolor(ebblue) lwidth(medium)) ///
+       (area kde_f2 kde_x2, fcolor(navy%40) lcolor(navy) lwidth(medthick)), ///
        title("Rozdělení ročních platů podle úrovně AI", color(black) size(medium)) ///
        xtitle("Roční plat (USD)", size(small)) ytitle("Frekvence", size(small)) ///
        legend(order(1 "Bez AI" 2 "AI Integration" 3 "Applied/Core AI") region(lcolor(white))) ///
        graphregion(color(white)) bgcolor(white) plotregion(fcolor(white) lcolor(white)) ///
        xlabel(50000(50000)300000, format(%9.0fc)) xscale(range(20000 350000))
 graph export "$outdir/Graf_1_platova_frekvence.png", replace
+drop kde_x0 kde_d0 kde_f0 kde_x1 kde_d1 kde_f1 kde_x2 kde_d2 kde_f2
 
 * Graf 2: Job Family
 preserve
@@ -954,26 +971,38 @@ capture ssc install estout
 capture ssc install coefplot
 
 * Tabulka: Hlavni OLS regresni tabulka pro diplomku
-* Modely: A (firemni profil), B (+ lidsky kapital), C-nojf (+ skills), C (+ skills + job family)
-* Vedouci doporucuje reportovat B vs C pro ukazku efektu job_family na AI premii
+* Tabulka pro diplomku:
+*   Model A = firemni profil
+*   Model B = A + lidsky kapital (edu, exp)
+*   B + Skills = B + skill clustery (bez job family) [= model_c_nojf]
+*   Model C = B + skill clustery + job family [= plny model]
+* Vedouci: baseline = "Ref." (ne 0.000); ukazat skill clustery a job family koeficienty
 esttab model_a model_b model_c_nojf model_c using "$outdir/Tabulka_OLS_hlavni.rtf", replace ///
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
-    drop(_cons) ///
-    order(1.ai_level 2.ai_level is_remote *.edu_ols *.exp_category) ///
-    refcat(1.ai_level "AI uroven (ref: None)" ///
-        0.edu_ols "Vzdelani (ref: Bachelor)" ///
-        0.exp_category "Zkusenosti (ref: Mid 3-5 let)" ///
-        0.size_cat "Velikost firmy (ref: 1001-5000)" ///
-        0.type_cat "Typ firmy (ref: Private/Subsidiary)", nolabel) ///
-    indicate("NACE sektor = *.sector_nace_num" "Region = *.region_num" ///
-        "Skill clustery = cluster_*" "Job Family = *.job_family_num") ///
+    drop(_cons ///
+        0.ai_level 3.edu_ols 3.exp_category 1.type_cat 5.size_cat ///
+        1.job_family_num) ///
+    order(1.ai_level 2.ai_level ///
+        is_remote ///
+        0.edu_ols 1.edu_ols 2.edu_ols 4.edu_ols ///
+        0.exp_category 2.exp_category 4.exp_category ///
+        cluster_* ///
+        *.job_family_num) ///
+    refcat(1.ai_level "{it:AI uroven (ref: None)}" ///
+        0.edu_ols "{it:Vzdelani (ref: Bachelor)}" ///
+        0.exp_category "{it:Zkusenosti (ref: Mid 3-5 let)}" ///
+        cluster_architecture__methods "{it:Skill clustery}" ///
+        2.job_family_num "{it:Job Family (ref: Data & AI)}" ///
+        0.size_cat "{it:Velikost firmy (ref: 1001-5000)}" ///
+        0.type_cat "{it:Typ firmy (ref: Private/Subsidiary)}", nolabel) ///
+    indicate("NACE sektor = *.sector_nace_num" "Region = *.region_num") ///
     stats(N r2 r2_a, fmt(0 3 3) labels("N" "R2" "Adj. R2")) ///
-    mtitles("Model A" "Model B" "C (bez JF)" "Model C") ///
+    mtitles("Model A" "Model B" "B + Skills" "Model C") ///
     title("Determinanty log(platu) v IT pozicich (OLS)") ///
     addnotes("Robustni standardni chyby v zavorkach." ///
         "Zavisle promenna: ln(rocni plat v USD)." ///
         "Referencni kategorie: AI level = None, Vzdelani = Bachelor, Zkusenosti = Mid (3-5 let)," ///
-        "Typ firmy = Private/Subsidiary, Velikost = 1001-5000.")
+        "Typ firmy = Private/Subsidiary, Velikost = 1001-5000, Job Family = Data & AI.")
 
 * Graf 5: Forest plot z Modelu B (Čistý akademický design s body)
 estimates restore model_b
