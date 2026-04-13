@@ -332,6 +332,20 @@ margins, dydx(*) predict(outcome(2))
 display _n "=============================================================="
 display "CROSS-COUNTRY ANALYZA DOKONCENA"
 display "=============================================================="
+
+* Graf 8: Penetrace AI požadavků na světových trzích
+preserve
+contract country ai_tier_num
+export delimited "$outdir/Graf_8_Penetrace_AI.csv", replace
+restore
+
+* Tabulka 5: Test homogenity mezinárodní AI prémie (OLS interakce)
+esttab pooled_model_c interaction_model using "$outdir/Tabulka_5_Test_homogenity.rtf", replace ///
+    label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+    stats(N r2 r2_a, fmt(0 3 3) labels("N" "R2" "Adj. R2")) ///
+    mtitles("Slouceny" "Interakcni") ///
+    title("Tabulka 5: Test homogenity mezinarodni AI premie (OLS)")
+
 estimates table pooled_model_c interaction_model, star stats(N r2 r2_a)
 display _n "--- Mlogit vysledky ---"
 estimates table pooled_mlogit, star stats(N ll chi2)

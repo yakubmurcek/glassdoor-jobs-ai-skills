@@ -977,7 +977,7 @@ capture ssc install coefplot
 *   B + Skills = B + skill clustery (bez job family) [= model_c_nojf]
 *   Model C = B + skill clustery + job family [= plny model]
 * Vedouci: baseline = "Ref." (ne 0.000); ukazat skill clustery a job family koeficienty
-esttab model_a model_b model_c_nojf model_c using "$outdir/Tabulka_OLS_hlavni.rtf", replace ///
+esttab model_a model_b model_c_nojf model_c using "$outdir/Tabulka_2_OLS_hlavni.rtf", replace ///
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
     drop(_cons ///
         0.ai_level 3.edu_ols 3.exp_category 1.type_cat 5.size_cat ///
@@ -1409,6 +1409,57 @@ summarize salary_mid experience_min_llm edu_cat exp_category skill_count has_ai 
 * Export do CSV pro další zpracování (grafy v Excelu/R/Python)
 export delimited desc_tier_llm salary_mid experience_min_llm edulevel_llm state sector using "$outdir/summary_for_charts.csv" if salary_mid != ., delimiter(",") replace
 
+* Tabulka 1: Základní charakteristiky vzorku
+preserve
+contract ai_level is_remote
+export delimited "$outdir/Tabulka_1_zakladni_charakteristiky.csv", replace
+restore
+
+* Tabulka 3: Binarni logit (AME)
+foreach m in logit_m1 logit_m2 logit_m3 logit_m3_nojf {
+    estimates restore `m'
+    local n = e(N)
+    local ll = e(ll)
+    local r2_p = e(r2_p)
+    quietly margins, dydx(*) post
+    estadd scalar ll = `ll'
+    estadd scalar r2_p = `r2_p'
+    estimates store ame_`m'
+}
+esttab ame_logit_m1 ame_logit_m2 ame_logit_m3 ame_logit_m3_nojf using "$outdir/Tabulka_3_Binarni_logit.rtf", replace ///
+    label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+    stats(N ll r2_p, fmt(0 3 3) labels("N" "Log-likelihood" "Pseudo R2")) ///
+    mtitles("M1 (Firma)" "M2 (Role)" "M3 (Kompletni)" "M3 (bez JF)") ///
+    title("Tabulka 3: Binarni logit — AME determinantu P(AI pozadavek)")
+
+* Tabulka 4: Multinomialni logit (AME)
+foreach m in mlogit_m3 mlogit_m3a mlogit_m3b {
+    estimates restore `m'
+    local n = e(N)
+    local ll = e(ll)
+    local r2_p = e(r2_p)
+    
+    quietly margins, dydx(*) predict(outcome(1)) post
+    estadd scalar ll = `ll'
+    estadd scalar r2_p = `r2_p'
+    estimates store ame_`m'_1
+    
+    estimates restore `m'
+    local n = e(N)
+    local ll = e(ll)
+    local r2_p = e(r2_p)
+
+    quietly margins, dydx(*) predict(outcome(2)) post
+    estadd scalar ll = `ll'
+    estadd scalar r2_p = `r2_p'
+    estimates store ame_`m'_2
+}
+
+esttab ame_mlogit_m3_1 ame_mlogit_m3_2 ame_mlogit_m3a_1 ame_mlogit_m3a_2 ame_mlogit_m3b_1 ame_mlogit_m3b_2 using "$outdir/Tabulka_4_Multinomialni_logit.rtf", replace ///
+    label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+    stats(N ll, fmt(0 3 3) labels("N" "Log-likelihood")) ///
+    mtitles("M3: AI Integ" "M3: App AI" "M3a: AI Integ" "M3a: App AI" "M3b: AI Integ" "M3b: App AI") ///
+    title("Tabulka 4: Multinomialni logit — AME pro P(AI Integration) a P(Applied/Core AI)")
 
 * ==============================================================================
 * 9. VIZUALIZACE
