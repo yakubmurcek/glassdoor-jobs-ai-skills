@@ -1,8 +1,8 @@
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
       name:  <unnamed>
-       log:  C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata\output/comparative_run_14_Apr_2026_21-51-54/ai_skills_comparative_analysis.log
+       log:  C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata\output/comparative_run_14_Apr_2026_22-06-10/ai_skills_comparative_analysis.log
   log type:  text
- opened on:  14 Apr 2026, 21:51:54
+ opened on:  14 Apr 2026, 22:06:10
 
 . 
 . 
@@ -5094,14 +5094,14 @@ Statistics   |
 . * --- 7.1 Tabulka 5: Pooled OLS s country FE + interakce (hlavni komparativni tabulka) ---
 . esttab pooled_fe_a pooled_fe_b pooled_fe_c pooled_interaction using "$outdir/Tabulka_5_Cross_Country_OLS.rtf", replace ///
 >     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
->     drop(_cons 0.ai_level 3.country_id 3.edu_ols 3.exp_category 1.type_cat 5.size_cat 1.job_family_num) ///
+>     drop(_cons) ///
 >     order(1.ai_level 2.ai_level 1.country_id 2.country_id ///
 >           1.country_id#1.ai_level 1.country_id#2.ai_level ///
 >           2.country_id#1.ai_level 2.country_id#2.ai_level ///
 >           is_remote ///
 >           0.edu_ols 1.edu_ols 2.edu_ols 4.edu_ols ///
 >           0.exp_category 2.exp_category 4.exp_category ///
->           cluster_* *.job_family_num) ///
+>           cluster_*) ///
 >     refcat(1.ai_level "{it:AI uroven (ref: None)}" ///
 >            1.country_id "{it:Zeme (ref: US)}" ///
 >            0.edu_ols "{it:Vzdelani (ref: Bachelor)}" ///
@@ -5109,96 +5109,512 @@ Statistics   |
 >            cluster_architecture__methods "{it:Skill clustery}", nolabel) ///
 >     indicate("NACE sektor = *.sector_nace_num" ///
 >              "Typ firmy = *.type_cat" ///
->              "Velikost firmy = *.size_cat") ///
+>              "Velikost firmy = *.size_cat" ///
+>              "Job family = *.job_family_num") ///
 >     stats(N r2 r2_a, fmt(0 3 3) labels("N" "R2" "Adj. R2")) ///
 >     mtitles("FE-A" "FE-B" "FE-C" "Interakce") ///
 >     title("Tabulka 5: Cross-country OLS pro ln(plat) — US/DE/IN") ///
 >     addnotes("Robustni standardni chyby v zavorkach." ///
 >              "Zavisla promenna: ln(rocni plat v USD, po konverzi EUR 1.165, INR /88)." ///
 >              "Referencni zeme: US. Zaporne koeficienty 1.country_id (DE) a 2.country_id (IN) = nizsi prumery nez US.")
-coefficient 1.type_cat not found
-r(111);
+(note: file ./output/comparative_run_14_Apr_2026_22-06-10/Tabulka_5_Cross_Country_OLS.rtf not found)
+(output written to ./output/comparative_run_14_Apr_2026_22-06-10/Tabulka_5_Cross_Country_OLS.rtf)
 
-end of do-file
+. 
+. * --- 7.2 Tabulka 5b: Country x AI AME (z interakcniho modelu) ---
+. estimates restore pooled_interaction
+(results pooled_interaction are active now)
 
-r(111);
+. quietly margins country_id, dydx(ai_level) post
 
-. do "C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata\ai_skills_analysis_comparative.do"
+. estimates store ame_country_ai
 
-. ********************************************************************************
-. * AI SKILLS IN IT JOB POSTINGS — COMPARATIVE STATA ANALYSIS (US vs DE vs IN)
-. * ==============================================================================
-. * Datasety: us_relevant_ai_stata.csv, de/de_relevant_ai_stata.csv, in_relevant_ai_stata.csv
-. * Autor: Yakub Murcek
-. * Datum: Duben 2026
-. * Stata 15.1 (IC/SE)
-. *
-. * Tento skript je paralelní verze hlavního ai_skills_analysis.do pro sdružené
-. * (pooled) vzorky tří zemí. Úprava oproti hlavní analýze:
-. *   - sdruceny vzorek US + DE + IN (country_id fixed effects, baseline = US via ib3)
-. *   - platy konvertovane na USD pevnymi kurzy za obdobi scrapingu (Sep–Oct 2025)
-. *   - geograficka kontrola: v pooled OLS pouzivame country FE (i.country_id).
-. *     Pomocna promenna location_market (US_<region> pro US, country code pro DE/IN)
-. *     je vytvorena pouze pro deskriptivu — v regresich by byla perfektne kolinearni
-. *     s country_id, proto ji nepouzivame jako regresor. Region FE zustava jen
-. *     v US-only specifikaci (§6.6).
-. *   - hlavni zajem je test homogenity AI premie napric zememi (country × ai_level)
-. *     a kvantifikace rozdilu v pravdepodobnosti AI pozice napric zememi (mlogit)
-. *
-. * Struktura logicky zrcadli hlavni do-file:
-. *   1. Nastaveni prostredi
-. *   2. Import a append trech datasetu
-. *   3. Cisteni a priprava dat (vc. meny, lokalni trh, clustery)
-. *   4. Cross-country deskriptivni statistika
-. *   5. Cross-country statisticke testy (AI premie, missingness, vzdelani)
-. *   6. OLS wage modely: baseline FE model + plny Model C + interakce country×AI
-. *   6A. Binarni logit: P(has_ai) s country FE
-. *   6B. Multinomialni logit: P(ai_level) s country FE + bez JF / bez JF+exp
-. *   7. Robustnostni kontroly (clustered SE, bez cirkularnich clusteru)
-. *   8. Exporty tabulek a grafu
-. ********************************************************************************
+. esttab ame_country_ai using "$outdir/Tabulka_5b_Country_AI_AME.rtf", replace ///
+>     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+>     mtitles("AME ai_level podle zeme") ///
+>     title("Tabulka 5b: AI mzdova premie podle zeme (marginalni efekty ai_level)")
+(note: file ./output/comparative_run_14_Apr_2026_22-06-10/Tabulka_5b_Country_AI_AME.rtf not found)
+(output written to ./output/comparative_run_14_Apr_2026_22-06-10/Tabulka_5b_Country_AI_AME.rtf)
+
+. 
+. * --- 7.3 Tabulka 6: Binarni logit — AME ---
+. foreach m in clogit_m1 clogit_m2 clogit_m3 {
+  2.     estimates restore `m'
+  3.     local n = e(N)
+  4.     local ll = e(ll)
+  5.     local r2_p = e(r2_p)
+  6.     quietly margins, dydx(*) post
+  7.     estadd scalar ll = `ll'
+  8.     estadd scalar r2_p = `r2_p'
+  9.     estimates store ame_`m'
+ 10. }
+(results clogit_m1 are active now)
+
+added scalar:
+                 e(ll) =  -12442.8
+
+added scalar:
+               e(r2_p) =  .06029779
+(results clogit_m2 are active now)
+
+added scalar:
+                 e(ll) =  -13058.011
+
+added scalar:
+               e(r2_p) =  .19311948
+(results clogit_m3 are active now)
+
+added scalar:
+                 e(ll) =  -10741.83
+
+added scalar:
+               e(r2_p) =  .18875801
+
+. esttab ame_clogit_m1 ame_clogit_m2 ame_clogit_m3 using "$outdir/Tabulka_6_Binarni_logit_country.rtf", replace ///
+>     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+>     stats(N ll r2_p, fmt(0 3 3) labels("N" "Log-likelihood" "Pseudo R2")) ///
+>     mtitles("M1 (Firma)" "M2 (Role)" "M3 (Kompletni)") ///
+>     title("Tabulka 6: Binarni logit s country FE — AME determinantu P(AI)")
+(note: file ./output/comparative_run_14_Apr_2026_22-06-10/Tabulka_6_Binarni_logit_country.rtf not found)
+(output written to ./output/comparative_run_14_Apr_2026_22-06-10/Tabulka_6_Binarni_logit_country.rtf)
+
+. 
+. * --- 7.4 Tabulka 7: Mlogit — AME M3 pro obe kategorie ---
+. foreach m in cmlogit_m3 cmlogit_m3a cmlogit_m3b {
+  2.     estimates restore `m'
+  3.     local n = e(N)
+  4.     local ll = e(ll)
+  5.     local r2_p = e(r2_p)
+  6.     quietly margins, dydx(*) predict(outcome(1)) post
+  7.     estadd scalar ll = `ll'
+  8.     estadd scalar r2_p = `r2_p'
+  9.     estimates store ame_`m'_1
+ 10. 
+.     estimates restore `m'
+ 11.     local n = e(N)
+ 12.     local ll = e(ll)
+ 13.     local r2_p = e(r2_p)
+ 14.     quietly margins, dydx(*) predict(outcome(2)) post
+ 15.     estadd scalar ll = `ll'
+ 16.     estadd scalar r2_p = `r2_p'
+ 17.     estimates store ame_`m'_2
+ 18. }
+(results cmlogit_m3 are active now)
+
+added scalar:
+                 e(ll) =  -13396.868
+
+added scalar:
+               e(r2_p) =  .1802418
+(results cmlogit_m3 are active now)
+
+added scalar:
+                 e(ll) =  -13396.868
+
+added scalar:
+               e(r2_p) =  .1802418
+(results cmlogit_m3a are active now)
+
+added scalar:
+                 e(ll) =  -14049.463
+
+added scalar:
+               e(r2_p) =  .14030937
+(results cmlogit_m3a are active now)
+
+added scalar:
+                 e(ll) =  -14049.463
+
+added scalar:
+               e(r2_p) =  .14030937
+(results cmlogit_m3b are active now)
+
+added scalar:
+                 e(ll) =  -14068.293
+
+added scalar:
+               e(r2_p) =  .13915714
+(results cmlogit_m3b are active now)
+
+added scalar:
+                 e(ll) =  -14068.293
+
+added scalar:
+               e(r2_p) =  .13915714
+
+. esttab ame_cmlogit_m3_1 ame_cmlogit_m3_2 ///
+>        ame_cmlogit_m3a_1 ame_cmlogit_m3a_2 ///
+>        ame_cmlogit_m3b_1 ame_cmlogit_m3b_2 ///
+>        using "$outdir/Tabulka_7_Mlogit_country.rtf", replace ///
+>     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+>     stats(N ll r2_p, fmt(0 3 3) labels("N" "Log-likelihood" "Pseudo R2")) ///
+>     mtitles("M3: AI Integ" "M3: App AI" "M3a: AI Integ" "M3a: App AI" "M3b: AI Integ" "M3b: App AI") ///
+>     title("Tabulka 7: Multinomialni logit s country FE — AME")
+(note: file ./output/comparative_run_14_Apr_2026_22-06-10/Tabulka_7_Mlogit_country.rtf not found)
+(output written to ./output/comparative_run_14_Apr_2026_22-06-10/Tabulka_7_Mlogit_country.rtf)
+
+. 
+. * --- 7.5 Graf 13: Penetrace AI pozadavku podle zeme (vstup do externiho grafu) ---
+. preserve
+
+. contract country ai_level
+
+. export delimited "$outdir/Graf_13_Penetrace_AI.csv", replace
+(note: file ./output/comparative_run_14_Apr_2026_22-06-10/Graf_13_Penetrace_AI.csv not found)
+file ./output/comparative_run_14_Apr_2026_22-06-10/Graf_13_Penetrace_AI.csv saved
+
+. restore
+
+. 
+. * --- 7.6 Graf 9: Distribuce ln(plat) podle zeme + AI ---
+. preserve
+
+. collapse (mean) ln_salary (count) n=ln_salary if ln_salary != ., by(country ai_level)
+
+. export delimited "$outdir/Graf_9_ln_salary_country_ai.csv", replace
+(note: file ./output/comparative_run_14_Apr_2026_22-06-10/Graf_9_ln_salary_country_ai.csv not found)
+file ./output/comparative_run_14_Apr_2026_22-06-10/Graf_9_ln_salary_country_ai.csv saved
+
+. restore
+
+. 
+. * --- 7.7 Graf 10: Forest plot interakcnich koeficientu country x AI ---
+. estimates restore pooled_interaction
+(results pooled_interaction are active now)
+
+. coefplot, keep(*.country_id#*.ai_level) ///
+>     xline(0, lpattern(dash) lcolor(red)) ///
+>     title("Interakce Country x AI level (OLS ln(plat)) — baseline US", size(medium)) ///
+>     xtitle("Koeficient (oproti US x None)", size(small)) ///
+>     msymbol(O) msize(small) mcolor(navy) ciopts(lcolor(navy) lwidth(thin)) ///
+>     graphregion(color(white)) bgcolor(white) plotregion(fcolor(white) lcolor(white))
+
+. graph export "$outdir/Graf_10_country_ai_interaction.png", replace
+(note: file ./output/comparative_run_14_Apr_2026_22-06-10/Graf_10_country_ai_interaction.png not found)
+(file ./output/comparative_run_14_Apr_2026_22-06-10/Graf_10_country_ai_interaction.png written in PNG format)
+
+. 
+. * --- 7.8 Summary statistics podle zeme ---
+. display _n "--- 7.8 Summary statistics pro tabulku ---"
+
+--- 7.8 Summary statistics pro tabulku ---
+
+. tabstat salary_mid ln_salary experience_min_llm edu_ols exp_category ///
+>     skill_count has_ai is_remote, by(country) stat(count mean sd)
+
+Summary statistics: N, mean, sd
+  by categories of: country 
+
+country |  salary~d  ln_sal~y  experi~m   edu_ols  exp_ca~y  skill_~t    has_ai  is_rem~e
+--------+--------------------------------------------------------------------------------
+     DE |       514       514      3997      6400      6400      6400      6400      6400
+        |  82055.64  11.26986  4.132224  1.268438  1.847344  10.44562  .1828125  .1210938
+        |  25117.08  .3071683  2.260299  1.496823  1.506658  7.789534  .3865429  .3262617
+--------+--------------------------------------------------------------------------------
+     IN |      9199      9199     11580     14184     14184     14184     14184     14184
+        |  8323.851  8.855318  3.949931  1.617033  2.343838  15.87049  .0628878  .1402284
+        |  7352.054  .5065257  2.829846   1.51966  1.293661  10.49221  .2427695  .3472361
+--------+--------------------------------------------------------------------------------
+     US |     14642     14642     15257     17848     17848     17848     17848     17848
+        |    124617  11.67981  4.520433  1.888559  2.588301  16.78737  .2054572  .2838974
+        |  42148.67  .3261007  2.625669  1.447254  1.233278  10.30623  .4040466  .4509003
+--------+--------------------------------------------------------------------------------
+  Total |     24355     24355     30834     38432     38432     38432     38432     38432
+        |   79794.3  10.60433  4.255852   1.68508  2.374688   15.3929  .1490685  .2037625
+        |  65108.34  1.422332  2.674398  1.499287  1.330332  10.25284  .3561606  .4027997
+-----------------------------------------------------------------------------------------
+
+. 
+. * Ulozeni zpracovaneho datasetu
+. save "$outdir/ai_skills_comparative_processed.dta", replace
+(note: file ./output/comparative_run_14_Apr_2026_22-06-10/ai_skills_comparative_processed.dta not found)
+file ./output/comparative_run_14_Apr_2026_22-06-10/ai_skills_comparative_processed.dta saved
+
 . 
 . 
 . * ==============================================================================
-. * 1. NASTAVENI PROSTREDI
+. * 8. ZAVER
 . * ==============================================================================
-. capture {
+. display _n "=============================================================="
 
-. if _rc {
-.     display as text "Pozor: Nepodarilo se automaticky nastavit slozku. Ujistete se, ze jste v 'analysis/stata'"
-. }
+==============================================================
 
-. display "Aktualni pracovni slozka: " c(pwd)
-Aktualni pracovni slozka: C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata
+. display "CROSS-COUNTRY ANALYZA DOKONCENA"
+CROSS-COUNTRY ANALYZA DOKONCENA
 
-. 
-. version 15.1
+. display "=============================================================="
+==============================================================
 
-. clear all
+. display "Vystupy ulozeny do: $outdir"
+Vystupy ulozeny do: ./output/comparative_run_14_Apr_2026_22-06-10
 
-. set more off
-
-. set max_memory 8g, permanently
-(set max_memory preference recorded)
+. display "Log: $outdir/ai_skills_comparative_analysis.log"
+Log: ./output/comparative_run_14_Apr_2026_22-06-10/ai_skills_comparative_analysis.log
 
 . 
-. local c_date = c(current_date)
+. display _n "--- Finalni shrnuti klicovych estimaci ---"
 
-. local c_time = c(current_time)
+--- Finalni shrnuti klicovych estimaci ---
 
-. local time_string = subinstr("`c_date'_`c_time'", " ", "_", .)
+. estimates table pooled_fe_a pooled_fe_b pooled_fe_c pooled_interaction, ///
+>     keep(1.ai_level 2.ai_level 1.country_id 2.country_id ///
+>          1.country_id#1.ai_level 1.country_id#2.ai_level ///
+>          2.country_id#1.ai_level 2.country_id#2.ai_level) ///
+>     star stats(N r2 r2_a)
 
-. local time_string = subinstr("`time_string'", ":", "-", .)
+------------------------------------------------------------------------------
+    Variable |  pooled_fe_a     pooled_fe_b     pooled_fe_c    pooled_inte~n  
+-------------+----------------------------------------------------------------
+    ai_level |
+AI Integr..  |   .1376457***    .12247717***    .10082156***    .10340832***  
+Applied/C..  |  .20434406***    .18882337***    .13308838***    .13563902***  
+             |
+  country_id |
+         DE  | -.51141245***   -.51188107***   -.53259549***   -.54451145***  
+         IN  | -2.7985784***   -2.7948254***   -2.7991709***   -2.7973307***  
+             |
+  country_id#|
+    ai_level |
+         DE #|
+AI Integr..  |                                                  .07547943     
+         DE #|
+Applied/C..  |                                                  .01261196     
+         IN #|
+AI Integr..  |                                                 -.02662965     
+         IN #|
+Applied/C..  |                                                  -.0156558     
+-------------+----------------------------------------------------------------
+           N |      23897           23897           23897           23897     
+          r2 |  .92509509       .93090348        .9337671       .93377207     
+        r2_a |  .92502921       .93082242        .9336143       .93360815     
+------------------------------------------------------------------------------
+                                      legend: * p<0.05; ** p<0.01; *** p<0.001
 
 . 
-. global datadir "../../data/outputs"
+. display _n "--- Finalni shrnuti mlogit (M3) ---"
 
-. global outdir "./output/comparative_run_`time_string'"
+--- Finalni shrnuti mlogit (M3) ---
+
+. estimates table cmlogit_m3, star stats(N ll r2_p)
+
+------------------------------
+    Variable |  cmlogit_m3    
+-------------+----------------
+None         |
+  country_id |
+         DE  |  (omitted)     
+         IN  |  (omitted)     
+             |
+sector_nac~m |
+          J  |  (omitted)     
+          K  |  (omitted)     
+          M  |  (omitted)     
+      Other  |  (omitted)     
+          Q  |  (omitted)     
+    Unknown  |  (omitted)     
+             |
+    type_cat |
+Unknown/O~r  |  (omitted)     
+             |
+    type_cat |
+     Public  |  (omitted)     
+Nonprofit~u  |  (omitted)     
+             |
+    size_cat |
+    Unknown  |  (omitted)     
+       1-50  |  (omitted)     
+     51-200  |  (omitted)     
+    201-500  |  (omitted)     
+   501-1000  |  (omitted)     
+             |
+    size_cat |
+ 5001-10000  |  (omitted)     
+     10000+  |  (omitted)     
+             |
+cluster_ar~s |  (omitted)     
+cluster_bi~s |  (omitted)     
+cluster_ba~t |  (omitted)     
+cluster_ce~s |  (omitted)     
+cluster_cl~g |  (omitted)     
+cluster_da~g |  (omitted)     
+cluster_da~e |  (omitted)     
+cluster_de~s |  (omitted)     
+cluster_dy~b |  (omitted)     
+cluster_en~d |  (omitted)     
+cluster_en~s |  (omitted)     
+cluster_fr~t |  (omitted)     
+cluster_mo~p |  (omitted)     
+cluster_ne~g |  (omitted)     
+cluster_os~d |  (omitted)     
+cluster_sc~l |  (omitted)     
+cluster_se~y |  (omitted)     
+cluster_sy~g |  (omitted)     
+cluster_te~g |  (omitted)     
+             |
+job_family~m |
+DevOps & ..  |  (omitted)     
+ Management  |  (omitted)     
+      Other  |  (omitted)     
+Software ..  |  (omitted)     
+Software ..  |  (omitted)     
+Sr+ Softw..  |  (omitted)     
+             |
+exp_category |
+    Missing  |  (omitted)     
+Junior (..)  |  (omitted)     
+             |
+exp_category |
+Senior+ ..)  |  (omitted)     
+             |
+       _cons |  (omitted)     
+-------------+----------------
+AI_Integra~n |
+  country_id |
+         DE  | -.10604188     
+         IN  | -1.8288747***  
+             |
+sector_nac~m |
+          J  |  .37447899***  
+          K  |   .2311901*    
+          M  |  .35582998**   
+      Other  |  .04307884     
+          Q  |  .44325201***  
+    Unknown  |  .54851052***  
+             |
+    type_cat |
+Unknown/O~r  | -.02657061     
+             |
+    type_cat |
+     Public  |  -.0034409     
+Nonprofit~u  |  .05653196     
+             |
+    size_cat |
+    Unknown  | -.20472615*    
+       1-50  | -.36768355***  
+     51-200  | -.06715627     
+    201-500  |   .0367524     
+   501-1000  | -.08543815     
+             |
+    size_cat |
+ 5001-10000  | -.28010449**   
+     10000+  | -.04726322     
+             |
+cluster_ar~s |  .07945428     
+cluster_bi~s |  .21699292***  
+cluster_ba~t |  .27238178***  
+cluster_ce~s | -.28496988**   
+cluster_cl~g |  .46013596***  
+cluster_da~g |  .09545001     
+cluster_da~e | -.22323409***  
+cluster_de~s |  .15519396**   
+cluster_dy~b |  .60494311***  
+cluster_en~d | -.47192561***  
+cluster_en~s |  .48953575***  
+cluster_fr~t |  .50313994***  
+cluster_mo~p |  -.0929654     
+cluster_ne~g | -.01333395     
+cluster_os~d |  -.2950894***  
+cluster_sc~l | -.35189306***  
+cluster_se~y |  .06509805     
+cluster_sy~g | -.02829387     
+cluster_te~g |  .00826858     
+             |
+job_family~m |
+DevOps & ..  | -1.2005223***  
+ Management  | -.59208845***  
+      Other  | -1.1853825***  
+Software ..  | -1.4013317***  
+Software ..  | -.72915496***  
+Sr+ Softw..  | -.75966109***  
+             |
+exp_category |
+    Missing  | -.24888031***  
+Junior (..)  | -.15746215*    
+             |
+exp_category |
+Senior+ ..)  | -.11309965*    
+             |
+       _cons | -1.8459092***  
+-------------+----------------
+Applied_Co~I |
+  country_id |
+         DE  | -.07565062     
+         IN  | -1.1445987***  
+             |
+sector_nac~m |
+          J  |  .36239244***  
+          K  |  .03805488     
+          M  |  .35608866*    
+      Other  | -.07473957     
+          Q  |  .25097199     
+    Unknown  |  .46810854***  
+             |
+    type_cat |
+Unknown/O~r  |  .04907515     
+             |
+    type_cat |
+     Public  |  -.1015366     
+Nonprofit~u  | -.05284465     
+             |
+    size_cat |
+    Unknown  |   .0274282     
+       1-50  | -.06967282     
+     51-200  |  .09587794     
+    201-500  | -.02430235     
+   501-1000  | -.25621439     
+             |
+    size_cat |
+ 5001-10000  |  .14737203     
+     10000+  |  .39524816***  
+             |
+cluster_ar~s | -.08102559     
+cluster_bi~s |  .31806102***  
+cluster_ba~t |   .0855555     
+cluster_ce~s | -.55699072***  
+cluster_cl~g |  .54993639***  
+cluster_da~g |   .6706065***  
+cluster_da~e | -.37201913***  
+cluster_de~s |  .23112863***  
+cluster_dy~b |  1.2055351***  
+cluster_en~d | -.56796943***  
+cluster_en~s | -.03224495     
+cluster_fr~t |  .05136853     
+cluster_mo~p | -.29308614**   
+cluster_ne~g |  .02064138     
+cluster_os~d | -.37062064***  
+cluster_sc~l | -.72116378***  
+cluster_se~y | -.00791798     
+cluster_sy~g |  .71925576***  
+cluster_te~g | -.12278516*    
+             |
+job_family~m |
+DevOps & ..  | -2.5060626***  
+ Management  | -1.0574068***  
+      Other  | -2.7891838***  
+Software ..  | -2.7168125***  
+Software ..  | -1.6327181***  
+Sr+ Softw..  | -1.6601578***  
+             |
+exp_category |
+    Missing  |  .13398025     
+Junior (..)  |  .01775094     
+             |
+exp_category |
+Senior+ ..)  |  .10645291     
+             |
+       _cons | -1.7965947***  
+-------------+----------------
+Statistics   |                
+           N |      32279     
+          ll | -13396.868     
+        r2_p |   .1802418     
+------------------------------
+legend: * p<0.05; ** p<0.01; *** p<0.001
 
 . 
-. capture mkdir "./output"
-
-. capture mkdir "$outdir"
-
-. 
-. capture log close
+. log close
+      name:  <unnamed>
+       log:  C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata\output/comparative_run_14_Apr_2026_22-06-10/ai_skills_comparative_analysis.log
+  log type:  text
+ closed on:  14 Apr 2026, 22:16:44
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
