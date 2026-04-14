@@ -820,14 +820,14 @@ capture ssc install coefplot
 * --- 7.1 Tabulka 5: Pooled OLS s country FE + interakce (hlavni komparativni tabulka) ---
 esttab pooled_fe_a pooled_fe_b pooled_fe_c pooled_interaction using "$outdir/Tabulka_5_Cross_Country_OLS.rtf", replace ///
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
-    drop(_cons 0.ai_level 3.country_id 3.edu_ols 3.exp_category 1.type_cat 5.size_cat 1.job_family_num) ///
+    drop(_cons) ///
     order(1.ai_level 2.ai_level 1.country_id 2.country_id ///
           1.country_id#1.ai_level 1.country_id#2.ai_level ///
           2.country_id#1.ai_level 2.country_id#2.ai_level ///
           is_remote ///
           0.edu_ols 1.edu_ols 2.edu_ols 4.edu_ols ///
           0.exp_category 2.exp_category 4.exp_category ///
-          cluster_* *.job_family_num) ///
+          cluster_*) ///
     refcat(1.ai_level "{it:AI uroven (ref: None)}" ///
            1.country_id "{it:Zeme (ref: US)}" ///
            0.edu_ols "{it:Vzdelani (ref: Bachelor)}" ///
@@ -835,7 +835,8 @@ esttab pooled_fe_a pooled_fe_b pooled_fe_c pooled_interaction using "$outdir/Tab
            cluster_architecture__methods "{it:Skill clustery}", nolabel) ///
     indicate("NACE sektor = *.sector_nace_num" ///
              "Typ firmy = *.type_cat" ///
-             "Velikost firmy = *.size_cat") ///
+             "Velikost firmy = *.size_cat" ///
+             "Job family = *.job_family_num") ///
     stats(N r2 r2_a, fmt(0 3 3) labels("N" "R2" "Adj. R2")) ///
     mtitles("FE-A" "FE-B" "FE-C" "Interakce") ///
     title("Tabulka 5: Cross-country OLS pro ln(plat) — US/DE/IN") ///
