@@ -1402,9 +1402,59 @@ margins, dydx(*) predict(outcome(2))
 display _n "--- 6B.5 Porovnani Mlogit M3 vs M3a vs M3b ---"
 estimates table mlogit_m3 mlogit_m3a mlogit_m3b, star stats(N ll chi2)
 
-* Vratit vyrazene clustery (potrebne pro sekci 7+ a export)
+* Vratit vyrazene clustery (potrebne pro sekci 7+, sekci 6A.6 a export)
 rename _excl_genai_logit cluster_generative_ai
 rename _excl_dsml_logit cluster_data_science__ml
+
+
+* ==============================================================================
+* 6A.6 CITLIVOSTNI ANALYZA — LOGIT S GenAI A DS/ML (CIRKULARNI)
+* ==============================================================================
+* Symetrie s OLS sekci 6.6: kvantifikace dopadu a priori vyrazeni
+* cluster_generative_ai (GPT, LLM, Transformers...) a cluster_data_science__ml
+* (TensorFlow, PyTorch, scikit-learn...) z hlavnich logit modelu.
+*
+* POZOR: Tento model je ILUSTRACI CIRKULARITY, NIKOLIV doporucovanou
+* specifikaci. Oba clustery tautologicky implikuji AI pozadavek, takze
+* vysledna Pseudo R2 a AME kvantifikuji zkresleni plynouci z cirkularniho
+* zarazeni — presne proto jsou v hlavnich modelech (6A.3) vyrazeny.
+*
+* Blok je zcela aditivni: neprejmenovava promenne, pouziva vlastni jmeno
+* estimates (logit_m3_circ), margins bez 'post', a nemodifikuje zadny
+* existujici export. Ostatni sekce (6B mlogit, 7 hard skills, 8 exporty,
+* 9 vizualizace) cerpaji z estimaci ulozenych DRIVE a jsou nedotceny.
+
+display _n "=============================================================="
+display "6A.6 CITLIVOSTNI ANALYZA — LOGIT S GenAI A DS/ML (CIRKULARNI)"
+display "=============================================================="
+
+display _n "--- 6A.6a Logit M3-circ (cluster_* vcetne GenAI/DS-ML) ---"
+logit has_ai ///
+    i.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    i.region_num ///
+    cluster_* ///
+    i.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category, vce(robust)
+estimates store logit_m3_circ
+
+display _n "--- 6A.6b AME Logit M3-circ (dopad cirkularnich clusteru) ---"
+margins, dydx(*)
+
+display _n "--- 6A.6c Porovnani Logit M3 (hlavni) vs M3-circ (cirkularni) ---"
+estimates table logit_m3 logit_m3_circ, star stats(N ll chi2 r2_p) ///
+    b(%7.4f)
+
+display _n "Interpretace sekce 6A.6:"
+display "  - Rozdil Pseudo R2 (M3 vs M3-circ) = dopad cirkularity."
+display "  - AME cluster_generative_ai a cluster_data_science__ml v M3-circ"
+display "    = velikost mechanicke 'prediktivni sily' plynouci z tautologie."
+display "  - Zmeny AME ostatnich clusteru (zejm. cloud_computing, bi/analytics)"
+display "    = kvantifikace toho, jak cirkularni promenne 'kradou' variabilitu."
+display "  - M3-circ NENI doporucena specifikace — dokumentuje opravnenost"
+display "    vyrazeni cirkularnich clusteru v 6A.3."
 
 
 * ==============================================================================
