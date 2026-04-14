@@ -333,10 +333,10 @@ display _n "=============================================================="
 display "CROSS-COUNTRY ANALYZA DOKONCENA"
 display "=============================================================="
 
-* Graf 8: Penetrace AI požadavků na světových trzích
+* Graf 13: Penetrace AI požadavků na světových trzích
 preserve
 contract country ai_tier_num
-export delimited "$outdir/Graf_8_Penetrace_AI.csv", replace
+export delimited "$outdir/Graf_13_Penetrace_AI.csv", replace
 restore
 
 * Tabulka 5: Test homogenity mezinárodní AI prémie (OLS interakce)

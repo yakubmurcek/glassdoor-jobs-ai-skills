@@ -253,6 +253,8 @@ gen is_remote = 0
 replace is_remote = 1 if strpos(lower(remote_work_types), "home") > 0
 replace is_remote = 1 if strpos(lower(remote_work_types), "remote") > 0
 
+label define remote_lbl 0 "Z kanceláře" 1 "Pouze Remote"
+label values is_remote remote_lbl
 label variable is_remote "Moznost remote prace (1=ano)"
 
 * --- 3.12 AI Level (multinomiální závislá proměnná) ---
@@ -1036,6 +1038,35 @@ marginsplot, title("Růst mzdy podle praxe (AI vs Běžné role)", size(medium))
     legend(title("Úroveň role") region(lcolor(white)))
 graph export "$outdir/Graf_7_margins_seniority.png", replace
 
+* Graf 8: Predikce mzdy dle Vzdělání (Marginsplot vrstvený podle AI)
+estimates restore model_b
+quietly margins i.ai_level#i.edu_ols
+marginsplot, title("Predikovaná mzda vs. Vzdělání a AI", size(medium)) ///
+    xtitle("Dosažené vzdělání", size(small)) ytitle("Předpokládaný log(Plat)", size(small)) ///
+    graphregion(color(white)) bgcolor(white) plotregion(fcolor(white) lcolor(white)) ///
+    legend(title("Úroveň role") region(lcolor(white)))
+graph export "$outdir/Graf_8_margins_education.png", replace
+
+* Graf 9: Mzdová AI mezera napříč NACE sektory (Marginsplot horizontal)
+quietly regress ln_salary i.ai_level##i.sector_nace_num i.region_num i.is_remote ib1.type_cat ib5.size_cat ib3.edu_ols ib3.exp_category i.job_family_num if ln_salary != ., vce(robust)
+quietly margins i.ai_level#i.sector_nace_num
+marginsplot, horizontal ///
+    title("Rozdíly v predikovaných mzdách napříč sektory", size(medium)) ///
+    xtitle("Předpokládaný log(Plat)", size(small)) ytitle("Sektor (NACE)", size(small)) ///
+    graphregion(color(white)) bgcolor(white) plotregion(fcolor(white) lcolor(white)) ///
+    legend(title("Úroveň role") region(lcolor(white)))
+graph export "$outdir/Graf_9_margins_sectors.png", replace
+
+* Graf 10: Mzdová prémie u Remote rolí podle AI
+quietly regress ln_salary i.ai_level##i.is_remote i.sector_nace_num i.region_num ib1.type_cat ib5.size_cat ib3.edu_ols ib3.exp_category i.job_family_num if ln_salary != ., vce(robust)
+quietly margins i.ai_level#i.is_remote
+marginsplot, title("Mzdová prémie u Remote rolí podle AI", size(medium)) ///
+    xtitle("Možnost práce na dálku", size(small)) ytitle("Předpokládaný log(Plat)", size(small)) ///
+    plotopts(msymbol(D) msize(medium)) ///
+    graphregion(color(white)) bgcolor(white) plotregion(fcolor(white) lcolor(white)) ///
+    legend(title("Úroveň role") region(lcolor(white)))
+graph export "$outdir/Graf_10_margins_remote.png", replace
+
 
 
 * --- Vyrazeni cirkularnich clusteru pro logit/mlogit ---
@@ -1149,8 +1180,8 @@ quietly logit has_ai ///
     i.job_family_num ///
     ib2.edu_logit ///
     ib3.exp_category, vce(robust)
-lroc, saving("$outdir/Graf_roc_logit_m3.gph", replace)
-graph export "$outdir/Graf_roc_logit_m3.png", replace
+lroc, saving("$outdir/Graf_11_roc_logit_m3.gph", replace)
+graph export "$outdir/Graf_11_roc_logit_m3.png", replace
 
 * --- 6A.3e Klasifikacni tabulka ---
 display _n "--- 6A.3e Classification table (Logit M3) ---"
@@ -1495,7 +1526,7 @@ display _n "--- 8.1 Summary statistics pro tabulky ---"
 summarize salary_mid experience_min_llm edu_cat exp_category skill_count has_ai is_remote
 
 * Export do CSV pro další zpracování (grafy v Excelu/R/Python)
-export delimited desc_tier_llm salary_mid experience_min_llm edulevel_llm state sector using "$outdir/summary_for_charts.csv" if salary_mid != ., delimiter(",") replace
+export delimited desc_tier_llm salary_mid experience_min_llm edulevel_llm state sector using "$outdir/Data_1_summary_for_charts.csv" if salary_mid != ., delimiter(",") replace
 
 * Tabulka 1: Základní charakteristiky vzorku
 preserve
@@ -1549,43 +1580,18 @@ esttab ame_mlogit_m3_1 ame_mlogit_m3_2 ame_mlogit_m3a_1 ame_mlogit_m3a_2 ame_mlo
     mtitles("M3: AI Integ" "M3: App AI" "M3a: AI Integ" "M3a: App AI" "M3b: AI Integ" "M3b: App AI") ///
     title("Tabulka 4: Multinomialni logit — AME pro P(AI Integration) a P(Applied/Core AI)")
 
-* ==============================================================================
-* 9. VIZUALIZACE
-* ==============================================================================
-
-display _n "=============================================================="
-display "9. VIZUALIZACE"
-display "=============================================================="
-
-* --- 9.1 Sloupcový graf: AI tier distribuce ---
-graph bar (count), over(desc_tier_llm) ///
-    title("Distribuce AI pozadavku v IT pozicich") ///
-    ytitle("Pocet pozic") ///
-    bar(1, color(navy))
-graph export "$outdir/ai_tier_distribution.png", replace width(1200)
-
-* --- 9.2 Box plot: Platy podle AI tier ---
-graph box salary_mid, over(desc_tier_llm) ///
-    title("Rozlozeni platu podle AI pozadavku") ///
-    ytitle("Rocni plat (USD)")
-graph export "$outdir/salary_by_ai_tier.png", replace width(1200)
-
-* --- 9.3 Histogram: Požadované zkušenosti ---
-histogram experience_min_llm if experience_min_llm < 15, ///
-    by(has_ai, title("Pozadovane zkusenosti") note("")) ///
-    xtitle("Roky zkusenosti") percent bin(15)
-graph export "$outdir/experience_histogram.png", replace width(1200)
-
-* --- 9.4 Vzdělání podle AI tier ---
-graph bar (count), over(edu_cat) over(has_ai) ///
-    title("Vzdelavaci pozadavky: AI vs non-AI pozice") ///
-    ytitle("Pocet pozic") ///
-    legend(label(1 "non-AI") label(2 "AI pozice"))
-graph export "$outdir/education_by_ai.png", replace width(1200)
-
+* Graf 12: Forest Plot marginálních efektů pro Mlogit M3 (Pouze Skill Clustery)
+coefplot (ame_mlogit_m3_1, label("AI Integration") mcolor(ebblue) ciopts(lcolor(ebblue))) ///
+         (ame_mlogit_m3_2, label("Applied/Core AI") mcolor(navy) ciopts(lcolor(navy))), ///
+    keep(cluster_*) ///
+    xline(0, lpattern(dash) lcolor(red)) ///
+    title("Vliv dovedností na AI profil pozice", size(medium)) ///
+    xtitle("Změna pravděpodobnosti (AME)", size(small)) ///
+    graphregion(color(white) margin(l=5 r=5)) bgcolor(white) plotregion(fcolor(white) lcolor(white))
+graph export "$outdir/Graf_12_coefplot_mlogit.png", replace
 
 * ==============================================================================
-* 10. ZÁVĚR A ULOŽENÍ
+* 9. ZÁVĚR A ULOŽENÍ
 * ==============================================================================
 
 display _n "=============================================================="

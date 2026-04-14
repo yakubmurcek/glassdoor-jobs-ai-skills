@@ -4,6 +4,11 @@ Tento dokument obsahuje návrh na vizualizaci výsledků analýzy pro kapitolu "
 
 ## 1. Rozvržení tabulek a grafů dle kapitol
 
+### Pomocné datové exporty
+* **Data 1: Agregovaný dataset pro externí grafy**
+  * **Export v do-filu:** `Data_1_summary_for_charts.csv`
+  * **Cíl:** Poskytnout čistá data (AI tier, plat, zkušenosti, odvětví) pro jednoduché flexibilní ploty v MS Excel / Python.
+
 ### 5.1 Deskriptivní statistika
 * **Graf 1: Distribuce ročních platů napříč úrovněmi AI (Křivka hustoty / KDE)** 
   * **Umístění:** Sekce 5.1.2.
@@ -13,6 +18,7 @@ Tento dokument obsahuje návrh na vizualizaci výsledků analýzy pro kapitolu "
 * **Graf 2: Podíl AI inzerátů podle *Job Family***
   * **Umístění:** Sekce 5.1.5.
   * **Cíl:** Nahradit zdlouhavý text sestupným žebříčkem na základě čistých vizualizovatelných dat z vygenerovaného CSV.
+  * **Export v do-filu:** `Graf_2_job_family_ai.csv`
 
 * **Graf 3: Podíl inzerátů nabízejících remote práci**
   * **Umístění:** Sekce 5.1.4.
@@ -22,11 +28,13 @@ Tento dokument obsahuje návrh na vizualizaci výsledků analýzy pro kapitolu "
 * **Graf 4: Kompozice seniority podle úrovně AI (Skládaný 100% sloupcový graf)**
   * **Umístění:** Sekce 5.1.5.
   * **Cíl:** Ukázat kompozici pracovních sil. Osa X: None, AI Integration, Applied AI; Osa Y: poměr Junior vs Mid vs Senior. Z grafu tak na první pohled vyplyne, že AI role preferují zkušenější kandidáty.
+  * **Export v do-filu:** `Graf_4_seniority_by_ai.csv`
 
 * **Tabulka 1: Základní charakteristiky vzorku podle AI požadavků (křížová tabulka)**
   * **Umístění:** Napříč sekcemi 5.1.3 až 5.1.6.
   * **Cíl:** Seskupit tunu deskriptivních procent z textu do jedné přehledné matice.
   * **Struktura:** Sloupce: *Všekny inzeráty | Bez AI | AI Integration | Applied/Core AI*. Řádky: *Vzdělání (%)*, *Zkušenosti (%)* a *Remote work (%)*.
+  * **Export v do-filu:** `Tabulka_1_zakladni_charakteristiky.csv`
 
 ### 5.2 Statistické testy
 * V této sekci se tabulky většinou nedoporučují, pokud k tomu není speciální důvod. Výsledky jednoduchých porovnání (t-testy, ANOVA) obvykle stačí popsat v textu i s příslušnými hodnotami (*t*, *p*, *d*).
@@ -54,7 +62,7 @@ Tento dokument obsahuje návrh na vizualizaci výsledků analýzy pro kapitolu "
     | R² | | | | |
     | Adj. R² | | | | |
 
-  * **Export v do-filu:** §6.8 → `Tabulka_OLS_hlavni.rtf`
+  * **Export v do-filu:** §6.8 → `Tabulka_2_OLS_hlavni.rtf`
   * **Poznámka:** Reference: AI level = None, Vzdělání = Missing, Zkušenosti = Mid (3–5 let). Robustní SE.
 
 * **Graf 5: Hierarchie mzdových efektů (Koeficientový / Forest plot)**
@@ -75,33 +83,59 @@ Tento dokument obsahuje návrh na vizualizaci výsledků analýzy pro kapitolu "
   * **Vzhled:** Liniový interakční graf. 3 separátní průběhy (pro „No AI", „AI Integration" a „Applied/Core AI").
   * **Export v do-filu:** §6.8 → `Graf_7_margins_seniority.png`
 
+* **Graf 8: Predikce mzdy dle Vzdělání (Marginsplot)**
+  * **Umístění:** OLS Analýza (konec sekce 5.3).
+  * **Cíl:** Vizualizovat trend "Skills-based hiring". Graf odpoví na otázku, zda kandidát s nižším vzděláním, ale AI dovednostmi vydělává více, než tradičně vzdělaný s magisterským titulem.
+  * **Export v do-filu:** `Graf_8_margins_education.png`
+
+* **Graf 9: Mzdová AI mezera napříč NACE sektory**
+  * **Umístění:** OLS Analýza (konec sekce 5.3).
+  * **Cíl:** Tzv. Marginsplot (obdoba Cleveland Dot Plot). Zjišťuje, ve kterém odvětví roste "AI prémie" nejsilněji (IT vs Finance vs Manufacturing).
+  * **Export v do-filu:** `Graf_9_margins_sectors.png`
+
+* **Graf 10: Mzdová prémie u Remote rolí podle AI**
+  * **Umístění:** OLS Analýza (konec sekce 5.3).
+  * **Cíl:** Interakční graf zkoumající, zda tvoří Remote práce a AI znalosti "dvojsmyslnou prémii" pro moderní digitalizovaný talent.
+  * **Export v do-filu:** `Graf_10_margins_remote.png`
+
 ### 5.4 Determinanty AI požadavku (binární logistická regrese)
 * **Tabulka 3: Binární logit — AME determinantů P(AI požadavek)**
   * **Umístění:** Sekce 5.4.
   * **Cíl:** Ukázat, které charakteristiky (firma, skills, pozice) predikují, zda inzerát vůbec požaduje AI.
   * **Struktura:** 4 sloupce: M1 (firma), M2 (role), M3 (kompletní), M3 bez JF (mediace). Řádky: AME jednotlivých prediktorů. Dole: N, Log-likelihood, Pseudo R².
   * **Klíčová zjištění:** M3 vs M3-nojf ukáže mediační efekt job_family.
-  * **Zdroj v do-filu:** §6A.1–6A.4d (logit M1–M3 + M3-nojf, `margins, dydx(*)`)
+  * **Zdroj v do-filu:** §6A.1–6A.4d (logit M1–M3 + M3-nojf, `margins, dydx(*)`) → `Tabulka_3_Binarni_logit.rtf`
   * **POZN:** Clustery `cluster_generative_ai` a `cluster_data_science__ml` jsou vyřazeny (tautologické s DV = AI tier).
+
+* **Graf 11: ROC křivka a AUC (Binární logit Model M3)**
+  * **Umístění:** Sekce 5.4.
+  * **Cíl:** Graficky zhodnotit prediktivní sílu a přesnost kompletního logistického modelu pro P(AI požadavek).
+  * **Export v do-filu:** `Graf_11_roc_logit_m3.png`
 
 ### 5.5 Dovednostní profil AI: Používání vs. Vývoj (multinomiální logit)
 * **Tabulka 4: Multinomiální logit — AME pro P(AI Integration) a P(Applied/Core AI)**
   * **Umístění:** Sekce 5.5.3.
   * **Cíl:** Ukázat odlišnosti dovednostních profilů: které charakteristiky rozlišují „používání AI" od „vývoje AI".
   * **Struktura:** V řádcích skill clustery a organizační charakteristiky. Dva hlavní sloupce vyjadřují AME pro *P(AI Integration)* a *P(Applied/Core AI)*. Kompletní model M3 + mediační modely M3a (bez JF) a M3b (bez JF + seniority).
-  * **Zdroj v do-filu:** §6B.1–6B.8 (mlogit M1–M3, M3a, M3b, `margins, dydx(*) predict(outcome(…))`)
+  * **Zdroj v do-filu:** §6B.1–6B.8 (mlogit M1–M3, M3a, M3b, `margins, dydx(*) predict(outcome(…))`) → `Tabulka_4_Multinomialni_logit.rtf`
   * **POZN:** Clustery GenAI a DS/ML vyřazeny (viz výše). Vzdělání (edu_logit) není zahrnuto v mlogit kvůli nízkému n v buňce HS/Assoc × Applied AI (23 < 50).
 
+* **Graf 12: Vizuální profil AI rolí (Forest Plot marginálních efektů)**
+  * **Umístění:** Sekce 5.5.3.
+  * **Cíl:** Vizuálně srovnat marginální efekty z Tabulky 4. Modré body ukážou překlopení pravděpodobnosti do "AI Integration", červené body překlápění do "Applied/Core AI" napříč Skill clustery. Tím čtenář uvidí, jaká dovednost odděluje pouhé "užívání AI" od "vývoje AI".
+  * **Export v do-filu:** `Graf_12_coefplot_mlogit.png`
+
 ### 5.6 Komparativní analýza zemí
-* **Graf 8: Penetrace AI požadavků na světových trzích**
+* **Graf 13: Penetrace AI požadavků na světových trzích**
   * **Umístění:** Sekce 5.6.1.
   * **Cíl:** Názorné rozlišení podílů jednotlivých států v poptávce o AI role.
   * **Vzhled:** Skládaný 100% sloupcový graf (Stacked bar chart) pro USA, Německo a Indii.
+  * **Export v do-filu:** `Graf_13_Penetrace_AI.csv`
 
 * **Tabulka 5: Test homogenity mezinárodní AI prémie (OLS interakce)**
   * **Umístění:** Sekce 5.6.5 (může být odsunuta do přílohy).
   * **Cíl:** Transparentnost OLS regrese s fixními efekty a interakcemi country × ai_level.
-  * **Zdroj v do-filu:** §5.2 v `ai_skills_analysis_comparative.do`
+  * **Zdroj v do-filu:** §5.2 v `ai_skills_analysis_comparative.do` → `Tabulka_5_Test_homogenity.rtf`
 
 ---
 
