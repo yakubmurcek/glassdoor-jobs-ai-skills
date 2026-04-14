@@ -159,6 +159,9 @@ replace education_hybrid = "missing" if education_hybrid == "-" | education_hybr
 replace education_hybrid = edu_level_det if education_hybrid == "missing" & edu_level_det != ""
 replace education_hybrid = "missing" if education_hybrid == ""
 replace education_hybrid = "master" if education_hybrid == "phd"
+replace education_hybrid = "associate" if education_hybrid == "diploma"
+* Bezpecnostni sit: jakakoli neznama hodnota -> missing
+replace education_hybrid = "missing" if !inlist(education_hybrid, "highschool", "associate", "bachelor", "master", "missing")
 
 * edu_ols: granularni pro OLS
 gen edu_ols = .
@@ -245,30 +248,38 @@ label variable has_salary "Ma uvedeny plat (1=ano)"
 * --- 3.6 Velikost firmy (ordinalni) ---
 replace size = "Unknown" if size == ""
 gen size_cat = .
-replace size_cat = 0 if size == "Unknown"
-replace size_cat = 1 if size == "1 to 50 Employees"
-replace size_cat = 2 if size == "51 to 200 Employees"
-replace size_cat = 3 if size == "201 to 500 Employees"
-replace size_cat = 4 if size == "501 to 1000 Employees"
-replace size_cat = 5 if size == "1001 to 5000 Employees"
-replace size_cat = 6 if size == "5001 to 10000 Employees"
-replace size_cat = 7 if size == "10000+ Employees"
+replace size_cat = 0 if inlist(size, "Unknown", "Unbekannt")
+replace size_cat = 1 if inlist(size, "1 to 50 Employees", "1 bis 50 Mitarbeiter")
+replace size_cat = 2 if inlist(size, "51 to 200 Employees", "51 bis 200 Mitarbeiter")
+replace size_cat = 3 if inlist(size, "201 to 500 Employees", "201 bis 500 Mitarbeiter")
+replace size_cat = 4 if inlist(size, "501 to 1000 Employees", "501 bis 1.000 Mitarbeiter")
+replace size_cat = 5 if inlist(size, "1001 to 5000 Employees", "1.001 bis 5.000 Mitarbeiter")
+replace size_cat = 6 if inlist(size, "5001 to 10000 Employees", "5.001 bis 10.000 Mitarbeiter")
+replace size_cat = 7 if inlist(size, "10000+ Employees", "Mehr als 10.000 Mitarbeiter")
 label define size_lbl 0 "Unknown" 1 "1-50" 2 "51-200" 3 "201-500" ///
     4 "501-1000" 5 "1001-5000" 6 "5001-10000" 7 "10000+"
 label values size_cat size_lbl
 label variable size_cat "Velikost firmy (ordinalni)"
 
 * --- 3.7 Typ firmy ---
+* POZN: Stata inlist() pojme max 10 stringu — proto rozdelujeme do vice radku.
 gen type_cat = .
 replace type_cat = 0 if inlist(type, "", "Unknown", "Contract", "Self-employed", "Private Practice / Firm", "Franchise")
-replace type_cat = 1 if inlist(type, "Company - Private", "Subsidiary or Business Segment")
-replace type_cat = 2 if type == "Company - Public"
-replace type_cat = 4 if inlist(type, "Nonprofit Organization", "Government", ///
-    "College / University", "School / School District", "Hospital")
+replace type_cat = 0 if inlist(type, "Unbekannt", "Auftragsunternehmen", "Selbstständig", "Privatpraxis/Kanzlei")
+replace type_cat = 1 if inlist(type, "Company - Private", "Subsidiary or Business Segment", "Privatunternehmen", "Tochtergesellschaft oder Geschäftsbereich")
+replace type_cat = 2 if inlist(type, "Company - Public", "Aktiengesellschaft")
+replace type_cat = 4 if inlist(type, "Nonprofit Organization", "Non-profit Organisation", "Government", "College / University", "School / School District", "Hospital")
+replace type_cat = 4 if inlist(type, "Gemeinnützige Organisation", "Öffentlicher Dienst", "Hochschule/Universität", "Schule/Schulbezirk", "Krankenhaus")
 label define type_lbl 0 "Unknown/Other" 1 "Private/Subsidiary" 2 "Public" ///
     4 "Nonprofit/Gov/Edu"
 label values type_cat type_lbl
 label variable type_cat "Typ firmy"
+
+* --- 3.7b Diagnostika: kontrola uplnosti size_cat a type_cat ---
+display _n "--- Diagnostika: size_cat missing po zemi ---"
+tab country if size_cat == ., missing
+display _n "--- Diagnostika: type_cat missing po zemi ---"
+tab country if type_cat == ., missing
 
 * --- 3.8 NACE sektor ---
 replace sector_nace = "Unknown" if sector_nace == ""
@@ -655,8 +666,12 @@ heckman ln_salary ///
 estimates store pooled_heckman
 
 display _n "--- 6.9b Porovnani OLS FE-C vs Heckman (AI a country koef.) ---"
+* POZN: Heckman uklada koeficienty pod rovnici 'ln_salary:', proto pouzivame
+* equation-qualified names. OLS je bez rovnice, proto keep() musi byt oddelene.
 estimates table pooled_fe_c pooled_heckman, ///
-    keep(1.ai_level 2.ai_level 1.country_id 2.country_id) star
+    keep(1.ai_level 2.ai_level 1.country_id 2.country_id ///
+         ln_salary:1.ai_level ln_salary:2.ai_level ///
+         ln_salary:1.country_id ln_salary:2.country_id) star
 
 
 * ==============================================================================
