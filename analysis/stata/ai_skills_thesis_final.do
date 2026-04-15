@@ -294,10 +294,17 @@ replace is_remote = 1 if strpos(lower(remote_work_types), "remote") > 0
 label variable is_remote "Moznost remote prace (1=ano)"
 
 * --- 3.10 Job family ---
+* Ponechavame plnou taxonomii z Python pipeline (10 kategorii). Drive byly
+* Frontend & Design / QA & Testing / Security / Systems & Embedded slouceny do
+* "Other" kvuli malym N; pri soucasnem vzorku (US 17k, DE 6.4k, IN 14k) je
+* drzet oddelene informativnejsi. "Other" si ponechavame jen pro inzeraty,
+* ktere regex neklasifikoval.
 replace job_family = "Unknown" if job_family == ""
-replace job_family = "Other" if inlist(job_family, "Frontend & Design", "QA & Testing", "Security", "Systems & Embedded")
 encode job_family, generate(job_family_num)
 label variable job_family_num "Rodina pozice"
+
+display _n "--- 3.10 Diagnosticke rozlozeni job_family x country (pro kontrolu N) ---"
+tab job_family country, missing
 
 * --- 3.11 Region (jen pro US) ---
 replace region = "Unknown" if region == ""
