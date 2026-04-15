@@ -1,0 +1,2756 @@
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata\output/thesis_final_run_15_Apr_2026_14-38-12/ai_skills_thesis_final.log
+  log type:  text
+ opened on:  15 Apr 2026, 14:38:12
+
+. 
+. 
+. * ==============================================================================
+. * 2. IMPORT A APPEND TREMI DATASETU (US + DE + IN)
+. * ==============================================================================
+. display _n "=============================================================="
+
+==============================================================
+
+. display "2. IMPORT A APPEND DATASETU"
+2. IMPORT A APPEND DATASETU
+
+. display "=============================================================="
+==============================================================
+
+. 
+. import delimited "$datadir/us_relevant_ai_stata.csv", delimiter(";") clear varnames(1) encoding(utf8)
+(75 vars, 18,464 obs)
+
+. capture drop country
+
+. gen country = "US"
+
+. display "US import: " _N " pozorovani"
+US import: 18464 pozorovani
+
+. tempfile us_data
+
+. save `us_data'
+file C:\Users\murcj\AppData\Local\Temp\ST_165c_000001.tmp saved
+
+. 
+. import delimited "$datadir/de/de_relevant_ai_stata.csv", delimiter(";") clear varnames(1) encoding(utf8)
+(75 vars, 9,254 obs)
+
+. capture drop country
+
+. gen country = "DE"
+
+. display "DE import: " _N " pozorovani"
+DE import: 9254 pozorovani
+
+. tempfile de_data
+
+. save `de_data'
+file C:\Users\murcj\AppData\Local\Temp\ST_165c_000002.tmp saved
+
+. 
+. import delimited "$datadir/in_relevant_ai_stata.csv", delimiter(";") clear varnames(1) encoding(utf8)
+(75 vars, 17,114 obs)
+
+. capture drop country
+
+. gen country = "IN"
+
+. display "IN import: " _N " pozorovani"
+IN import: 17114 pozorovani
+
+. tempfile in_data
+
+. save `in_data'
+file C:\Users\murcj\AppData\Local\Temp\ST_165c_000003.tmp saved
+
+. 
+. use `us_data', clear
+
+. append using `de_data', force
+(note: variable skill_cluster was byte in the using data, but will be str1217 now)
+(note: variable website was byte in the using data, but will be str127 now)
+(note: variable job_title was str131, now str154 to accommodate using data's values)
+(note: variable location was str32, now str34 to accommodate using data's values)
+(note: variable company was str81, now str92 to accommodate using data's values)
+(note: variable city was str32, now str34 to accommodate using data's values)
+(note: variable ceo was str64, now str102 to accommodate using data's values)
+(note: variable headquarters was str37, now str51 to accommodate using data's values)
+(note: variable industry was str40, now str58 to accommodate using data's values)
+(note: variable revenue was str32, now str40 to accommodate using data's values)
+(note: variable size was str23, now str28 to accommodate using data's values)
+(note: variable type was str30, now str42 to accommodate using data's values)
+
+. append using `in_data', force
+(note: variable skill_cluster was byte in the using data, but will be str1217 now)
+(note: variable website was byte in the using data, but will be str127 now)
+(note: variable skills was str576, now str622 to accommodate using data's values)
+(note: variable skills_ai_det was str98, now str112 to accommodate using data's values)
+(note: variable desc_ai_llm was str400, now str613 to accommodate using data's values)
+(note: variable job_title was str154, now str186 to accommodate using data's values)
+
+. 
+. display _n "Pocet pozorovani celkem po spojeni (US+DE+IN): " _N
+
+Pocet pozorovani celkem po spojeni (US+DE+IN): 44832
+
+. tab country, missing
+
+    country |      Freq.     Percent        Cum.
+------------+-----------------------------------
+         DE |      9,254       20.64       20.64
+         IN |     17,114       38.17       58.82
+         US |     18,464       41.18      100.00
+------------+-----------------------------------
+      Total |     44,832      100.00
+
+. 
+. encode country, generate(country_id)
+
+. label variable country_id "Zeme povodu inzeratu (DE=1, IN=2, US=3)"
+
+. * POZN: V regresich pouzivame ib3.country_id (baseline = US).
+. 
+. 
+. * ==============================================================================
+. * 3. CISTENI A PRIPRAVA DAT (vcetne GenAI override)
+. * ==============================================================================
+. display _n "=============================================================="
+
+==============================================================
+
+. display "3. CISTENI A PRIPRAVA DAT"
+3. CISTENI A PRIPRAVA DAT
+
+. display "=============================================================="
+==============================================================
+
+. 
+. * --- 3.0 Confidence filter a vyrazeni starych inzeratu ---
+. keep if desc_conf_llm >= 0.7
+(6,384 observations deleted)
+
+. display "Po filtru confidence >= 0.7: " _N
+Po filtru confidence >= 0.7: 38448
+
+. 
+. gen date_format_discover = date(substr(discover_date, 1, 10), "YMD")
+
+. format date_format_discover %td
+
+. destring age_in_days, replace force
+age_in_days already numeric; no replace
+
+. gen real_post_date = date_format_discover - age_in_days
+
+. format real_post_date %td
+
+. gen post_year = year(real_post_date)
+
+. drop if post_year <= 2023
+(12 observations deleted)
+
+. display "Po vyrazeni <= 2023: " _N
+Po vyrazeni <= 2023: 38436
+
+. 
+. * --- 3.1 AI tier klasifikace ---
+. replace desc_tier_llm = "missing" if desc_tier_llm == ""
+(0 real changes made)
+
+. replace desc_tier_llm = "applied_ai" if desc_tier_llm == "core_ai"
+(90 real changes made)
+
+. 
+. * --- 3.2 has_ai + ai_level ---
+. gen has_ai = (desc_tier_llm != "none" & desc_tier_llm != "missing")
+
+. label variable has_ai "AI Job (1=AI Integration nebo Applied/Core AI)"
+
+. 
+. gen ai_level = 0
+
+. replace ai_level = 1 if desc_tier_llm == "ai_integration"
+(3,370 real changes made)
+
+. replace ai_level = 2 if desc_tier_llm == "applied_ai"
+(2,359 real changes made)
+
+. label define ailevel_lbl 0 "None" 1 "AI Integration" 2 "Applied/Core AI"
+
+. label values ai_level ailevel_lbl
+
+. label variable ai_level "Uroven AI pozadavku (0/1/2)"
+
+. 
+. * --- 3.2b GenAI skill cluster -> AI Integration tier override ---
+. * Pokud inzerat ma cluster_generative_ai == 1 a je v None tieru, prirad do AI Integration.
+. * Pravidlo NEPONIZUJE inzeraty, ktere uz jsou v Applied/Core AI.
+. * Dusledek: cluster_generative_ai je mechanicky vazan na ai_level>=1 a musi byt
+. * vyrazen z RHS regresnich modelu, kde ai_level/has_ai je LHS (cirkularita).
+. display _n "--- 3.2b GenAI -> AI Integration override ---"
+
+--- 3.2b GenAI -> AI Integration override ---
+
+. display "Pred override: inzeraty s cluster_generative_ai==1 podle ai_level:"
+Pred override: inzeraty s cluster_generative_ai==1 podle ai_level:
+
+. tab ai_level if cluster_generative_ai == 1, missing
+
+      Uroven AI |
+      pozadavku |
+        (0/1/2) |      Freq.     Percent        Cum.
+----------------+-----------------------------------
+           None |        324       13.75       13.75
+ AI Integration |      1,047       44.42       58.17
+Applied/Core AI |        986       41.83      100.00
+----------------+-----------------------------------
+          Total |      2,357      100.00
+
+. 
+. count if cluster_generative_ai == 1 & ai_level == 0
+  324
+
+. local n_genai_override = r(N)
+
+. replace ai_level = 1 if cluster_generative_ai == 1 & ai_level == 0
+(324 real changes made)
+
+. replace has_ai = 1 if ai_level >= 1
+(324 real changes made)
+
+. replace desc_tier_llm = "ai_integration" if ai_level == 1 & desc_tier_llm == "none"
+(324 real changes made)
+
+. 
+. display "Pocet inzeratu presunutych z None -> AI Integration: `n_genai_override'"
+Pocet inzeratu presunutych z None -> AI Integration: 324
+
+. display _n "Po override: inzeraty s cluster_generative_ai==1 podle ai_level:"
+
+Po override: inzeraty s cluster_generative_ai==1 podle ai_level:
+
+. tab ai_level if cluster_generative_ai == 1, missing
+
+      Uroven AI |
+      pozadavku |
+        (0/1/2) |      Freq.     Percent        Cum.
+----------------+-----------------------------------
+ AI Integration |      1,371       58.17       58.17
+Applied/Core AI |        986       41.83      100.00
+----------------+-----------------------------------
+          Total |      2,357      100.00
+
+. 
+. * --- 3.2c Diagnosticke crosstaby (dokumentace rozhodnuti, ML override neprovadime) ---
+. display _n "--- 3.2c Crosstab: cluster_data_science__ml x ai_level (ML NENI overridnut) ---"
+
+--- 3.2c Crosstab: cluster_data_science__ml x ai_level (ML NENI overridnut) ---
+
+. tab cluster_data_science__ml ai_level, row col
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+cluster_da |
+ta_science |   Uroven AI pozadavku (0/1/2)
+      __ml |      None  AI Integr  Applied/C |     Total
+-----------+---------------------------------+----------
+         0 |    30,733      2,712        633 |    34,078 
+           |     90.18       7.96       1.86 |    100.00 
+           |     94.90      73.42      26.83 |     88.66 
+-----------+---------------------------------+----------
+         1 |     1,650        982      1,726 |     4,358 
+           |     37.86      22.53      39.61 |    100.00 
+           |      5.10      26.58      73.17 |     11.34 
+-----------+---------------------------------+----------
+     Total |    32,383      3,694      2,359 |    38,436 
+           |     84.25       9.61       6.14 |    100.00 
+           |    100.00     100.00     100.00 |    100.00 
+
+. display _n "--- 3.2c Crosstab: cluster_generative_ai x ai_level (post-override, kontrola) ---"
+
+--- 3.2c Crosstab: cluster_generative_ai x ai_level (post-override, kontrola) ---
+
+. tab cluster_generative_ai ai_level, row col
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+|  row percentage   |
+| column percentage |
++-------------------+
+
+cluster_ge |
+nerative_a |   Uroven AI pozadavku (0/1/2)
+         i |      None  AI Integr  Applied/C |     Total
+-----------+---------------------------------+----------
+         0 |    32,383      2,323      1,373 |    36,079 
+           |     89.76       6.44       3.81 |    100.00 
+           |    100.00      62.89      58.20 |     93.87 
+-----------+---------------------------------+----------
+         1 |         0      1,371        986 |     2,357 
+           |      0.00      58.17      41.83 |    100.00 
+           |      0.00      37.11      41.80 |      6.13 
+-----------+---------------------------------+----------
+     Total |    32,383      3,694      2,359 |    38,436 
+           |     84.25       9.61       6.14 |    100.00 
+           |    100.00     100.00     100.00 |    100.00 
+
+. 
+. preserve
+
+.     contract cluster_generative_ai ai_level
+
+.     export delimited "$outdir/Crosstab_GenAI_Tier.csv", replace delimiter(";")
+(note: file ./output/thesis_final_run_15_Apr_2026_14-38-12/Crosstab_GenAI_Tier.csv not found)
+file ./output/thesis_final_run_15_Apr_2026_14-38-12/Crosstab_GenAI_Tier.csv saved
+
+. restore
+
+. preserve
+
+.     contract cluster_data_science__ml ai_level
+
+.     export delimited "$outdir/Crosstab_ML_Tier.csv", replace delimiter(";")
+(note: file ./output/thesis_final_run_15_Apr_2026_14-38-12/Crosstab_ML_Tier.csv not found)
+file ./output/thesis_final_run_15_Apr_2026_14-38-12/Crosstab_ML_Tier.csv saved
+
+. restore
+
+. 
+. * --- 3.3 Vzdelani: edu_bin (Bc.+ ano/ne) ---
+. gen education_hybrid = lower(edulevel_llm)
+(4 missing values generated)
+
+. replace education_hybrid = subinstr(education_hybrid, "'s", "", .)
+(16,072 real changes made)
+
+. replace education_hybrid = "highschool" if education_hybrid == "high school"
+(361 real changes made)
+
+. replace education_hybrid = "missing" if education_hybrid == "-" | education_hybrid == ""
+(21,043 real changes made)
+
+. replace education_hybrid = edu_level_det if education_hybrid == "missing" & edu_level_det != ""
+(4,519 real changes made)
+
+. replace education_hybrid = "missing" if education_hybrid == ""
+(0 real changes made)
+
+. replace education_hybrid = "master" if education_hybrid == "phd"
+(40 real changes made)
+
+. replace education_hybrid = "associate" if education_hybrid == "diploma"
+(0 real changes made)
+
+. replace education_hybrid = "missing" if !inlist(education_hybrid, "highschool", "associate", "bachelor", "master", "missing")
+(0 real changes made)
+
+. 
+. gen edu_bin = inlist(education_hybrid, "bachelor", "master")
+
+. label define edu_bin_lbl 0 "Nizsi/chybejici" 1 "Bc.+"
+
+. label values edu_bin edu_bin_lbl
+
+. label variable edu_bin "Bakalar+ pozadovan (binarni)"
+
+. 
+. display _n "--- 3.3 edu_bin rozdeleni po zemich ---"
+
+--- 3.3 edu_bin rozdeleni po zemich ---
+
+. tab edu_bin country, col
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+       Bakalar+ |
+      pozadovan |             country
+      (binarni) |        DE         IN         US |     Total
+----------------+---------------------------------+----------
+Nizsi/chybejici |     4,272      6,809      7,077 |    18,158 
+                |     66.73      48.00      39.65 |     47.24 
+----------------+---------------------------------+----------
+           Bc.+ |     2,130      7,377     10,771 |    20,278 
+                |     33.27      52.00      60.35 |     52.76 
+----------------+---------------------------------+----------
+          Total |     6,402     14,186     17,848 |    38,436 
+                |    100.00     100.00     100.00 |    100.00 
+
+. 
+. * --- 3.4 Zkusenosti: exp_bin (>=1 rok ano/ne) ---
+. destring experience_min_llm, replace force
+experience_min_llm: contains nonnumeric characters; replaced as double
+(7599 missing values generated)
+
+. gen exp_bin = (experience_min_llm >= 1) if experience_min_llm != .
+(7,599 missing values generated)
+
+. replace exp_bin = 0 if missing(exp_bin)
+(7,599 real changes made)
+
+. label define exp_bin_lbl 0 "< 1 rok / chybejici" 1 ">= 1 rok praxe"
+
+. label values exp_bin exp_bin_lbl
+
+. label variable exp_bin "Praxe >=1 rok pozadovana (binarni)"
+
+. 
+. display _n "--- 3.4 exp_bin rozdeleni po zemich ---"
+
+--- 3.4 exp_bin rozdeleni po zemich ---
+
+. tab exp_bin country, col
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+      Praxe >=1 rok |
+         pozadovana |             country
+          (binarni) |        DE         IN         US |     Total
+--------------------+---------------------------------+----------
+< 1 rok / chybejici |     2,722      3,487      3,407 |     9,616 
+                    |     42.52      24.58      19.09 |     25.02 
+--------------------+---------------------------------+----------
+     >= 1 rok praxe |     3,680     10,699     14,441 |    28,820 
+                    |     57.48      75.42      80.91 |     74.98 
+--------------------+---------------------------------+----------
+              Total |     6,402     14,186     17,848 |    38,436 
+                    |    100.00     100.00     100.00 |    100.00 
+
+. 
+. * --- 3.5 Plat — prevod na USD a rocni bazi ---
+. destring salary_min salary_mid salary_max, replace force
+salary_min already numeric; no replace
+salary_mid already numeric; no replace
+salary_max already numeric; no replace
+
+. 
+. * Pevne kurzy (prumer Sep-Oct 2025)
+. local eur_usd = 1.165
+
+. local inr_usd = 88
+
+. 
+. drop if country == "DE" & !inlist(pay_currency, "EUR", "")
+(2 observations deleted)
+
+. drop if country == "IN" & pay_currency == "" & salary_mid != .
+(2 observations deleted)
+
+. 
+. foreach var of varlist salary_min salary_mid salary_max {
+  2.     replace `var' = `var' * `eur_usd' if pay_currency == "EUR"
+  3.     replace `var' = `var' / `inr_usd' if pay_currency == "INR"
+  4. }
+(516 real changes made)
+(10,049 real changes made)
+(516 real changes made)
+(10,049 real changes made)
+(516 real changes made)
+(10,049 real changes made)
+
+. 
+. * US: 2080 h/rok, DE: 1607 h (OECD 2024), IN: 1920 h
+. foreach var of varlist salary_min salary_mid salary_max {
+  2.     replace `var' = `var' * 2080 if pay_period == "HOURLY" & country == "US"
+  3.     replace `var' = `var' * 1607 if pay_period == "HOURLY" & country == "DE"
+  4.     replace `var' = `var' * 1920 if pay_period == "HOURLY" & country == "IN"
+  5.     replace `var' = `var' * 12   if pay_period == "MONTHLY"
+  6. }
+(840 real changes made)
+(21 real changes made)
+(30 real changes made)
+(1,584 real changes made)
+(840 real changes made)
+(21 real changes made)
+(30 real changes made)
+(1,584 real changes made)
+(840 real changes made)
+(21 real changes made)
+(30 real changes made)
+(1,584 real changes made)
+
+. 
+. replace salary_mid = . if salary_mid < 3000 | salary_mid > 500000
+(855 real changes made, 855 to missing)
+
+. label variable salary_mid "Rocni plat - stredni hodnota (USD)"
+
+. 
+. gen ln_salary = ln(salary_mid)
+(14,077 missing values generated)
+
+. label variable ln_salary "Prirozeny logaritmus platu (USD)"
+
+. 
+. gen has_salary = (salary_mid != .)
+
+. label variable has_salary "Ma uvedeny plat (1=ano)"
+
+. 
+. * --- 3.6 Velikost firmy ---
+. replace size = "Unknown" if size == ""
+(3,336 real changes made)
+
+. gen size_cat = .
+(38,432 missing values generated)
+
+. replace size_cat = 0 if inlist(size, "Unknown", "Unbekannt")
+(7,693 real changes made)
+
+. replace size_cat = 1 if inlist(size, "1 to 50 Employees", "1 bis 50 Mitarbeiter")
+(6,469 real changes made)
+
+. replace size_cat = 2 if inlist(size, "51 to 200 Employees", "51 bis 200 Mitarbeiter")
+(4,802 real changes made)
+
+. replace size_cat = 3 if inlist(size, "201 to 500 Employees", "201 bis 500 Mitarbeiter")
+(2,783 real changes made)
+
+. replace size_cat = 4 if inlist(size, "501 to 1000 Employees", "501 bis 1.000 Mitarbeiter")
+(2,053 real changes made)
+
+. replace size_cat = 5 if inlist(size, "1001 to 5000 Employees", "1.001 bis 5.000 Mitarbeiter")
+(4,215 real changes made)
+
+. replace size_cat = 6 if inlist(size, "5001 to 10000 Employees", "5.001 bis 10.000 Mitarbeiter")
+(2,227 real changes made)
+
+. replace size_cat = 7 if inlist(size, "10000+ Employees", "Mehr als 10.000 Mitarbeiter")
+(8,190 real changes made)
+
+. label define size_lbl 0 "Unknown" 1 "1-50" 2 "51-200" 3 "201-500" ///
+>     4 "501-1000" 5 "1001-5000" 6 "5001-10000" 7 "10000+"
+
+. label values size_cat size_lbl
+
+. label variable size_cat "Velikost firmy (ordinalni)"
+
+. 
+. * --- 3.7 Typ firmy ---
+. gen type_cat = .
+(38,432 missing values generated)
+
+. replace type_cat = 0 if inlist(type, "", "Unknown", "Contract", "Self-employed", "Private Practice / Firm", "Franchise")
+(4,408 real changes made)
+
+. replace type_cat = 0 if inlist(type, "Unbekannt", "Auftragsunternehmen", "Selbstständig", "Privatpraxis/Kanzlei")
+(615 real changes made)
+
+. replace type_cat = 1 if inlist(type, "Company - Private", "Subsidiary or Business Segment", "Privatunternehmen", "Tochtergesellschaft oder Geschäftsbereich")
+(20,187 real changes made)
+
+. replace type_cat = 2 if inlist(type, "Company - Public", "Aktiengesellschaft")
+(12,218 real changes made)
+
+. replace type_cat = 4 if inlist(type, "Nonprofit Organization", "Non-profit Organisation", "Government", "College / University", "School / School District", "Hospital")
+(961 real changes made)
+
+. replace type_cat = 4 if inlist(type, "Gemeinnützige Organisation", "Öffentlicher Dienst", "Hochschule/Universität", "Schule/Schulbezirk", "Krankenhaus")
+(43 real changes made)
+
+. label define type_lbl 0 "Unknown/Other" 1 "Private/Subsidiary" 2 "Public" 4 "Nonprofit/Gov/Edu"
+
+. label values type_cat type_lbl
+
+. label variable type_cat "Typ firmy"
+
+. 
+. * --- 3.8 NACE sektor ---
+. replace sector_nace = "Unknown" if sector_nace == ""
+(0 real changes made)
+
+. replace sector_nace = "Other" if !inlist(sector_nace, "J", "C", "K", "M", "Q", "Unknown")
+(3,663 real changes made)
+
+. encode sector_nace, generate(sector_nace_num)
+
+. label variable sector_nace_num "NACE sektor"
+
+. 
+. * --- 3.9 Remote prace ---
+. gen is_remote = 0
+
+. replace is_remote = 1 if strpos(lower(remote_work_types), "home") > 0
+(7,831 real changes made)
+
+. replace is_remote = 1 if strpos(lower(remote_work_types), "remote") > 0
+(0 real changes made)
+
+. label variable is_remote "Moznost remote prace (1=ano)"
+
+. 
+. * --- 3.10 Job family ---
+. replace job_family = "Unknown" if job_family == ""
+(0 real changes made)
+
+. replace job_family = "Other" if inlist(job_family, "Frontend & Design", "QA & Testing", "Security", "Systems & Embedded")
+(10,147 real changes made)
+
+. encode job_family, generate(job_family_num)
+
+. label variable job_family_num "Rodina pozice"
+
+. 
+. * --- 3.11 Region (jen pro US) ---
+. replace region = "Unknown" if region == ""
+(0 real changes made)
+
+. encode region, generate(region_num)
+
+. label variable region_num "Census region (US-specific)"
+
+. 
+. * --- 3.12 Vyrazeni ridkych skill clusteru (konzistentne s hlavni analyzou) ---
+. capture drop cluster_legacy__mainframe
+
+. capture drop cluster_data_analysis__stats
+
+. capture drop cluster_tools__editors
+
+. 
+. * --- 3.13 Company ID (pro potencialni cluster SE) ---
+. destring company_id, replace force
+company_id already numeric; no replace
+
+. label variable company_id "ID firmy"
+
+. 
+. 
+. * ==============================================================================
+. * 4. TABULKA 1 — VYSKYT AI POZADAVKU PO ZEMICH (DESKRIPCE)
+. * ==============================================================================
+. display _n "=============================================================="
+
+==============================================================
+
+. display "4. TABULKA 1 — VYSKYT AI PO ZEMICH"
+4. TABULKA 1 — VYSKYT AI PO ZEMICH
+
+. display "=============================================================="
+==============================================================
+
+. 
+. display _n "--- Sloupcova % (v ramci zeme soucet = 100%) ---"
+
+--- Sloupcova % (v ramci zeme soucet = 100%) ---
+
+. tab ai_level country, column
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+      Uroven AI |
+      pozadavku |             country
+        (0/1/2) |        DE         IN         US |     Total
+----------------+---------------------------------+----------
+           None |     5,202     13,140     14,037 |    32,379 
+                |     81.28      92.64      78.65 |     84.25 
+----------------+---------------------------------+----------
+ AI Integration |       650        546      2,498 |     3,694 
+                |     10.16       3.85      14.00 |      9.61 
+----------------+---------------------------------+----------
+Applied/Core AI |       548        498      1,313 |     2,359 
+                |      8.56       3.51       7.36 |      6.14 
+----------------+---------------------------------+----------
+          Total |     6,400     14,184     17,848 |    38,432 
+                |    100.00     100.00     100.00 |    100.00 
+
+. display _n "--- Absolutni pocty ---"
+
+--- Absolutni pocty ---
+
+. tab ai_level country
+
+      Uroven AI |
+      pozadavku |             country
+        (0/1/2) |        DE         IN         US |     Total
+----------------+---------------------------------+----------
+           None |     5,202     13,140     14,037 |    32,379 
+ AI Integration |       650        546      2,498 |     3,694 
+Applied/Core AI |       548        498      1,313 |     2,359 
+----------------+---------------------------------+----------
+          Total |     6,400     14,184     17,848 |    38,432 
+
+. 
+. preserve
+
+.     contract ai_level country
+
+.     bysort country: egen country_total = total(_freq)
+
+.     gen pct_col = 100 * _freq / country_total
+
+.     keep country ai_level _freq pct_col
+
+.     reshape wide _freq pct_col, i(ai_level) j(country) string
+(note: j = DE IN US)
+
+Data                               long   ->   wide
+-----------------------------------------------------------------------------
+Number of obs.                        9   ->       3
+Number of variables                   4   ->       7
+j variable (3 values)           country   ->   (dropped)
+xij variables:
+                                  _freq   ->   _freqDE _freqIN _freqUS
+                                pct_col   ->   pct_colDE pct_colIN pct_colUS
+-----------------------------------------------------------------------------
+
+.     order ai_level _freqUS pct_colUS _freqDE pct_colDE _freqIN pct_colIN
+
+.     export delimited "$outdir/Tabulka_1_Vyskyt_AI.csv", replace delimiter(";")
+(note: file ./output/thesis_final_run_15_Apr_2026_14-38-12/Tabulka_1_Vyskyt_AI.csv not found)
+file ./output/thesis_final_run_15_Apr_2026_14-38-12/Tabulka_1_Vyskyt_AI.csv saved
+
+. restore
+
+. 
+. 
+. * ==============================================================================
+. * 5. PRIPRAVA PRO LOGIT/MLOGIT — vyrazeni cluster_generative_ai z RHS
+. * ==============================================================================
+. * cluster_generative_ai je po §3.2b override mechanicky vazan na ai_level>=1
+. * (vsechny inzeraty s tim clusterem maji ai_level v {1,2}). Proto ho v logit/
+. * mlogit modelech vyrazujeme z RHS. cluster_data_science__ml zustava jako bezny
+. * skill cluster (override se neprovadi).
+. rename cluster_generative_ai _excl_genai
+
+. 
+. 
+. * ==============================================================================
+. * 6. TABULKA 2 — BINARNI LOGIT P(AI) ~ JOB FAMILY + CONTROLS (AME, per zeme)
+. * ==============================================================================
+. display _n "=============================================================="
+
+==============================================================
+
+. display "6. TABULKA 2 — BINARNI LOGIT, JOB FAMILY"
+6. TABULKA 2 — BINARNI LOGIT, JOB FAMILY
+
+. display "=============================================================="
+==============================================================
+
+. 
+. foreach c in US DE IN {
+  2.     display _n "=========== Zeme = `c' (Tabulka 2) ==========="
+  3.     capture noisily logit has_ai ///
+>         i.job_family_num ///
+>         edu_bin ///
+>         exp_bin ///
+>         i.sector_nace_num ///
+>         ib1.type_cat ///
+>         ib5.size_cat ///
+>         is_remote ///
+>         if country == "`c'", vce(robust)
+  4.     if _rc == 0 {
+  5.         quietly margins, dydx(*) post
+  6.         estimates store ame_t2_`c'
+  7.     }
+  8.     else {
+  9.         display as error "Logit Tabulka 2 pro `c' selhal (rc=" _rc ")"
+ 10.     }
+ 11. }
+
+=========== Zeme = US (Tabulka 2) ===========
+
+Iteration 0:   log pseudolikelihood = -9255.7972  
+Iteration 1:   log pseudolikelihood = -8667.3406  
+Iteration 2:   log pseudolikelihood = -8629.8533  
+Iteration 3:   log pseudolikelihood = -8629.6976  
+Iteration 4:   log pseudolikelihood = -8629.6976  
+
+Logistic regression                             Number of obs     =     17,848
+                                                Wald chi2(25)     =    1199.01
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood = -8629.6976               Pseudo R2         =     0.0676
+
+----------------------------------------------------------------------------------------
+                       |               Robust
+                has_ai |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+-----------------------+----------------------------------------------------------------
+        job_family_num |
+       DevOps & Cloud  |  -1.745648   .0943905   -18.49   0.000     -1.93065   -1.560646
+           Management  |  -1.112406   .1017344   -10.93   0.000    -1.311802   -.9130104
+                Other  |  -1.933233   .0733189   -26.37   0.000    -2.076936   -1.789531
+   Software Developer  |  -1.832083   .0818443   -22.38   0.000    -1.992495   -1.671671
+    Software Engineer  |  -1.188127   .0833035   -14.26   0.000    -1.351399   -1.024855
+Sr+ Software Engineer  |  -1.045436   .0915459   -11.42   0.000    -1.224863   -.8660096
+                       |
+               edu_bin |  -.2780274   .0402392    -6.91   0.000    -.3568948   -.1991601
+               exp_bin |   .2236008   .0528747     4.23   0.000     .1199684    .3272333
+                       |
+       sector_nace_num |
+                    J  |     .38428   .0675284     5.69   0.000     .2519267    .5166333
+                    K  |   .1179643   .0907863     1.30   0.194    -.0599735    .2959021
+                    M  |    .417431   .1089073     3.83   0.000     .2039767    .6308853
+                Other  |    .076101   .0844596     0.90   0.368    -.0894367    .2416387
+                    Q  |   .2660323   .1148678     2.32   0.021     .0408955    .4911691
+              Unknown  |   .5731777   .0889459     6.44   0.000     .3988469    .7475085
+                       |
+              type_cat |
+        Unknown/Other  |  -.0127935   .0797878    -0.16   0.873    -.1691747    .1435878
+               Public  |  -.0421769   .0527594    -0.80   0.424    -.1455833    .0612296
+    Nonprofit/Gov/Edu  |  -.0620813   .1070527    -0.58   0.562    -.2719007    .1477382
+                       |
+              size_cat |
+              Unknown  |  -.3373287   .0854814    -3.95   0.000    -.5048691   -.1697884
+                 1-50  |  -.4492348   .0809211    -5.55   0.000    -.6078373   -.2906324
+               51-200  |  -.1121373   .0769388    -1.46   0.145    -.2629346      .03866
+              201-500  |  -.1014885   .0835818    -1.21   0.225    -.2653057    .0623288
+             501-1000  |  -.0748161   .0948789    -0.79   0.430    -.2607753    .1111431
+           5001-10000  |  -.2528222   .0970552    -2.60   0.009     -.443047   -.0625975
+               10000+  |   .1331119    .070017     1.90   0.057    -.0041189    .2703428
+                       |
+             is_remote |   .3149036   .0426401     7.39   0.000     .2313306    .3984767
+                 _cons |  -.0317312   .1119587    -0.28   0.777    -.2511662    .1877038
+----------------------------------------------------------------------------------------
+
+=========== Zeme = DE (Tabulka 2) ===========
+
+Iteration 0:   log pseudolikelihood = -3085.5617  
+Iteration 1:   log pseudolikelihood = -2588.3913  
+Iteration 2:   log pseudolikelihood = -2554.7892  
+Iteration 3:   log pseudolikelihood =  -2543.451  
+Iteration 4:   log pseudolikelihood = -2543.4459  
+Iteration 5:   log pseudolikelihood = -2543.4459  
+
+Logistic regression                             Number of obs     =      6,400
+                                                Wald chi2(25)     =     863.99
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood = -2543.4459               Pseudo R2         =     0.1757
+
+----------------------------------------------------------------------------------------
+                       |               Robust
+                has_ai |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+-----------------------+----------------------------------------------------------------
+        job_family_num |
+       DevOps & Cloud  |  -3.203559   .1621462   -19.76   0.000     -3.52136   -2.885758
+           Management  |  -2.591732   .1547828   -16.74   0.000    -2.895101   -2.288363
+                Other  |  -3.634681   .1534443   -23.69   0.000    -3.935426   -3.333936
+   Software Developer  |  -3.196249   .1501281   -21.29   0.000    -3.490494   -2.902003
+    Software Engineer  |  -3.025825   .1689899   -17.91   0.000     -3.35704   -2.694611
+Sr+ Software Engineer  |  -2.490449   .1592025   -15.64   0.000     -2.80248   -2.178418
+                       |
+               edu_bin |   .5052296   .0751337     6.72   0.000     .3579702    .6524889
+               exp_bin |   .3213537   .0814891     3.94   0.000      .161638    .4810694
+                       |
+       sector_nace_num |
+                    J  |   1.051659   .1585913     6.63   0.000     .7408257    1.362492
+                    K  |  -.2606831   .3450488    -0.76   0.450    -.9369664    .4156002
+                    M  |   .7735441    .222484     3.48   0.001     .3374835    1.209605
+                Other  |   .3156515   .1996738     1.58   0.114    -.0757019     .707005
+                    Q  |   1.448049   .3614245     4.01   0.000     .7396705    2.156429
+              Unknown  |    .738259   .1693574     4.36   0.000     .4063246    1.070193
+                       |
+              type_cat |
+        Unknown/Other  |  -.0880276   .1190157    -0.74   0.460    -.3212941     .145239
+               Public  |   .1670226   .0887002     1.88   0.060    -.0068265    .3408718
+    Nonprofit/Gov/Edu  |   .4371568   .3981185     1.10   0.272    -.3431412    1.217455
+                       |
+              size_cat |
+              Unknown  |   .1184598   .1491115     0.79   0.427    -.1737933    .4107129
+                 1-50  |   .3444469    .157658     2.18   0.029     .0354429     .653451
+               51-200  |   .2278544   .1597291     1.43   0.154    -.0852088    .5409176
+              201-500  |   .1505258    .182769     0.82   0.410    -.2076949    .5087466
+             501-1000  |   .0741092   .1931193     0.38   0.701    -.3043977    .4526161
+           5001-10000  |   .2028088   .1976484     1.03   0.305    -.1845751    .5901926
+               10000+  |   .3664149   .1445146     2.54   0.011     .0831716    .6496583
+                       |
+             is_remote |    .528717   .1019771     5.18   0.000     .3288455    .7285885
+                 _cons |  -.1291327     .22363    -0.58   0.564    -.5674395    .3091741
+----------------------------------------------------------------------------------------
+
+=========== Zeme = IN (Tabulka 2) ===========
+
+Iteration 0:   log pseudolikelihood = -3728.4532  
+Iteration 1:   log pseudolikelihood =  -3267.447  
+Iteration 2:   log pseudolikelihood = -3193.2461  
+Iteration 3:   log pseudolikelihood = -3192.2782  
+Iteration 4:   log pseudolikelihood = -3192.2779  
+
+Logistic regression                             Number of obs     =     14,184
+                                                Wald chi2(25)     =    1123.45
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood = -3192.2779               Pseudo R2         =     0.1438
+
+----------------------------------------------------------------------------------------
+                       |               Robust
+                has_ai |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+-----------------------+----------------------------------------------------------------
+        job_family_num |
+       DevOps & Cloud  |  -2.934657   .1538407   -19.08   0.000    -3.236179   -2.633135
+           Management  |  -1.802706   .1332248   -13.53   0.000    -2.063822    -1.54159
+                Other  |  -2.984622   .1138347   -26.22   0.000    -3.207734    -2.76151
+   Software Developer  |  -3.069983   .1185403   -25.90   0.000    -3.302318   -2.837648
+    Software Engineer  |  -2.059615   .1200971   -17.15   0.000    -2.295001   -1.824229
+Sr+ Software Engineer  |  -2.147468   .1341917   -16.00   0.000    -2.410479   -1.884457
+                       |
+               edu_bin |   .4268525   .0730264     5.85   0.000     .2837235    .5699815
+               exp_bin |   .0361311   .0856494     0.42   0.673    -.1317386    .2040009
+                       |
+       sector_nace_num |
+                    J  |   .2463604   .1506693     1.64   0.102    -.0489461    .5416669
+                    K  |   .3224445   .1929247     1.67   0.095     -.055681      .70057
+                    M  |   .1970259   .2202189     0.89   0.371    -.2345953    .6286471
+                Other  |  -.1723954   .2097881    -0.82   0.411    -.5835725    .2387817
+                    Q  |   .9707173   .3101342     3.13   0.002     .3628655    1.578569
+              Unknown  |   .0215906   .1872676     0.12   0.908    -.3454471    .3886284
+                       |
+              type_cat |
+        Unknown/Other  |   .1054963   .1307125     0.81   0.420    -.1506956    .3616881
+               Public  |   .0490107   .0991042     0.49   0.621      -.14523    .2432513
+    Nonprofit/Gov/Edu  |   1.387997   .3690881     3.76   0.000     .6645975    2.111396
+                       |
+              size_cat |
+              Unknown  |   .4137192   .1892519     2.19   0.029     .0427923     .784646
+                 1-50  |   .2054423   .1734598     1.18   0.236    -.1345326    .5454172
+               51-200  |    .246165      .1654     1.49   0.137    -.0780129     .570343
+              201-500  |   .2523055   .1912966     1.32   0.187     -.122629    .6272399
+             501-1000  |  -.0587889   .2168546    -0.27   0.786     -.483816    .3662382
+           5001-10000  |   .3023031   .1803778     1.68   0.094    -.0512309    .6558371
+               10000+  |   .1238751   .1487739     0.83   0.405    -.1677165    .4154666
+                       |
+             is_remote |   .5275187   .0887881     5.94   0.000     .3534973    .7015402
+                 _cons |   -.943974   .2207358    -4.28   0.000    -1.376608   -.5113397
+----------------------------------------------------------------------------------------
+
+. 
+. esttab ame_t2_US ame_t2_DE ame_t2_IN using "$outdir/Tabulka_2_Logit_JobFamily.rtf", replace ///
+>     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+>     keep(*.job_family_num edu_bin exp_bin) ///
+>     order(*.job_family_num edu_bin exp_bin) ///
+>     stats(N, fmt(0) labels("N")) ///
+>     mtitles("USA" "Nemecko" "Indie") ///
+>     title("Tabulka 2: Binarni logit P(AI pozadavek = ano), AME podle zeme — job family") ///
+>     addnotes("Zavisla promenna: has_ai (1=AI Integration nebo Applied/Core AI, 0=None)." ///
+>              "Prumerne marginalni efekty (AME) z logitu s robustnimi SE." ///
+>              "Kontroly (neukazovane v tabulce): NACE sektor, typ firmy, velikost firmy, remote." ///
+>              "Referencni job family: Data & AI.")
+(note: file ./output/thesis_final_run_15_Apr_2026_14-38-12/Tabulka_2_Logit_JobFamily.rtf not found)
+(output written to ./output/thesis_final_run_15_Apr_2026_14-38-12/Tabulka_2_Logit_JobFamily.rtf)
+
+. 
+. 
+. * ==============================================================================
+. * 7. TABULKA 3 — BINARNI LOGIT P(AI) ~ SKILL CLUSTERY + CONTROLS (AME, per zeme)
+. * ==============================================================================
+. display _n "=============================================================="
+
+==============================================================
+
+. display "7. TABULKA 3 — BINARNI LOGIT, SKILL CLUSTERY"
+7. TABULKA 3 — BINARNI LOGIT, SKILL CLUSTERY
+
+. display "=============================================================="
+==============================================================
+
+. 
+. foreach c in US DE IN {
+  2.     display _n "=========== Zeme = `c' (Tabulka 3) ==========="
+  3.     capture noisily logit has_ai ///
+>         cluster_* ///
+>         edu_bin ///
+>         exp_bin ///
+>         i.sector_nace_num ///
+>         ib1.type_cat ///
+>         ib5.size_cat ///
+>         is_remote ///
+>         if country == "`c'", vce(robust)
+  4.     if _rc == 0 {
+  5.         quietly margins, dydx(*) post
+  6.         estimates store ame_t3_`c'
+  7.     }
+  8.     else {
+  9.         display as error "Logit Tabulka 3 pro `c' selhal (rc=" _rc ")"
+ 10.     }
+ 11. }
+
+=========== Zeme = US (Tabulka 3) ===========
+
+Iteration 0:   log pseudolikelihood = -9255.7972  
+Iteration 1:   log pseudolikelihood = -7089.2694  
+Iteration 2:   log pseudolikelihood = -6943.5536  
+Iteration 3:   log pseudolikelihood = -6936.6039  
+Iteration 4:   log pseudolikelihood = -6936.5912  
+Iteration 5:   log pseudolikelihood = -6936.5912  
+
+Logistic regression                             Number of obs     =     17,848
+                                                Wald chi2(39)     =    3164.78
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood = -6936.5912               Pseudo R2         =     0.2506
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                       has_ai |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+cluster_architecture__methods |   .0365518   .0630024     0.58   0.562    -.0869308    .1600343
+        cluster_bi__analytics |   .2049236   .0473652     4.33   0.000     .1120896    .2977577
+  cluster_backend_development |   .1852693   .0534671     3.47   0.001     .0804757    .2900628
+       cluster_certifications |  -.2710446   .1008531    -2.69   0.007    -.4687131   -.0733761
+      cluster_cloud_computing |   .4946959   .0524908     9.42   0.000     .3918158     .597576
+     cluster_data_engineering |   .2454715   .0500785     4.90   0.000     .1473194    .3436236
+     cluster_data_science__ml |   2.957709   .0602741    49.07   0.000     2.839574    3.075844
+   cluster_databases__storage |  -.1638966     .05064    -3.24   0.001    -.2631492   -.0646439
+   cluster_devops__containers |   .0687014   .0524851     1.31   0.191    -.0341675    .1715704
+         cluster_dynamic__web |   .5800175   .0516017    11.24   0.000     .4788801    .6811549
+  cluster_enterprise__managed |  -.5256818   .0505201   -10.41   0.000    -.6246993   -.4266643
+ cluster_enterprise_platforms |   .3862649   .0957927     4.03   0.000     .1985146    .5740152
+ cluster_frontend_development |   .3248944   .0537674     6.04   0.000     .2195123    .4302765
+      cluster_mobile__desktop |  -.0780964   .0667267    -1.17   0.242    -.2088783    .0526855
+           cluster_networking |  -.0287535   .0520136    -0.55   0.580    -.1306983    .0731914
+         cluster_os__embedded |  -.2896771   .0648251    -4.47   0.000    -.4167319   -.1626223
+     cluster_scripting__shell |  -.4307505   .0847175    -5.08   0.000    -.5967938   -.2647072
+   cluster_security__identity |  -.0889777   .0517685    -1.72   0.086    -.1904421    .0124867
+  cluster_systems_programming |   .2449547   .0634807     3.86   0.000     .1205348    .3693746
+cluster_testing_qa__debugging |  -.0219526   .0458016    -0.48   0.632    -.1117222    .0678169
+                      edu_bin |  -.3166785   .0464434    -6.82   0.000    -.4077059   -.2256512
+                      exp_bin |   .2153232   .0599219     3.59   0.000     .0978785    .3327679
+                              |
+              sector_nace_num |
+                           J  |   .4644258   .0793462     5.85   0.000       .30891    .6199415
+                           K  |   .3200208   .1057179     3.03   0.002     .1128175     .527224
+                           M  |   .4493546   .1217267     3.69   0.000     .2107746    .6879346
+                       Other  |   .1344591   .0983595     1.37   0.172    -.0583219    .3272401
+                           Q  |   .3234032   .1313859     2.46   0.014     .0658915    .5809148
+                     Unknown  |    .640924   .1023168     6.26   0.000     .4403867    .8414612
+                              |
+                     type_cat |
+               Unknown/Other  |   .0322709   .0897995     0.36   0.719    -.1437328    .2082747
+                      Public  |  -.0344482    .060889    -0.57   0.572    -.1537885     .084892
+           Nonprofit/Gov/Edu  |   .0701001   .1213802     0.58   0.564    -.1678008     .308001
+                              |
+                     size_cat |
+                     Unknown  |  -.3948121   .0986828    -4.00   0.000    -.5882268   -.2013974
+                        1-50  |  -.5681883   .0952908    -5.96   0.000    -.7549548   -.3814217
+                      51-200  |  -.2331892   .0901534    -2.59   0.010    -.4098867   -.0564917
+                     201-500  |  -.1180911   .0980746    -1.20   0.229    -.3103137    .0741315
+                    501-1000  |  -.1944841   .1125591    -1.73   0.084    -.4150958    .0261276
+                  5001-10000  |  -.2810925   .1117941    -2.51   0.012    -.5002049   -.0619801
+                      10000+  |   .0726415   .0821525     0.88   0.377    -.0883744    .2336575
+                              |
+                    is_remote |   .2863324   .0489851     5.85   0.000     .1903233    .3823415
+                        _cons |  -2.838658    .125824   -22.56   0.000    -3.085269   -2.592047
+-----------------------------------------------------------------------------------------------
+
+=========== Zeme = DE (Tabulka 3) ===========
+
+Iteration 0:   log pseudolikelihood = -3085.5617  
+Iteration 1:   log pseudolikelihood = -2394.0054  
+Iteration 2:   log pseudolikelihood =  -2305.005  
+Iteration 3:   log pseudolikelihood = -2302.8504  
+Iteration 4:   log pseudolikelihood = -2302.8445  
+Iteration 5:   log pseudolikelihood = -2302.8445  
+
+Logistic regression                             Number of obs     =      6,400
+                                                Wald chi2(39)     =    1155.36
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood = -2302.8445               Pseudo R2         =     0.2537
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                       has_ai |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+cluster_architecture__methods |    .002575   .0895285     0.03   0.977    -.1728976    .1780476
+        cluster_bi__analytics |    .428171   .0955733     4.48   0.000     .2408507    .6154912
+  cluster_backend_development |   .2289561   .0913199     2.51   0.012     .0499723    .4079398
+       cluster_certifications |  -.4671836   .2317606    -2.02   0.044    -.9214261   -.0129412
+      cluster_cloud_computing |   .4909875   .0909303     5.40   0.000     .3127673    .6692077
+     cluster_data_engineering |   .6257645    .092816     6.74   0.000     .4438485    .8076805
+     cluster_data_science__ml |   1.981861   .0889643    22.28   0.000     1.807494    2.156228
+   cluster_databases__storage |  -.0135158   .0861364    -0.16   0.875    -.1823399    .1553084
+   cluster_devops__containers |   .2290211   .0895481     2.56   0.011     .0535101     .404532
+         cluster_dynamic__web |   .7964869   .0886444     8.99   0.000     .6227471    .9702267
+  cluster_enterprise__managed |  -.4430656   .0911529    -4.86   0.000    -.6217219   -.2644092
+ cluster_enterprise_platforms |   .1764082   .2501153     0.71   0.481    -.3138087    .6666251
+ cluster_frontend_development |   .3286812   .0871255     3.77   0.000     .1579184     .499444
+      cluster_mobile__desktop |  -.0885308   .1405812    -0.63   0.529    -.3640649    .1870032
+           cluster_networking |  -.4112418   .1136652    -3.62   0.000    -.6340214   -.1884621
+         cluster_os__embedded |   -.628187   .1325963    -4.74   0.000     -.888071    -.368303
+     cluster_scripting__shell |  -.7921376   .1799249    -4.40   0.000    -1.144784   -.4394913
+   cluster_security__identity |  -.2704002   .1140198    -2.37   0.018    -.4938749   -.0469256
+  cluster_systems_programming |   .1350302   .1140362     1.18   0.236    -.0884768    .3585371
+cluster_testing_qa__debugging |  -.0281933   .0874353    -0.32   0.747    -.1995633    .1431767
+                      edu_bin |   .5472134   .0796531     6.87   0.000     .3910962    .7033306
+                      exp_bin |   .2108293   .0813304     2.59   0.010     .0514246    .3702339
+                              |
+              sector_nace_num |
+                           J  |   .9158468   .1643758     5.57   0.000     .5936762    1.238017
+                           K  |  -.7351835   .3424897    -2.15   0.032    -1.406451    -.063916
+                           M  |   .5631666   .2441384     2.31   0.021      .084664    1.041669
+                       Other  |   .3478902   .2052829     1.69   0.090    -.0544569    .7502374
+                           Q  |   1.527101   .3634686     4.20   0.000     .8147161    2.239487
+                     Unknown  |   .6191396   .1770034     3.50   0.000     .2722193    .9660598
+                              |
+                     type_cat |
+               Unknown/Other  |   .0979273   .1244039     0.79   0.431    -.1458998    .3417543
+                      Public  |   .2077261   .0955768     2.17   0.030      .020399    .3950532
+           Nonprofit/Gov/Edu  |   .1097374   .4123415     0.27   0.790     -.698437    .9179119
+                              |
+                     size_cat |
+                     Unknown  |  -.0124132   .1553027    -0.08   0.936    -.3168009    .2919744
+                        1-50  |   .0801872   .1660297     0.48   0.629     -.245225    .4055995
+                      51-200  |  -.0186646   .1706132    -0.11   0.913    -.3530603    .3157311
+                     201-500  |   .2072261   .1868257     1.11   0.267    -.1589456    .5733977
+                    501-1000  |  -.0400102   .1978949    -0.20   0.840    -.4278772    .3478567
+                  5001-10000  |    .099135   .2106134     0.47   0.638    -.3136596    .5119296
+                      10000+  |    .368697   .1557064     2.37   0.018     .0635181    .6738758
+                              |
+                    is_remote |   .4123579   .1093014     3.77   0.000     .1981311    .6265848
+                        _cons |  -4.011404   .2166944   -18.51   0.000    -4.436117   -3.586691
+-----------------------------------------------------------------------------------------------
+
+=========== Zeme = IN (Tabulka 3) ===========
+
+Iteration 0:   log pseudolikelihood = -3728.4532  
+Iteration 1:   log pseudolikelihood = -2917.7124  
+Iteration 2:   log pseudolikelihood = -2760.0155  
+Iteration 3:   log pseudolikelihood = -2758.1154  
+Iteration 4:   log pseudolikelihood = -2758.1129  
+Iteration 5:   log pseudolikelihood = -2758.1129  
+
+Logistic regression                             Number of obs     =     14,184
+                                                Wald chi2(39)     =    1596.38
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood = -2758.1129               Pseudo R2         =     0.2603
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                       has_ai |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+cluster_architecture__methods |  -.1049654    .093169    -1.13   0.260    -.2875733    .0776425
+        cluster_bi__analytics |   .2550669   .0808948     3.15   0.002     .0965161    .4136178
+  cluster_backend_development |   .0822006   .0870451     0.94   0.345    -.0884046    .2528058
+       cluster_certifications |  -.3586553   .1814321    -1.98   0.048    -.7142557   -.0030548
+      cluster_cloud_computing |   .4961647   .0941628     5.27   0.000      .311609    .6807204
+     cluster_data_engineering |    .508968   .0819649     6.21   0.000     .3483196    .6696163
+     cluster_data_science__ml |   2.570601   .0774595    33.19   0.000     2.418783    2.722419
+   cluster_databases__storage |  -.2790825    .083132    -3.36   0.001    -.4420182   -.1161469
+   cluster_devops__containers |     .15984   .0927159     1.72   0.085    -.0218797    .3415597
+         cluster_dynamic__web |   .8619424   .0886934     9.72   0.000     .6881065    1.035778
+  cluster_enterprise__managed |  -.3369591   .0881396    -3.82   0.000    -.5097096   -.1642086
+ cluster_enterprise_platforms |   .0574125   .1849294     0.31   0.756    -.3050425    .4198676
+ cluster_frontend_development |   .0670988   .0903481     0.74   0.458    -.1099803     .244178
+      cluster_mobile__desktop |  -.5324993    .140576    -3.79   0.000    -.8080233   -.2569753
+           cluster_networking |  -.1138723   .1001464    -1.14   0.256    -.3101557    .0824111
+         cluster_os__embedded |   -.836788   .1386543    -6.04   0.000    -1.108545   -.5650305
+     cluster_scripting__shell |  -.6086138   .1607211    -3.79   0.000    -.9236215   -.2936062
+   cluster_security__identity |   .2157082   .0904088     2.39   0.017     .0385102    .3929062
+  cluster_systems_programming |   .4933528   .1355167     3.64   0.000     .2277449    .7589606
+cluster_testing_qa__debugging |   -.108363   .0764157    -1.42   0.156    -.2581351     .041409
+                      edu_bin |   .2780833   .0781983     3.56   0.000     .1248175    .4313491
+                      exp_bin |   .0107285   .0916423     0.12   0.907    -.1688871    .1903441
+                              |
+              sector_nace_num |
+                           J  |   .1694969   .1595003     1.06   0.288     -.143118    .4821118
+                           K  |   .3456658   .2065384     1.67   0.094    -.0591421    .7504737
+                           M  |    .104037   .2414999     0.43   0.667    -.3692941    .5773682
+                       Other  |  -.0644724     .22528    -0.29   0.775    -.5060132    .3770683
+                           Q  |   1.060626   .3319207     3.20   0.001     .4100736    1.711179
+                     Unknown  |   .0470991   .2051644     0.23   0.818    -.3550158    .4492139
+                              |
+                     type_cat |
+               Unknown/Other  |   .0722979   .1504352     0.48   0.631    -.2225496    .3671454
+                      Public  |   .0700594   .1068464     0.66   0.512    -.1393557    .2794745
+           Nonprofit/Gov/Edu  |   1.233588   .4742688     2.60   0.009     .3040381    2.163138
+                              |
+                     size_cat |
+                     Unknown  |   .1740973   .2139079     0.81   0.416    -.2451544     .593349
+                        1-50  |  -.0442548   .1922948    -0.23   0.818    -.4211457     .332636
+                      51-200  |    .227124   .1774457     1.28   0.201    -.1206632    .5749112
+                     201-500  |   .4096476   .2047121     2.00   0.045     .0084193     .810876
+                    501-1000  |   .2412402   .2277988     1.06   0.290    -.2052372    .6877176
+                  5001-10000  |   .4610679   .1868012     2.47   0.014     .0949443    .8271914
+                      10000+  |   .2332984   .1578418     1.48   0.139    -.0760658    .5426625
+                              |
+                    is_remote |   .6551229   .0907466     7.22   0.000     .4772629    .8329829
+                        _cons |  -4.439911   .2332289   -19.04   0.000    -4.897031   -3.982791
+-----------------------------------------------------------------------------------------------
+
+. 
+. esttab ame_t3_US ame_t3_DE ame_t3_IN using "$outdir/Tabulka_3_Logit_SkillClusters.rtf", replace ///
+>     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+>     keep(cluster_* edu_bin exp_bin) ///
+>     order(cluster_* edu_bin exp_bin) ///
+>     stats(N, fmt(0) labels("N")) ///
+>     mtitles("USA" "Nemecko" "Indie") ///
+>     title("Tabulka 3: Binarni logit P(AI pozadavek = ano), AME podle zeme — skill clustery") ///
+>     addnotes("Zavisla promenna: has_ai (1=AI Integration nebo Applied/Core AI, 0=None)." ///
+>              "Prumerne marginalni efekty (AME) z logitu s robustnimi SE." ///
+>              "Kontroly (neukazovane): NACE sektor, typ firmy, velikost firmy, remote." ///
+>              "cluster_generative_ai vyrazen z RHS kvuli cirkularite (GenAI -> AI Integration override).")
+(note: file ./output/thesis_final_run_15_Apr_2026_14-38-12/Tabulka_3_Logit_SkillClusters.rtf not found)
+(output written to ./output/thesis_final_run_15_Apr_2026_14-38-12/Tabulka_3_Logit_SkillClusters.rtf)
+
+. 
+. 
+. * ==============================================================================
+. * 8. TABULKA 4 — MLOGIT P(AI tier) ~ SKILL CLUSTERY (AME, 9 sloupcu)
+. * ==============================================================================
+. display _n "=============================================================="
+
+==============================================================
+
+. display "8. TABULKA 4 — MLOGIT, SKILL CLUSTERY"
+8. TABULKA 4 — MLOGIT, SKILL CLUSTERY
+
+. display "=============================================================="
+==============================================================
+
+. 
+. foreach c in US DE IN {
+  2.     display _n "=========== Zeme = `c' (Tabulka 4) ==========="
+  3.     * Tri beh modelu (pro kazdy outcome zvlast), protoze margins post prepisuje
+.     * e(b). Pouzivame AME predict(outcome(k)) pro k=0,1,2.
+.     foreach o in 0 1 2 {
+  4.         capture noisily mlogit ai_level ///
+>             cluster_* ///
+>             edu_bin ///
+>             exp_bin ///
+>             i.sector_nace_num ///
+>             ib1.type_cat ///
+>             ib5.size_cat ///
+>             is_remote ///
+>             if country == "`c'", baseoutcome(0) vce(robust)
+  5.         if _rc == 0 {
+  6.             quietly margins, dydx(*) predict(outcome(`o')) post
+  7.             estimates store ame_t4_`c'_`o'
+  8.         }
+  9.         else {
+ 10.             display as error "Mlogit Tabulka 4 pro `c' outcome `o' selhal (rc=" _rc ")"
+ 11.         }
+ 12.     }
+ 13. }
+
+=========== Zeme = US (Tabulka 4) ===========
+
+Iteration 0:   log pseudolikelihood = -11710.058  
+Iteration 1:   log pseudolikelihood = -10590.871  
+Iteration 2:   log pseudolikelihood = -9008.2012  
+Iteration 3:   log pseudolikelihood = -8926.5678  
+Iteration 4:   log pseudolikelihood =  -8925.507  
+Iteration 5:   log pseudolikelihood =  -8925.506  
+Iteration 6:   log pseudolikelihood =  -8925.506  
+
+Multinomial logistic regression                 Number of obs     =     17,848
+                                                Wald chi2(78)     =    3632.24
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood =  -8925.506               Pseudo R2         =     0.2378
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                     ai_level |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+None                          |  (base outcome)
+------------------------------+----------------------------------------------------------------
+AI_Integration                |
+cluster_architecture__methods |   .0781143   .0688857     1.13   0.257    -.0568992    .2131278
+        cluster_bi__analytics |   .1955368   .0509704     3.84   0.000     .0956366    .2954369
+  cluster_backend_development |   .2216033   .0575739     3.85   0.000     .1087605     .334446
+       cluster_certifications |  -.2222806   .1068931    -2.08   0.038    -.4317872    -.012774
+      cluster_cloud_computing |   .4560172   .0562522     8.11   0.000     .3457649    .5662694
+     cluster_data_engineering |   .0716381   .0548739     1.31   0.192    -.0359128     .179189
+     cluster_data_science__ml |   2.364434   .0678675    34.84   0.000     2.231416    2.497452
+   cluster_databases__storage |  -.1865603   .0542383    -3.44   0.001    -.2928654   -.0802551
+   cluster_devops__containers |   .0781552   .0560985     1.39   0.164     -.031796    .1881063
+         cluster_dynamic__web |   .4543985   .0548611     8.28   0.000     .3468727    .5619244
+  cluster_enterprise__managed |  -.4960848   .0544863    -9.10   0.000     -.602876   -.3892936
+ cluster_enterprise_platforms |   .5101566   .0978643     5.21   0.000     .3183461     .701967
+ cluster_frontend_development |   .4456303   .0586824     7.59   0.000     .3306149    .5606458
+      cluster_mobile__desktop |  -.0593513   .0704958    -0.84   0.400    -.1975206     .078818
+           cluster_networking |  -.0063989   .0555386    -0.12   0.908    -.1152526    .1024548
+         cluster_os__embedded |  -.2175886   .0694608    -3.13   0.002    -.3537293   -.0814479
+     cluster_scripting__shell |  -.3705868    .090561    -4.09   0.000    -.5480831   -.1930904
+   cluster_security__identity |  -.0407984   .0552639    -0.74   0.460    -.1491136    .0675169
+  cluster_systems_programming |   .0514142   .0718879     0.72   0.474    -.0894834    .1923118
+cluster_testing_qa__debugging |   .0201161   .0493476     0.41   0.684    -.0766034    .1168356
+                      edu_bin |  -.3241697   .0498267    -6.51   0.000    -.4218283   -.2265111
+                      exp_bin |   .2657101    .066434     4.00   0.000     .1355019    .3959183
+                              |
+              sector_nace_num |
+                           J  |   .4519428   .0874583     5.17   0.000     .2805277    .6233579
+                           K  |   .3102294   .1143374     2.71   0.007     .0861323    .5343265
+                           M  |    .444338   .1338482     3.32   0.001     .1820004    .7066756
+                       Other  |   .1448905    .107279     1.35   0.177    -.0653724    .3551535
+                           Q  |   .3702228    .140556     2.63   0.008     .0947381    .6457074
+                     Unknown  |   .6174151    .111931     5.52   0.000     .3980343    .8367959
+                              |
+                     type_cat |
+               Unknown/Other  |   .0324831   .0967872     0.34   0.737    -.1572165    .2221826
+                      Public  |  -.0093093   .0648781    -0.14   0.886     -.136468    .1178494
+           Nonprofit/Gov/Edu  |   .0784254    .127181     0.62   0.537    -.1708448    .3276956
+                              |
+                     size_cat |
+                     Unknown  |  -.4004171   .1042813    -3.84   0.000    -.6048047   -.1960294
+                        1-50  |  -.5878279   .1022169    -5.75   0.000    -.7881694   -.3874864
+                      51-200  |  -.2480704   .0957932    -2.59   0.010    -.4358217   -.0603191
+                     201-500  |    -.10195   .1038704    -0.98   0.326    -.3055324    .1016323
+                    501-1000  |  -.1354523   .1159546    -1.17   0.243     -.362719    .0918145
+                  5001-10000  |  -.3356605    .120977    -2.77   0.006    -.5727712   -.0985499
+                      10000+  |  -.0008605   .0868954    -0.01   0.992    -.1711723    .1694513
+                              |
+                    is_remote |   .2292551   .0526944     4.35   0.000      .125976    .3325342
+                        _cons |  -3.060453   .1374874   -22.26   0.000    -3.329924   -2.790983
+------------------------------+----------------------------------------------------------------
+Applied_Core_AI               |
+cluster_architecture__methods |  -.0805563   .1036859    -0.78   0.437    -.2837769    .1226643
+        cluster_bi__analytics |   .2092919    .077768     2.69   0.007     .0568695    .3617143
+  cluster_backend_development |   .0785055   .0876413     0.90   0.370    -.0932684    .2502793
+       cluster_certifications |  -.4844716   .1699773    -2.85   0.004     -.817621   -.1513221
+      cluster_cloud_computing |   .6243573   .0880677     7.09   0.000     .4517477    .7969669
+     cluster_data_engineering |   .7872626   .0820765     9.59   0.000     .6263957    .9481296
+     cluster_data_science__ml |   4.089191    .082062    49.83   0.000     3.928352     4.25003
+   cluster_databases__storage |  -.0979673   .0847351    -1.16   0.248    -.2640451    .0681105
+   cluster_devops__containers |   .0276079   .0882407     0.31   0.754    -.1453407    .2005565
+         cluster_dynamic__web |   .9674901   .0906183    10.68   0.000     .7898815    1.145099
+  cluster_enterprise__managed |  -.6323546   .0831662    -7.60   0.000    -.7953574   -.4693517
+ cluster_enterprise_platforms |  -.0839598   .1496735    -0.56   0.575    -.3773144    .2093948
+ cluster_frontend_development |  -.0034891   .0873451    -0.04   0.968    -.1746823     .167704
+      cluster_mobile__desktop |  -.1495762   .1172699    -1.28   0.202    -.3794209    .0802685
+           cluster_networking |  -.1054968   .0855865    -1.23   0.218    -.2732432    .0622496
+         cluster_os__embedded |  -.4903127   .1072576    -4.57   0.000    -.7005338   -.2800916
+     cluster_scripting__shell |   -.603879   .1426621    -4.23   0.000    -.8834916   -.3242664
+   cluster_security__identity |  -.2225431   .0858534    -2.59   0.010    -.3908127   -.0542735
+  cluster_systems_programming |   .7908723   .0988708     8.00   0.000      .597089    .9846556
+cluster_testing_qa__debugging |  -.1432967   .0766002    -1.87   0.061    -.2934303    .0068369
+                      edu_bin |  -.2984718   .0767522    -3.89   0.000    -.4489034   -.1480403
+                      exp_bin |    .054749   .0977774     0.56   0.576    -.1368911    .2463891
+                              |
+              sector_nace_num |
+                           J  |   .5069672   .1243985     4.08   0.000     .2631505    .7507838
+                           K  |   .3333819   .1756177     1.90   0.058    -.0108225    .6775863
+                           M  |   .4595793   .2007844     2.29   0.022     .0660491    .8531094
+                       Other  |    .097647   .1610366     0.61   0.544    -.2179789    .4132729
+                           Q  |   .1252182   .2119595     0.59   0.555    -.2902147    .5406511
+                     Unknown  |   .7293667   .1665593     4.38   0.000     .4029165    1.055817
+                              |
+                     type_cat |
+               Unknown/Other  |     .05747   .1594301     0.36   0.718    -.2550073    .3699473
+                      Public  |  -.0864108   .1037029    -0.83   0.405    -.2896648    .1168432
+           Nonprofit/Gov/Edu  |   .0832887   .2065069     0.40   0.687    -.3214573    .4880347
+                              |
+                     size_cat |
+                     Unknown  |  -.3790097   .1706952    -2.22   0.026    -.7135661   -.0444532
+                        1-50  |  -.4973285   .1562869    -3.18   0.001    -.8036452   -.1910117
+                      51-200  |  -.1748478   .1482012    -1.18   0.238    -.4653169    .1156213
+                     201-500  |  -.1782433   .1651096    -1.08   0.280    -.5018522    .1453657
+                    501-1000  |  -.4342306   .1910022    -2.27   0.023     -.808588   -.0598732
+                  5001-10000  |  -.1096236     .18512    -0.59   0.554    -.4724522     .253205
+                      10000+  |   .3015042   .1361919     2.21   0.027      .034573    .5684354
+                              |
+                    is_remote |   .4777386   .0797605     5.99   0.000     .3214108    .6340663
+                        _cons |  -4.670857   .2109771   -22.14   0.000    -5.084364   -4.257349
+-----------------------------------------------------------------------------------------------
+
+Iteration 0:   log pseudolikelihood = -11710.058  
+Iteration 1:   log pseudolikelihood = -10590.871  
+Iteration 2:   log pseudolikelihood = -9008.2012  
+Iteration 3:   log pseudolikelihood = -8926.5678  
+Iteration 4:   log pseudolikelihood =  -8925.507  
+Iteration 5:   log pseudolikelihood =  -8925.506  
+Iteration 6:   log pseudolikelihood =  -8925.506  
+
+Multinomial logistic regression                 Number of obs     =     17,848
+                                                Wald chi2(78)     =    3632.24
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood =  -8925.506               Pseudo R2         =     0.2378
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                     ai_level |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+None                          |  (base outcome)
+------------------------------+----------------------------------------------------------------
+AI_Integration                |
+cluster_architecture__methods |   .0781143   .0688857     1.13   0.257    -.0568992    .2131278
+        cluster_bi__analytics |   .1955368   .0509704     3.84   0.000     .0956366    .2954369
+  cluster_backend_development |   .2216033   .0575739     3.85   0.000     .1087605     .334446
+       cluster_certifications |  -.2222806   .1068931    -2.08   0.038    -.4317872    -.012774
+      cluster_cloud_computing |   .4560172   .0562522     8.11   0.000     .3457649    .5662694
+     cluster_data_engineering |   .0716381   .0548739     1.31   0.192    -.0359128     .179189
+     cluster_data_science__ml |   2.364434   .0678675    34.84   0.000     2.231416    2.497452
+   cluster_databases__storage |  -.1865603   .0542383    -3.44   0.001    -.2928654   -.0802551
+   cluster_devops__containers |   .0781552   .0560985     1.39   0.164     -.031796    .1881063
+         cluster_dynamic__web |   .4543985   .0548611     8.28   0.000     .3468727    .5619244
+  cluster_enterprise__managed |  -.4960848   .0544863    -9.10   0.000     -.602876   -.3892936
+ cluster_enterprise_platforms |   .5101566   .0978643     5.21   0.000     .3183461     .701967
+ cluster_frontend_development |   .4456303   .0586824     7.59   0.000     .3306149    .5606458
+      cluster_mobile__desktop |  -.0593513   .0704958    -0.84   0.400    -.1975206     .078818
+           cluster_networking |  -.0063989   .0555386    -0.12   0.908    -.1152526    .1024548
+         cluster_os__embedded |  -.2175886   .0694608    -3.13   0.002    -.3537293   -.0814479
+     cluster_scripting__shell |  -.3705868    .090561    -4.09   0.000    -.5480831   -.1930904
+   cluster_security__identity |  -.0407984   .0552639    -0.74   0.460    -.1491136    .0675169
+  cluster_systems_programming |   .0514142   .0718879     0.72   0.474    -.0894834    .1923118
+cluster_testing_qa__debugging |   .0201161   .0493476     0.41   0.684    -.0766034    .1168356
+                      edu_bin |  -.3241697   .0498267    -6.51   0.000    -.4218283   -.2265111
+                      exp_bin |   .2657101    .066434     4.00   0.000     .1355019    .3959183
+                              |
+              sector_nace_num |
+                           J  |   .4519428   .0874583     5.17   0.000     .2805277    .6233579
+                           K  |   .3102294   .1143374     2.71   0.007     .0861323    .5343265
+                           M  |    .444338   .1338482     3.32   0.001     .1820004    .7066756
+                       Other  |   .1448905    .107279     1.35   0.177    -.0653724    .3551535
+                           Q  |   .3702228    .140556     2.63   0.008     .0947381    .6457074
+                     Unknown  |   .6174151    .111931     5.52   0.000     .3980343    .8367959
+                              |
+                     type_cat |
+               Unknown/Other  |   .0324831   .0967872     0.34   0.737    -.1572165    .2221826
+                      Public  |  -.0093093   .0648781    -0.14   0.886     -.136468    .1178494
+           Nonprofit/Gov/Edu  |   .0784254    .127181     0.62   0.537    -.1708448    .3276956
+                              |
+                     size_cat |
+                     Unknown  |  -.4004171   .1042813    -3.84   0.000    -.6048047   -.1960294
+                        1-50  |  -.5878279   .1022169    -5.75   0.000    -.7881694   -.3874864
+                      51-200  |  -.2480704   .0957932    -2.59   0.010    -.4358217   -.0603191
+                     201-500  |    -.10195   .1038704    -0.98   0.326    -.3055324    .1016323
+                    501-1000  |  -.1354523   .1159546    -1.17   0.243     -.362719    .0918145
+                  5001-10000  |  -.3356605    .120977    -2.77   0.006    -.5727712   -.0985499
+                      10000+  |  -.0008605   .0868954    -0.01   0.992    -.1711723    .1694513
+                              |
+                    is_remote |   .2292551   .0526944     4.35   0.000      .125976    .3325342
+                        _cons |  -3.060453   .1374874   -22.26   0.000    -3.329924   -2.790983
+------------------------------+----------------------------------------------------------------
+Applied_Core_AI               |
+cluster_architecture__methods |  -.0805563   .1036859    -0.78   0.437    -.2837769    .1226643
+        cluster_bi__analytics |   .2092919    .077768     2.69   0.007     .0568695    .3617143
+  cluster_backend_development |   .0785055   .0876413     0.90   0.370    -.0932684    .2502793
+       cluster_certifications |  -.4844716   .1699773    -2.85   0.004     -.817621   -.1513221
+      cluster_cloud_computing |   .6243573   .0880677     7.09   0.000     .4517477    .7969669
+     cluster_data_engineering |   .7872626   .0820765     9.59   0.000     .6263957    .9481296
+     cluster_data_science__ml |   4.089191    .082062    49.83   0.000     3.928352     4.25003
+   cluster_databases__storage |  -.0979673   .0847351    -1.16   0.248    -.2640451    .0681105
+   cluster_devops__containers |   .0276079   .0882407     0.31   0.754    -.1453407    .2005565
+         cluster_dynamic__web |   .9674901   .0906183    10.68   0.000     .7898815    1.145099
+  cluster_enterprise__managed |  -.6323546   .0831662    -7.60   0.000    -.7953574   -.4693517
+ cluster_enterprise_platforms |  -.0839598   .1496735    -0.56   0.575    -.3773144    .2093948
+ cluster_frontend_development |  -.0034891   .0873451    -0.04   0.968    -.1746823     .167704
+      cluster_mobile__desktop |  -.1495762   .1172699    -1.28   0.202    -.3794209    .0802685
+           cluster_networking |  -.1054968   .0855865    -1.23   0.218    -.2732432    .0622496
+         cluster_os__embedded |  -.4903127   .1072576    -4.57   0.000    -.7005338   -.2800916
+     cluster_scripting__shell |   -.603879   .1426621    -4.23   0.000    -.8834916   -.3242664
+   cluster_security__identity |  -.2225431   .0858534    -2.59   0.010    -.3908127   -.0542735
+  cluster_systems_programming |   .7908723   .0988708     8.00   0.000      .597089    .9846556
+cluster_testing_qa__debugging |  -.1432967   .0766002    -1.87   0.061    -.2934303    .0068369
+                      edu_bin |  -.2984718   .0767522    -3.89   0.000    -.4489034   -.1480403
+                      exp_bin |    .054749   .0977774     0.56   0.576    -.1368911    .2463891
+                              |
+              sector_nace_num |
+                           J  |   .5069672   .1243985     4.08   0.000     .2631505    .7507838
+                           K  |   .3333819   .1756177     1.90   0.058    -.0108225    .6775863
+                           M  |   .4595793   .2007844     2.29   0.022     .0660491    .8531094
+                       Other  |    .097647   .1610366     0.61   0.544    -.2179789    .4132729
+                           Q  |   .1252182   .2119595     0.59   0.555    -.2902147    .5406511
+                     Unknown  |   .7293667   .1665593     4.38   0.000     .4029165    1.055817
+                              |
+                     type_cat |
+               Unknown/Other  |     .05747   .1594301     0.36   0.718    -.2550073    .3699473
+                      Public  |  -.0864108   .1037029    -0.83   0.405    -.2896648    .1168432
+           Nonprofit/Gov/Edu  |   .0832887   .2065069     0.40   0.687    -.3214573    .4880347
+                              |
+                     size_cat |
+                     Unknown  |  -.3790097   .1706952    -2.22   0.026    -.7135661   -.0444532
+                        1-50  |  -.4973285   .1562869    -3.18   0.001    -.8036452   -.1910117
+                      51-200  |  -.1748478   .1482012    -1.18   0.238    -.4653169    .1156213
+                     201-500  |  -.1782433   .1651096    -1.08   0.280    -.5018522    .1453657
+                    501-1000  |  -.4342306   .1910022    -2.27   0.023     -.808588   -.0598732
+                  5001-10000  |  -.1096236     .18512    -0.59   0.554    -.4724522     .253205
+                      10000+  |   .3015042   .1361919     2.21   0.027      .034573    .5684354
+                              |
+                    is_remote |   .4777386   .0797605     5.99   0.000     .3214108    .6340663
+                        _cons |  -4.670857   .2109771   -22.14   0.000    -5.084364   -4.257349
+-----------------------------------------------------------------------------------------------
+
+Iteration 0:   log pseudolikelihood = -11710.058  
+Iteration 1:   log pseudolikelihood = -10590.871  
+Iteration 2:   log pseudolikelihood = -9008.2012  
+Iteration 3:   log pseudolikelihood = -8926.5678  
+Iteration 4:   log pseudolikelihood =  -8925.507  
+Iteration 5:   log pseudolikelihood =  -8925.506  
+Iteration 6:   log pseudolikelihood =  -8925.506  
+
+Multinomial logistic regression                 Number of obs     =     17,848
+                                                Wald chi2(78)     =    3632.24
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood =  -8925.506               Pseudo R2         =     0.2378
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                     ai_level |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+None                          |  (base outcome)
+------------------------------+----------------------------------------------------------------
+AI_Integration                |
+cluster_architecture__methods |   .0781143   .0688857     1.13   0.257    -.0568992    .2131278
+        cluster_bi__analytics |   .1955368   .0509704     3.84   0.000     .0956366    .2954369
+  cluster_backend_development |   .2216033   .0575739     3.85   0.000     .1087605     .334446
+       cluster_certifications |  -.2222806   .1068931    -2.08   0.038    -.4317872    -.012774
+      cluster_cloud_computing |   .4560172   .0562522     8.11   0.000     .3457649    .5662694
+     cluster_data_engineering |   .0716381   .0548739     1.31   0.192    -.0359128     .179189
+     cluster_data_science__ml |   2.364434   .0678675    34.84   0.000     2.231416    2.497452
+   cluster_databases__storage |  -.1865603   .0542383    -3.44   0.001    -.2928654   -.0802551
+   cluster_devops__containers |   .0781552   .0560985     1.39   0.164     -.031796    .1881063
+         cluster_dynamic__web |   .4543985   .0548611     8.28   0.000     .3468727    .5619244
+  cluster_enterprise__managed |  -.4960848   .0544863    -9.10   0.000     -.602876   -.3892936
+ cluster_enterprise_platforms |   .5101566   .0978643     5.21   0.000     .3183461     .701967
+ cluster_frontend_development |   .4456303   .0586824     7.59   0.000     .3306149    .5606458
+      cluster_mobile__desktop |  -.0593513   .0704958    -0.84   0.400    -.1975206     .078818
+           cluster_networking |  -.0063989   .0555386    -0.12   0.908    -.1152526    .1024548
+         cluster_os__embedded |  -.2175886   .0694608    -3.13   0.002    -.3537293   -.0814479
+     cluster_scripting__shell |  -.3705868    .090561    -4.09   0.000    -.5480831   -.1930904
+   cluster_security__identity |  -.0407984   .0552639    -0.74   0.460    -.1491136    .0675169
+  cluster_systems_programming |   .0514142   .0718879     0.72   0.474    -.0894834    .1923118
+cluster_testing_qa__debugging |   .0201161   .0493476     0.41   0.684    -.0766034    .1168356
+                      edu_bin |  -.3241697   .0498267    -6.51   0.000    -.4218283   -.2265111
+                      exp_bin |   .2657101    .066434     4.00   0.000     .1355019    .3959183
+                              |
+              sector_nace_num |
+                           J  |   .4519428   .0874583     5.17   0.000     .2805277    .6233579
+                           K  |   .3102294   .1143374     2.71   0.007     .0861323    .5343265
+                           M  |    .444338   .1338482     3.32   0.001     .1820004    .7066756
+                       Other  |   .1448905    .107279     1.35   0.177    -.0653724    .3551535
+                           Q  |   .3702228    .140556     2.63   0.008     .0947381    .6457074
+                     Unknown  |   .6174151    .111931     5.52   0.000     .3980343    .8367959
+                              |
+                     type_cat |
+               Unknown/Other  |   .0324831   .0967872     0.34   0.737    -.1572165    .2221826
+                      Public  |  -.0093093   .0648781    -0.14   0.886     -.136468    .1178494
+           Nonprofit/Gov/Edu  |   .0784254    .127181     0.62   0.537    -.1708448    .3276956
+                              |
+                     size_cat |
+                     Unknown  |  -.4004171   .1042813    -3.84   0.000    -.6048047   -.1960294
+                        1-50  |  -.5878279   .1022169    -5.75   0.000    -.7881694   -.3874864
+                      51-200  |  -.2480704   .0957932    -2.59   0.010    -.4358217   -.0603191
+                     201-500  |    -.10195   .1038704    -0.98   0.326    -.3055324    .1016323
+                    501-1000  |  -.1354523   .1159546    -1.17   0.243     -.362719    .0918145
+                  5001-10000  |  -.3356605    .120977    -2.77   0.006    -.5727712   -.0985499
+                      10000+  |  -.0008605   .0868954    -0.01   0.992    -.1711723    .1694513
+                              |
+                    is_remote |   .2292551   .0526944     4.35   0.000      .125976    .3325342
+                        _cons |  -3.060453   .1374874   -22.26   0.000    -3.329924   -2.790983
+------------------------------+----------------------------------------------------------------
+Applied_Core_AI               |
+cluster_architecture__methods |  -.0805563   .1036859    -0.78   0.437    -.2837769    .1226643
+        cluster_bi__analytics |   .2092919    .077768     2.69   0.007     .0568695    .3617143
+  cluster_backend_development |   .0785055   .0876413     0.90   0.370    -.0932684    .2502793
+       cluster_certifications |  -.4844716   .1699773    -2.85   0.004     -.817621   -.1513221
+      cluster_cloud_computing |   .6243573   .0880677     7.09   0.000     .4517477    .7969669
+     cluster_data_engineering |   .7872626   .0820765     9.59   0.000     .6263957    .9481296
+     cluster_data_science__ml |   4.089191    .082062    49.83   0.000     3.928352     4.25003
+   cluster_databases__storage |  -.0979673   .0847351    -1.16   0.248    -.2640451    .0681105
+   cluster_devops__containers |   .0276079   .0882407     0.31   0.754    -.1453407    .2005565
+         cluster_dynamic__web |   .9674901   .0906183    10.68   0.000     .7898815    1.145099
+  cluster_enterprise__managed |  -.6323546   .0831662    -7.60   0.000    -.7953574   -.4693517
+ cluster_enterprise_platforms |  -.0839598   .1496735    -0.56   0.575    -.3773144    .2093948
+ cluster_frontend_development |  -.0034891   .0873451    -0.04   0.968    -.1746823     .167704
+      cluster_mobile__desktop |  -.1495762   .1172699    -1.28   0.202    -.3794209    .0802685
+           cluster_networking |  -.1054968   .0855865    -1.23   0.218    -.2732432    .0622496
+         cluster_os__embedded |  -.4903127   .1072576    -4.57   0.000    -.7005338   -.2800916
+     cluster_scripting__shell |   -.603879   .1426621    -4.23   0.000    -.8834916   -.3242664
+   cluster_security__identity |  -.2225431   .0858534    -2.59   0.010    -.3908127   -.0542735
+  cluster_systems_programming |   .7908723   .0988708     8.00   0.000      .597089    .9846556
+cluster_testing_qa__debugging |  -.1432967   .0766002    -1.87   0.061    -.2934303    .0068369
+                      edu_bin |  -.2984718   .0767522    -3.89   0.000    -.4489034   -.1480403
+                      exp_bin |    .054749   .0977774     0.56   0.576    -.1368911    .2463891
+                              |
+              sector_nace_num |
+                           J  |   .5069672   .1243985     4.08   0.000     .2631505    .7507838
+                           K  |   .3333819   .1756177     1.90   0.058    -.0108225    .6775863
+                           M  |   .4595793   .2007844     2.29   0.022     .0660491    .8531094
+                       Other  |    .097647   .1610366     0.61   0.544    -.2179789    .4132729
+                           Q  |   .1252182   .2119595     0.59   0.555    -.2902147    .5406511
+                     Unknown  |   .7293667   .1665593     4.38   0.000     .4029165    1.055817
+                              |
+                     type_cat |
+               Unknown/Other  |     .05747   .1594301     0.36   0.718    -.2550073    .3699473
+                      Public  |  -.0864108   .1037029    -0.83   0.405    -.2896648    .1168432
+           Nonprofit/Gov/Edu  |   .0832887   .2065069     0.40   0.687    -.3214573    .4880347
+                              |
+                     size_cat |
+                     Unknown  |  -.3790097   .1706952    -2.22   0.026    -.7135661   -.0444532
+                        1-50  |  -.4973285   .1562869    -3.18   0.001    -.8036452   -.1910117
+                      51-200  |  -.1748478   .1482012    -1.18   0.238    -.4653169    .1156213
+                     201-500  |  -.1782433   .1651096    -1.08   0.280    -.5018522    .1453657
+                    501-1000  |  -.4342306   .1910022    -2.27   0.023     -.808588   -.0598732
+                  5001-10000  |  -.1096236     .18512    -0.59   0.554    -.4724522     .253205
+                      10000+  |   .3015042   .1361919     2.21   0.027      .034573    .5684354
+                              |
+                    is_remote |   .4777386   .0797605     5.99   0.000     .3214108    .6340663
+                        _cons |  -4.670857   .2109771   -22.14   0.000    -5.084364   -4.257349
+-----------------------------------------------------------------------------------------------
+
+=========== Zeme = DE (Tabulka 4) ===========
+
+Iteration 0:   log pseudolikelihood = -3911.6045  
+Iteration 1:   log pseudolikelihood = -3370.3212  
+Iteration 2:   log pseudolikelihood = -3001.3414  
+Iteration 3:   log pseudolikelihood = -2879.6423  
+Iteration 4:   log pseudolikelihood = -2877.0029  
+Iteration 5:   log pseudolikelihood = -2876.9944  
+Iteration 6:   log pseudolikelihood = -2876.9944  
+
+Multinomial logistic regression                 Number of obs     =      6,400
+                                                Wald chi2(78)     =    1437.37
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood = -2876.9944               Pseudo R2         =     0.2645
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                     ai_level |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+None                          |  (base outcome)
+------------------------------+----------------------------------------------------------------
+AI_Integration                |
+cluster_architecture__methods |   .0422926   .1070885     0.39   0.693     -.167597    .2521823
+        cluster_bi__analytics |   .4221843   .1130003     3.74   0.000     .2007078    .6436608
+  cluster_backend_development |   .4117177   .1085132     3.79   0.000     .1990356    .6243997
+       cluster_certifications |  -.5101591   .2930583    -1.74   0.082    -1.084543    .0642246
+      cluster_cloud_computing |   .5347382   .1031913     5.18   0.000     .3324869    .7369895
+     cluster_data_engineering |   .3286945   .1132944     2.90   0.004     .1066416    .5507474
+     cluster_data_science__ml |   1.045692   .1191593     8.78   0.000      .812144     1.27924
+   cluster_databases__storage |   .0465726   .0987688     0.47   0.637    -.1470107     .240156
+   cluster_devops__containers |   .0697728   .1020598     0.68   0.494    -.1302609    .2698064
+         cluster_dynamic__web |   .4019752   .1030385     3.90   0.000     .2000234     .603927
+  cluster_enterprise__managed |  -.4725335    .109252    -4.33   0.000    -.6866635   -.2584035
+ cluster_enterprise_platforms |   .2887443   .2639915     1.09   0.274    -.2286696    .8061582
+ cluster_frontend_development |   .7541316   .1102545     6.84   0.000     .5380368    .9702264
+      cluster_mobile__desktop |   .0618557    .152472     0.41   0.685     -.236984    .3606954
+           cluster_networking |  -.3895416   .1351446    -2.88   0.004    -.6544203    -.124663
+         cluster_os__embedded |  -.5530585   .1651596    -3.35   0.001    -.8767655   -.2293516
+     cluster_scripting__shell |  -.7090947   .2386629    -2.97   0.003    -1.176865    -.241324
+   cluster_security__identity |  -.1772171   .1319697    -1.34   0.179     -.435873    .0814388
+  cluster_systems_programming |  -.1432237   .1492376    -0.96   0.337    -.4357239    .1492766
+cluster_testing_qa__debugging |    .139164   .0980105     1.42   0.156    -.0529331    .3312611
+                      edu_bin |   .4627816   .0933094     4.96   0.000     .2798985    .6456647
+                      exp_bin |    .351212   .0975999     3.60   0.000     .1599198    .5425042
+                              |
+              sector_nace_num |
+                           J  |   .9690328    .223228     4.34   0.000      .531514    1.406552
+                           K  |  -.5073571   .4349326    -1.17   0.243    -1.359809    .3450952
+                           M  |   .8980681   .2966741     3.03   0.002     .3165976    1.479539
+                       Other  |   .5290458   .2613198     2.02   0.043     .0168685    1.041223
+                           Q  |   1.679467    .425517     3.95   0.000     .8454693    2.513465
+                     Unknown  |    .822725   .2351656     3.50   0.000     .3618089    1.283641
+                              |
+                     type_cat |
+               Unknown/Other  |    .009078   .1474825     0.06   0.951    -.2799823    .2981383
+                      Public  |   .2602728   .1102991     2.36   0.018     .0440906     .476455
+           Nonprofit/Gov/Edu  |   .3567882   .4448494     0.80   0.423    -.5151005    1.228677
+                              |
+                     size_cat |
+                     Unknown  |  -.0117651   .1855606    -0.06   0.949    -.3754572     .351927
+                        1-50  |   .0343247    .200009     0.17   0.864    -.3576858    .4263351
+                      51-200  |   .0181222   .2027395     0.09   0.929    -.3792398    .4154843
+                     201-500  |   .3617591   .2165615     1.67   0.095    -.0626936    .7862118
+                    501-1000  |   .0543482   .2441267     0.22   0.824    -.4241314    .5328278
+                  5001-10000  |   .2288022   .2493202     0.92   0.359    -.2598563    .7174608
+                      10000+  |   .5077666   .1846328     2.75   0.006      .145893    .8696402
+                              |
+                    is_remote |   .4651913   .1237547     3.76   0.000     .2226365    .7077461
+                        _cons |  -4.683116    .278338   -16.83   0.000    -5.228648   -4.137583
+------------------------------+----------------------------------------------------------------
+Applied_Core_AI               |
+cluster_architecture__methods |  -.0014727   .1366772    -0.01   0.991    -.2693551    .2664096
+        cluster_bi__analytics |   .4225609   .1351298     3.13   0.002     .1577113    .6874105
+  cluster_backend_development |  -.0406237   .1336385    -0.30   0.761    -.3025504     .221303
+       cluster_certifications |   -.481171   .3425472    -1.40   0.160    -1.152551    .1902091
+      cluster_cloud_computing |   .3955763   .1404711     2.82   0.005     .1202579    .6708947
+     cluster_data_engineering |   1.084141    .132375     8.19   0.000     .8246908    1.343591
+     cluster_data_science__ml |   3.003979    .121284    24.77   0.000     2.766267    3.241692
+   cluster_databases__storage |  -.1621832   .1288989    -1.26   0.208    -.4148205     .090454
+   cluster_devops__containers |   .4724503   .1393364     3.39   0.001      .199356    .7455446
+         cluster_dynamic__web |   1.432352   .1424441    10.06   0.000     1.153167    1.711537
+  cluster_enterprise__managed |  -.4638901   .1364526    -3.40   0.001    -.7313322    -.196448
+ cluster_enterprise_platforms |  -.1753515     .37565    -0.47   0.641     -.911612    .5609089
+ cluster_frontend_development |  -.2924913   .1294376    -2.26   0.024    -.5461843   -.0387982
+      cluster_mobile__desktop |  -.4472028   .2464452    -1.81   0.070    -.9302264    .0358209
+           cluster_networking |  -.4399249   .1691381    -2.60   0.009    -.7714294   -.1084204
+         cluster_os__embedded |  -.6984389    .186655    -3.74   0.000    -1.064276   -.3326018
+     cluster_scripting__shell |  -.9181695   .2463107    -3.73   0.000     -1.40093   -.4354094
+   cluster_security__identity |  -.3511473   .1774297    -1.98   0.048    -.6989032   -.0033914
+  cluster_systems_programming |    .479153   .1558058     3.08   0.002     .1737792    .7845269
+cluster_testing_qa__debugging |  -.4054042   .1332076    -3.04   0.002    -.6664862   -.1443222
+                      edu_bin |   .6978693   .1191771     5.86   0.000     .4642865    .9314522
+                      exp_bin |  -.0567584   .1216708    -0.47   0.641    -.2952287     .181712
+                              |
+              sector_nace_num |
+                           J  |   .8778068   .2418336     3.63   0.000     .4038216    1.351792
+                           K  |  -.9154779   .5059745    -1.81   0.070     -1.90717     .076214
+                           M  |  -.1972036   .3676885    -0.54   0.592    -.9178599    .5234527
+                       Other  |   .0066647   .3157623     0.02   0.983     -.612218    .6255474
+                           Q  |   1.252828   .5189306     2.41   0.016     .2357423    2.269913
+                     Unknown  |   .3073556   .2601363     1.18   0.237    -.2025022    .8172134
+                              |
+                     type_cat |
+               Unknown/Other  |   .2501755   .1873984     1.33   0.182    -.1171186    .6174696
+                      Public  |   .1217282   .1472454     0.83   0.408    -.1668674    .4103239
+           Nonprofit/Gov/Edu  |  -.5206797    .639351    -0.81   0.415    -1.773785    .7324252
+                              |
+                     size_cat |
+                     Unknown  |   .0067265   .2277175     0.03   0.976    -.4395915    .4530446
+                        1-50  |   .1366513   .2386695     0.57   0.567    -.3311323    .6044349
+                      51-200  |   -.054177   .2436569    -0.22   0.824    -.5317357    .4233816
+                     201-500  |  -.1161271   .3082645    -0.38   0.706    -.7203145    .4880603
+                    501-1000  |  -.3010428   .2880353    -1.05   0.296    -.8655816    .2634961
+                  5001-10000  |  -.1771728   .3140293    -0.56   0.573    -.7926589    .4383133
+                      10000+  |   .1170085   .2374609     0.49   0.622    -.3484063    .5824233
+                              |
+                    is_remote |    .336318   .1586177     2.12   0.034     .0254329    .6472031
+                        _cons |  -5.029114     .33064   -15.21   0.000    -5.677157   -4.381072
+-----------------------------------------------------------------------------------------------
+
+Iteration 0:   log pseudolikelihood = -3911.6045  
+Iteration 1:   log pseudolikelihood = -3370.3212  
+Iteration 2:   log pseudolikelihood = -3001.3414  
+Iteration 3:   log pseudolikelihood = -2879.6423  
+Iteration 4:   log pseudolikelihood = -2877.0029  
+Iteration 5:   log pseudolikelihood = -2876.9944  
+Iteration 6:   log pseudolikelihood = -2876.9944  
+
+Multinomial logistic regression                 Number of obs     =      6,400
+                                                Wald chi2(78)     =    1437.37
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood = -2876.9944               Pseudo R2         =     0.2645
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                     ai_level |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+None                          |  (base outcome)
+------------------------------+----------------------------------------------------------------
+AI_Integration                |
+cluster_architecture__methods |   .0422926   .1070885     0.39   0.693     -.167597    .2521823
+        cluster_bi__analytics |   .4221843   .1130003     3.74   0.000     .2007078    .6436608
+  cluster_backend_development |   .4117177   .1085132     3.79   0.000     .1990356    .6243997
+       cluster_certifications |  -.5101591   .2930583    -1.74   0.082    -1.084543    .0642246
+      cluster_cloud_computing |   .5347382   .1031913     5.18   0.000     .3324869    .7369895
+     cluster_data_engineering |   .3286945   .1132944     2.90   0.004     .1066416    .5507474
+     cluster_data_science__ml |   1.045692   .1191593     8.78   0.000      .812144     1.27924
+   cluster_databases__storage |   .0465726   .0987688     0.47   0.637    -.1470107     .240156
+   cluster_devops__containers |   .0697728   .1020598     0.68   0.494    -.1302609    .2698064
+         cluster_dynamic__web |   .4019752   .1030385     3.90   0.000     .2000234     .603927
+  cluster_enterprise__managed |  -.4725335    .109252    -4.33   0.000    -.6866635   -.2584035
+ cluster_enterprise_platforms |   .2887443   .2639915     1.09   0.274    -.2286696    .8061582
+ cluster_frontend_development |   .7541316   .1102545     6.84   0.000     .5380368    .9702264
+      cluster_mobile__desktop |   .0618557    .152472     0.41   0.685     -.236984    .3606954
+           cluster_networking |  -.3895416   .1351446    -2.88   0.004    -.6544203    -.124663
+         cluster_os__embedded |  -.5530585   .1651596    -3.35   0.001    -.8767655   -.2293516
+     cluster_scripting__shell |  -.7090947   .2386629    -2.97   0.003    -1.176865    -.241324
+   cluster_security__identity |  -.1772171   .1319697    -1.34   0.179     -.435873    .0814388
+  cluster_systems_programming |  -.1432237   .1492376    -0.96   0.337    -.4357239    .1492766
+cluster_testing_qa__debugging |    .139164   .0980105     1.42   0.156    -.0529331    .3312611
+                      edu_bin |   .4627816   .0933094     4.96   0.000     .2798985    .6456647
+                      exp_bin |    .351212   .0975999     3.60   0.000     .1599198    .5425042
+                              |
+              sector_nace_num |
+                           J  |   .9690328    .223228     4.34   0.000      .531514    1.406552
+                           K  |  -.5073571   .4349326    -1.17   0.243    -1.359809    .3450952
+                           M  |   .8980681   .2966741     3.03   0.002     .3165976    1.479539
+                       Other  |   .5290458   .2613198     2.02   0.043     .0168685    1.041223
+                           Q  |   1.679467    .425517     3.95   0.000     .8454693    2.513465
+                     Unknown  |    .822725   .2351656     3.50   0.000     .3618089    1.283641
+                              |
+                     type_cat |
+               Unknown/Other  |    .009078   .1474825     0.06   0.951    -.2799823    .2981383
+                      Public  |   .2602728   .1102991     2.36   0.018     .0440906     .476455
+           Nonprofit/Gov/Edu  |   .3567882   .4448494     0.80   0.423    -.5151005    1.228677
+                              |
+                     size_cat |
+                     Unknown  |  -.0117651   .1855606    -0.06   0.949    -.3754572     .351927
+                        1-50  |   .0343247    .200009     0.17   0.864    -.3576858    .4263351
+                      51-200  |   .0181222   .2027395     0.09   0.929    -.3792398    .4154843
+                     201-500  |   .3617591   .2165615     1.67   0.095    -.0626936    .7862118
+                    501-1000  |   .0543482   .2441267     0.22   0.824    -.4241314    .5328278
+                  5001-10000  |   .2288022   .2493202     0.92   0.359    -.2598563    .7174608
+                      10000+  |   .5077666   .1846328     2.75   0.006      .145893    .8696402
+                              |
+                    is_remote |   .4651913   .1237547     3.76   0.000     .2226365    .7077461
+                        _cons |  -4.683116    .278338   -16.83   0.000    -5.228648   -4.137583
+------------------------------+----------------------------------------------------------------
+Applied_Core_AI               |
+cluster_architecture__methods |  -.0014727   .1366772    -0.01   0.991    -.2693551    .2664096
+        cluster_bi__analytics |   .4225609   .1351298     3.13   0.002     .1577113    .6874105
+  cluster_backend_development |  -.0406237   .1336385    -0.30   0.761    -.3025504     .221303
+       cluster_certifications |   -.481171   .3425472    -1.40   0.160    -1.152551    .1902091
+      cluster_cloud_computing |   .3955763   .1404711     2.82   0.005     .1202579    .6708947
+     cluster_data_engineering |   1.084141    .132375     8.19   0.000     .8246908    1.343591
+     cluster_data_science__ml |   3.003979    .121284    24.77   0.000     2.766267    3.241692
+   cluster_databases__storage |  -.1621832   .1288989    -1.26   0.208    -.4148205     .090454
+   cluster_devops__containers |   .4724503   .1393364     3.39   0.001      .199356    .7455446
+         cluster_dynamic__web |   1.432352   .1424441    10.06   0.000     1.153167    1.711537
+  cluster_enterprise__managed |  -.4638901   .1364526    -3.40   0.001    -.7313322    -.196448
+ cluster_enterprise_platforms |  -.1753515     .37565    -0.47   0.641     -.911612    .5609089
+ cluster_frontend_development |  -.2924913   .1294376    -2.26   0.024    -.5461843   -.0387982
+      cluster_mobile__desktop |  -.4472028   .2464452    -1.81   0.070    -.9302264    .0358209
+           cluster_networking |  -.4399249   .1691381    -2.60   0.009    -.7714294   -.1084204
+         cluster_os__embedded |  -.6984389    .186655    -3.74   0.000    -1.064276   -.3326018
+     cluster_scripting__shell |  -.9181695   .2463107    -3.73   0.000     -1.40093   -.4354094
+   cluster_security__identity |  -.3511473   .1774297    -1.98   0.048    -.6989032   -.0033914
+  cluster_systems_programming |    .479153   .1558058     3.08   0.002     .1737792    .7845269
+cluster_testing_qa__debugging |  -.4054042   .1332076    -3.04   0.002    -.6664862   -.1443222
+                      edu_bin |   .6978693   .1191771     5.86   0.000     .4642865    .9314522
+                      exp_bin |  -.0567584   .1216708    -0.47   0.641    -.2952287     .181712
+                              |
+              sector_nace_num |
+                           J  |   .8778068   .2418336     3.63   0.000     .4038216    1.351792
+                           K  |  -.9154779   .5059745    -1.81   0.070     -1.90717     .076214
+                           M  |  -.1972036   .3676885    -0.54   0.592    -.9178599    .5234527
+                       Other  |   .0066647   .3157623     0.02   0.983     -.612218    .6255474
+                           Q  |   1.252828   .5189306     2.41   0.016     .2357423    2.269913
+                     Unknown  |   .3073556   .2601363     1.18   0.237    -.2025022    .8172134
+                              |
+                     type_cat |
+               Unknown/Other  |   .2501755   .1873984     1.33   0.182    -.1171186    .6174696
+                      Public  |   .1217282   .1472454     0.83   0.408    -.1668674    .4103239
+           Nonprofit/Gov/Edu  |  -.5206797    .639351    -0.81   0.415    -1.773785    .7324252
+                              |
+                     size_cat |
+                     Unknown  |   .0067265   .2277175     0.03   0.976    -.4395915    .4530446
+                        1-50  |   .1366513   .2386695     0.57   0.567    -.3311323    .6044349
+                      51-200  |   -.054177   .2436569    -0.22   0.824    -.5317357    .4233816
+                     201-500  |  -.1161271   .3082645    -0.38   0.706    -.7203145    .4880603
+                    501-1000  |  -.3010428   .2880353    -1.05   0.296    -.8655816    .2634961
+                  5001-10000  |  -.1771728   .3140293    -0.56   0.573    -.7926589    .4383133
+                      10000+  |   .1170085   .2374609     0.49   0.622    -.3484063    .5824233
+                              |
+                    is_remote |    .336318   .1586177     2.12   0.034     .0254329    .6472031
+                        _cons |  -5.029114     .33064   -15.21   0.000    -5.677157   -4.381072
+-----------------------------------------------------------------------------------------------
+
+Iteration 0:   log pseudolikelihood = -3911.6045  
+Iteration 1:   log pseudolikelihood = -3370.3212  
+Iteration 2:   log pseudolikelihood = -3001.3414  
+Iteration 3:   log pseudolikelihood = -2879.6423  
+Iteration 4:   log pseudolikelihood = -2877.0029  
+Iteration 5:   log pseudolikelihood = -2876.9944  
+Iteration 6:   log pseudolikelihood = -2876.9944  
+
+Multinomial logistic regression                 Number of obs     =      6,400
+                                                Wald chi2(78)     =    1437.37
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood = -2876.9944               Pseudo R2         =     0.2645
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                     ai_level |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+None                          |  (base outcome)
+------------------------------+----------------------------------------------------------------
+AI_Integration                |
+cluster_architecture__methods |   .0422926   .1070885     0.39   0.693     -.167597    .2521823
+        cluster_bi__analytics |   .4221843   .1130003     3.74   0.000     .2007078    .6436608
+  cluster_backend_development |   .4117177   .1085132     3.79   0.000     .1990356    .6243997
+       cluster_certifications |  -.5101591   .2930583    -1.74   0.082    -1.084543    .0642246
+      cluster_cloud_computing |   .5347382   .1031913     5.18   0.000     .3324869    .7369895
+     cluster_data_engineering |   .3286945   .1132944     2.90   0.004     .1066416    .5507474
+     cluster_data_science__ml |   1.045692   .1191593     8.78   0.000      .812144     1.27924
+   cluster_databases__storage |   .0465726   .0987688     0.47   0.637    -.1470107     .240156
+   cluster_devops__containers |   .0697728   .1020598     0.68   0.494    -.1302609    .2698064
+         cluster_dynamic__web |   .4019752   .1030385     3.90   0.000     .2000234     .603927
+  cluster_enterprise__managed |  -.4725335    .109252    -4.33   0.000    -.6866635   -.2584035
+ cluster_enterprise_platforms |   .2887443   .2639915     1.09   0.274    -.2286696    .8061582
+ cluster_frontend_development |   .7541316   .1102545     6.84   0.000     .5380368    .9702264
+      cluster_mobile__desktop |   .0618557    .152472     0.41   0.685     -.236984    .3606954
+           cluster_networking |  -.3895416   .1351446    -2.88   0.004    -.6544203    -.124663
+         cluster_os__embedded |  -.5530585   .1651596    -3.35   0.001    -.8767655   -.2293516
+     cluster_scripting__shell |  -.7090947   .2386629    -2.97   0.003    -1.176865    -.241324
+   cluster_security__identity |  -.1772171   .1319697    -1.34   0.179     -.435873    .0814388
+  cluster_systems_programming |  -.1432237   .1492376    -0.96   0.337    -.4357239    .1492766
+cluster_testing_qa__debugging |    .139164   .0980105     1.42   0.156    -.0529331    .3312611
+                      edu_bin |   .4627816   .0933094     4.96   0.000     .2798985    .6456647
+                      exp_bin |    .351212   .0975999     3.60   0.000     .1599198    .5425042
+                              |
+              sector_nace_num |
+                           J  |   .9690328    .223228     4.34   0.000      .531514    1.406552
+                           K  |  -.5073571   .4349326    -1.17   0.243    -1.359809    .3450952
+                           M  |   .8980681   .2966741     3.03   0.002     .3165976    1.479539
+                       Other  |   .5290458   .2613198     2.02   0.043     .0168685    1.041223
+                           Q  |   1.679467    .425517     3.95   0.000     .8454693    2.513465
+                     Unknown  |    .822725   .2351656     3.50   0.000     .3618089    1.283641
+                              |
+                     type_cat |
+               Unknown/Other  |    .009078   .1474825     0.06   0.951    -.2799823    .2981383
+                      Public  |   .2602728   .1102991     2.36   0.018     .0440906     .476455
+           Nonprofit/Gov/Edu  |   .3567882   .4448494     0.80   0.423    -.5151005    1.228677
+                              |
+                     size_cat |
+                     Unknown  |  -.0117651   .1855606    -0.06   0.949    -.3754572     .351927
+                        1-50  |   .0343247    .200009     0.17   0.864    -.3576858    .4263351
+                      51-200  |   .0181222   .2027395     0.09   0.929    -.3792398    .4154843
+                     201-500  |   .3617591   .2165615     1.67   0.095    -.0626936    .7862118
+                    501-1000  |   .0543482   .2441267     0.22   0.824    -.4241314    .5328278
+                  5001-10000  |   .2288022   .2493202     0.92   0.359    -.2598563    .7174608
+                      10000+  |   .5077666   .1846328     2.75   0.006      .145893    .8696402
+                              |
+                    is_remote |   .4651913   .1237547     3.76   0.000     .2226365    .7077461
+                        _cons |  -4.683116    .278338   -16.83   0.000    -5.228648   -4.137583
+------------------------------+----------------------------------------------------------------
+Applied_Core_AI               |
+cluster_architecture__methods |  -.0014727   .1366772    -0.01   0.991    -.2693551    .2664096
+        cluster_bi__analytics |   .4225609   .1351298     3.13   0.002     .1577113    .6874105
+  cluster_backend_development |  -.0406237   .1336385    -0.30   0.761    -.3025504     .221303
+       cluster_certifications |   -.481171   .3425472    -1.40   0.160    -1.152551    .1902091
+      cluster_cloud_computing |   .3955763   .1404711     2.82   0.005     .1202579    .6708947
+     cluster_data_engineering |   1.084141    .132375     8.19   0.000     .8246908    1.343591
+     cluster_data_science__ml |   3.003979    .121284    24.77   0.000     2.766267    3.241692
+   cluster_databases__storage |  -.1621832   .1288989    -1.26   0.208    -.4148205     .090454
+   cluster_devops__containers |   .4724503   .1393364     3.39   0.001      .199356    .7455446
+         cluster_dynamic__web |   1.432352   .1424441    10.06   0.000     1.153167    1.711537
+  cluster_enterprise__managed |  -.4638901   .1364526    -3.40   0.001    -.7313322    -.196448
+ cluster_enterprise_platforms |  -.1753515     .37565    -0.47   0.641     -.911612    .5609089
+ cluster_frontend_development |  -.2924913   .1294376    -2.26   0.024    -.5461843   -.0387982
+      cluster_mobile__desktop |  -.4472028   .2464452    -1.81   0.070    -.9302264    .0358209
+           cluster_networking |  -.4399249   .1691381    -2.60   0.009    -.7714294   -.1084204
+         cluster_os__embedded |  -.6984389    .186655    -3.74   0.000    -1.064276   -.3326018
+     cluster_scripting__shell |  -.9181695   .2463107    -3.73   0.000     -1.40093   -.4354094
+   cluster_security__identity |  -.3511473   .1774297    -1.98   0.048    -.6989032   -.0033914
+  cluster_systems_programming |    .479153   .1558058     3.08   0.002     .1737792    .7845269
+cluster_testing_qa__debugging |  -.4054042   .1332076    -3.04   0.002    -.6664862   -.1443222
+                      edu_bin |   .6978693   .1191771     5.86   0.000     .4642865    .9314522
+                      exp_bin |  -.0567584   .1216708    -0.47   0.641    -.2952287     .181712
+                              |
+              sector_nace_num |
+                           J  |   .8778068   .2418336     3.63   0.000     .4038216    1.351792
+                           K  |  -.9154779   .5059745    -1.81   0.070     -1.90717     .076214
+                           M  |  -.1972036   .3676885    -0.54   0.592    -.9178599    .5234527
+                       Other  |   .0066647   .3157623     0.02   0.983     -.612218    .6255474
+                           Q  |   1.252828   .5189306     2.41   0.016     .2357423    2.269913
+                     Unknown  |   .3073556   .2601363     1.18   0.237    -.2025022    .8172134
+                              |
+                     type_cat |
+               Unknown/Other  |   .2501755   .1873984     1.33   0.182    -.1171186    .6174696
+                      Public  |   .1217282   .1472454     0.83   0.408    -.1668674    .4103239
+           Nonprofit/Gov/Edu  |  -.5206797    .639351    -0.81   0.415    -1.773785    .7324252
+                              |
+                     size_cat |
+                     Unknown  |   .0067265   .2277175     0.03   0.976    -.4395915    .4530446
+                        1-50  |   .1366513   .2386695     0.57   0.567    -.3311323    .6044349
+                      51-200  |   -.054177   .2436569    -0.22   0.824    -.5317357    .4233816
+                     201-500  |  -.1161271   .3082645    -0.38   0.706    -.7203145    .4880603
+                    501-1000  |  -.3010428   .2880353    -1.05   0.296    -.8655816    .2634961
+                  5001-10000  |  -.1771728   .3140293    -0.56   0.573    -.7926589    .4383133
+                      10000+  |   .1170085   .2374609     0.49   0.622    -.3484063    .5824233
+                              |
+                    is_remote |    .336318   .1586177     2.12   0.034     .0254329    .6472031
+                        _cons |  -5.029114     .33064   -15.21   0.000    -5.677157   -4.381072
+-----------------------------------------------------------------------------------------------
+
+=========== Zeme = IN (Tabulka 4) ===========
+
+Iteration 0:   log pseudolikelihood =  -4450.995  
+Iteration 1:   log pseudolikelihood = -3848.4955  
+Iteration 2:   log pseudolikelihood = -3333.0622  
+Iteration 3:   log pseudolikelihood = -3227.2441  
+Iteration 4:   log pseudolikelihood = -3225.5844  
+Iteration 5:   log pseudolikelihood = -3225.5804  
+Iteration 6:   log pseudolikelihood = -3225.5804  
+
+Multinomial logistic regression                 Number of obs     =     14,184
+                                                Wald chi2(78)     =    1576.03
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood = -3225.5804               Pseudo R2         =     0.2753
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                     ai_level |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+None                          |  (base outcome)
+------------------------------+----------------------------------------------------------------
+AI_Integration                |
+cluster_architecture__methods |   .0212284    .118811     0.18   0.858    -.2116369    .2540938
+        cluster_bi__analytics |   .1963649   .1012198     1.94   0.052    -.0020223    .3947521
+  cluster_backend_development |   .2712593   .1051461     2.58   0.010     .0651767    .4773419
+       cluster_certifications |  -.2871928   .2124865    -1.35   0.177    -.7036588    .1292732
+      cluster_cloud_computing |   .4082396   .1148471     3.55   0.000     .1831434    .6333357
+     cluster_data_engineering |   .3296181   .1011506     3.26   0.001     .1313666    .5278696
+     cluster_data_science__ml |   1.511347   .1130273    13.37   0.000     1.289817    1.732876
+   cluster_databases__storage |  -.2802361   .0987615    -2.84   0.005    -.4738051   -.0866671
+   cluster_devops__containers |   .0923634   .1113186     0.83   0.407     -.125817    .3105438
+         cluster_dynamic__web |   .5337096   .1004432     5.31   0.000     .3368445    .7305748
+  cluster_enterprise__managed |  -.3182104   .1057212    -3.01   0.003    -.5254201   -.1110007
+ cluster_enterprise_platforms |   .0554323   .2257279     0.25   0.806    -.3869862    .4978509
+ cluster_frontend_development |   .2453779   .1110647     2.21   0.027     .0276951    .4630607
+      cluster_mobile__desktop |  -.3473554   .1534808    -2.26   0.024    -.6481723   -.0465386
+           cluster_networking |  -.0600764   .1198805    -0.50   0.616    -.2950379     .174885
+         cluster_os__embedded |    -.76669   .1647926    -4.65   0.000    -1.089678   -.4437023
+     cluster_scripting__shell |  -.1781676    .175844    -1.01   0.311    -.5228154    .1664802
+   cluster_security__identity |   .3303023    .106411     3.10   0.002     .1217407    .5388639
+  cluster_systems_programming |   .4990987   .1619865     3.08   0.002      .181611    .8165864
+cluster_testing_qa__debugging |   .0096088   .0935026     0.10   0.918    -.1736529    .1928704
+                      edu_bin |   .0564222   .0934846     0.60   0.546    -.1268042    .2396487
+                      exp_bin |   .1845125   .1168663     1.58   0.114    -.0445411    .4135662
+                              |
+              sector_nace_num |
+                           J  |   .0952315   .1966435     0.48   0.628    -.2901828    .4806458
+                           K  |   .3079141   .2489558     1.24   0.216    -.1800302    .7958585
+                           M  |   .0322444   .2887806     0.11   0.911     -.533755    .5982439
+                       Other  |  -.2717917   .2785667    -0.98   0.329    -.8177724     .274189
+                           Q  |    .690408   .4522241     1.53   0.127    -.1959349    1.576751
+                     Unknown  |  -.0902644   .2431735    -0.37   0.710    -.5668758    .3863469
+                              |
+                     type_cat |
+               Unknown/Other  |  -.1139406   .1840531    -0.62   0.536    -.4746779    .2467968
+                      Public  |   .1044569   .1270832     0.82   0.411    -.1446217    .3535355
+           Nonprofit/Gov/Edu  |   1.606689   .4195782     3.83   0.000     .7843307    2.429047
+                              |
+                     size_cat |
+                     Unknown  |   .2520063   .2418984     1.04   0.298    -.2221059    .7261185
+                        1-50  |  -.0034933   .2205449    -0.02   0.987    -.4357534    .4287668
+                      51-200  |   .2363586   .2017563     1.17   0.241    -.1590764    .6317937
+                     201-500  |   .4006185    .231392     1.73   0.083    -.0529015    .8541385
+                    501-1000  |   .2534636   .2509422     1.01   0.312    -.2383741    .7453012
+                  5001-10000  |  -.0268747    .244592    -0.11   0.913    -.5062663    .4525169
+                      10000+  |   .0714774    .182391     0.39   0.695    -.2860023    .4289572
+                              |
+                    is_remote |   .6531156   .1090099     5.99   0.000     .4394601    .8667711
+                        _cons |  -4.641588   .2842505   -16.33   0.000    -5.198709   -4.084467
+------------------------------+----------------------------------------------------------------
+Applied_Core_AI               |
+cluster_architecture__methods |  -.3176706   .1495759    -2.12   0.034    -.6108339   -.0245072
+        cluster_bi__analytics |    .289847   .1258697     2.30   0.021     .0431468    .5365471
+  cluster_backend_development |  -.2093437   .1412317    -1.48   0.138    -.4861527    .0674654
+       cluster_certifications |  -.5234748   .3060433    -1.71   0.087    -1.123309    .0763591
+      cluster_cloud_computing |   .6250901   .1476206     4.23   0.000     .3357591    .9144211
+     cluster_data_engineering |   .7557176   .1323025     5.71   0.000     .4964096    1.015026
+     cluster_data_science__ml |   3.879724   .1301405    29.81   0.000     3.624654    4.134795
+   cluster_databases__storage |  -.3234562   .1381076    -2.34   0.019    -.5941421   -.0527702
+   cluster_devops__containers |   .2784118   .1497228     1.86   0.063    -.0150395    .5718631
+         cluster_dynamic__web |    1.42956   .1612575     8.87   0.000     1.113501    1.745619
+  cluster_enterprise__managed |  -.3751466   .1421373    -2.64   0.008    -.6537306   -.0965625
+ cluster_enterprise_platforms |   .0955586   .3008783     0.32   0.751     -.494152    .6852692
+ cluster_frontend_development |  -.1439549   .1433788    -1.00   0.315    -.4249721    .1370624
+      cluster_mobile__desktop |  -1.034251   .2831366    -3.65   0.000    -1.589189   -.4793139
+           cluster_networking |  -.1846701   .1604165    -1.15   0.250    -.4990806    .1297403
+         cluster_os__embedded |  -.8760854   .2255967    -3.88   0.000    -1.318247   -.4339239
+     cluster_scripting__shell |  -1.576131   .3108646    -5.07   0.000    -2.185414   -.9668472
+   cluster_security__identity |   .0626881   .1497473     0.42   0.675    -.2308112    .3561874
+  cluster_systems_programming |   .4802035     .20883     2.30   0.021     .0709041    .8895028
+cluster_testing_qa__debugging |  -.3032268    .123349    -2.46   0.014    -.5449863   -.0614672
+                      edu_bin |   .6946419   .1278241     5.43   0.000     .4441113    .9451724
+                      exp_bin |  -.3044537   .1435059    -2.12   0.034    -.5857202   -.0231873
+                              |
+              sector_nace_num |
+                           J  |   .2958074   .2504079     1.18   0.237    -.1949831     .786598
+                           K  |   .4005356   .3243891     1.23   0.217    -.2352555    1.036327
+                           M  |   .1833113   .3938114     0.47   0.642    -.5885448    .9551675
+                       Other  |   .3329121   .3787908     0.88   0.379    -.4095042    1.075328
+                           Q  |   1.755286   .4827038     3.64   0.000     .8092038    2.701368
+                     Unknown  |    .273138   .3359029     0.81   0.416    -.3852196    .9314957
+                              |
+                     type_cat |
+               Unknown/Other  |   .4861386   .2397981     2.03   0.043     .0161429    .9561343
+                      Public  |   .0644535   .1743021     0.37   0.712    -.2771724    .4060795
+           Nonprofit/Gov/Edu  |   .0157246   1.215392     0.01   0.990      -2.3664    2.397849
+                              |
+                     size_cat |
+                     Unknown  |  -.0665716   .3484762    -0.19   0.848    -.7495724    .6164292
+                        1-50  |  -.1269501   .3168891    -0.40   0.689    -.7480413    .4941412
+                      51-200  |   .1948635   .2935685     0.66   0.507    -.3805202    .7702472
+                     201-500  |   .3086013   .3359973     0.92   0.358    -.3499413     .967144
+                    501-1000  |   .0389029   .4031641     0.10   0.923    -.7512843    .8290901
+                  5001-10000  |   1.212756   .2893367     4.19   0.000     .6456665    1.779846
+                      10000+  |   .4078666    .249373     1.64   0.102    -.0808955    .8966288
+                              |
+                    is_remote |   .6031002   .1509857     3.99   0.000     .3071736    .8990268
+                        _cons |  -6.310107   .3793554   -16.63   0.000     -7.05363   -5.566584
+-----------------------------------------------------------------------------------------------
+
+Iteration 0:   log pseudolikelihood =  -4450.995  
+Iteration 1:   log pseudolikelihood = -3848.4955  
+Iteration 2:   log pseudolikelihood = -3333.0622  
+Iteration 3:   log pseudolikelihood = -3227.2441  
+Iteration 4:   log pseudolikelihood = -3225.5844  
+Iteration 5:   log pseudolikelihood = -3225.5804  
+Iteration 6:   log pseudolikelihood = -3225.5804  
+
+Multinomial logistic regression                 Number of obs     =     14,184
+                                                Wald chi2(78)     =    1576.03
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood = -3225.5804               Pseudo R2         =     0.2753
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                     ai_level |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+None                          |  (base outcome)
+------------------------------+----------------------------------------------------------------
+AI_Integration                |
+cluster_architecture__methods |   .0212284    .118811     0.18   0.858    -.2116369    .2540938
+        cluster_bi__analytics |   .1963649   .1012198     1.94   0.052    -.0020223    .3947521
+  cluster_backend_development |   .2712593   .1051461     2.58   0.010     .0651767    .4773419
+       cluster_certifications |  -.2871928   .2124865    -1.35   0.177    -.7036588    .1292732
+      cluster_cloud_computing |   .4082396   .1148471     3.55   0.000     .1831434    .6333357
+     cluster_data_engineering |   .3296181   .1011506     3.26   0.001     .1313666    .5278696
+     cluster_data_science__ml |   1.511347   .1130273    13.37   0.000     1.289817    1.732876
+   cluster_databases__storage |  -.2802361   .0987615    -2.84   0.005    -.4738051   -.0866671
+   cluster_devops__containers |   .0923634   .1113186     0.83   0.407     -.125817    .3105438
+         cluster_dynamic__web |   .5337096   .1004432     5.31   0.000     .3368445    .7305748
+  cluster_enterprise__managed |  -.3182104   .1057212    -3.01   0.003    -.5254201   -.1110007
+ cluster_enterprise_platforms |   .0554323   .2257279     0.25   0.806    -.3869862    .4978509
+ cluster_frontend_development |   .2453779   .1110647     2.21   0.027     .0276951    .4630607
+      cluster_mobile__desktop |  -.3473554   .1534808    -2.26   0.024    -.6481723   -.0465386
+           cluster_networking |  -.0600764   .1198805    -0.50   0.616    -.2950379     .174885
+         cluster_os__embedded |    -.76669   .1647926    -4.65   0.000    -1.089678   -.4437023
+     cluster_scripting__shell |  -.1781676    .175844    -1.01   0.311    -.5228154    .1664802
+   cluster_security__identity |   .3303023    .106411     3.10   0.002     .1217407    .5388639
+  cluster_systems_programming |   .4990987   .1619865     3.08   0.002      .181611    .8165864
+cluster_testing_qa__debugging |   .0096088   .0935026     0.10   0.918    -.1736529    .1928704
+                      edu_bin |   .0564222   .0934846     0.60   0.546    -.1268042    .2396487
+                      exp_bin |   .1845125   .1168663     1.58   0.114    -.0445411    .4135662
+                              |
+              sector_nace_num |
+                           J  |   .0952315   .1966435     0.48   0.628    -.2901828    .4806458
+                           K  |   .3079141   .2489558     1.24   0.216    -.1800302    .7958585
+                           M  |   .0322444   .2887806     0.11   0.911     -.533755    .5982439
+                       Other  |  -.2717917   .2785667    -0.98   0.329    -.8177724     .274189
+                           Q  |    .690408   .4522241     1.53   0.127    -.1959349    1.576751
+                     Unknown  |  -.0902644   .2431735    -0.37   0.710    -.5668758    .3863469
+                              |
+                     type_cat |
+               Unknown/Other  |  -.1139406   .1840531    -0.62   0.536    -.4746779    .2467968
+                      Public  |   .1044569   .1270832     0.82   0.411    -.1446217    .3535355
+           Nonprofit/Gov/Edu  |   1.606689   .4195782     3.83   0.000     .7843307    2.429047
+                              |
+                     size_cat |
+                     Unknown  |   .2520063   .2418984     1.04   0.298    -.2221059    .7261185
+                        1-50  |  -.0034933   .2205449    -0.02   0.987    -.4357534    .4287668
+                      51-200  |   .2363586   .2017563     1.17   0.241    -.1590764    .6317937
+                     201-500  |   .4006185    .231392     1.73   0.083    -.0529015    .8541385
+                    501-1000  |   .2534636   .2509422     1.01   0.312    -.2383741    .7453012
+                  5001-10000  |  -.0268747    .244592    -0.11   0.913    -.5062663    .4525169
+                      10000+  |   .0714774    .182391     0.39   0.695    -.2860023    .4289572
+                              |
+                    is_remote |   .6531156   .1090099     5.99   0.000     .4394601    .8667711
+                        _cons |  -4.641588   .2842505   -16.33   0.000    -5.198709   -4.084467
+------------------------------+----------------------------------------------------------------
+Applied_Core_AI               |
+cluster_architecture__methods |  -.3176706   .1495759    -2.12   0.034    -.6108339   -.0245072
+        cluster_bi__analytics |    .289847   .1258697     2.30   0.021     .0431468    .5365471
+  cluster_backend_development |  -.2093437   .1412317    -1.48   0.138    -.4861527    .0674654
+       cluster_certifications |  -.5234748   .3060433    -1.71   0.087    -1.123309    .0763591
+      cluster_cloud_computing |   .6250901   .1476206     4.23   0.000     .3357591    .9144211
+     cluster_data_engineering |   .7557176   .1323025     5.71   0.000     .4964096    1.015026
+     cluster_data_science__ml |   3.879724   .1301405    29.81   0.000     3.624654    4.134795
+   cluster_databases__storage |  -.3234562   .1381076    -2.34   0.019    -.5941421   -.0527702
+   cluster_devops__containers |   .2784118   .1497228     1.86   0.063    -.0150395    .5718631
+         cluster_dynamic__web |    1.42956   .1612575     8.87   0.000     1.113501    1.745619
+  cluster_enterprise__managed |  -.3751466   .1421373    -2.64   0.008    -.6537306   -.0965625
+ cluster_enterprise_platforms |   .0955586   .3008783     0.32   0.751     -.494152    .6852692
+ cluster_frontend_development |  -.1439549   .1433788    -1.00   0.315    -.4249721    .1370624
+      cluster_mobile__desktop |  -1.034251   .2831366    -3.65   0.000    -1.589189   -.4793139
+           cluster_networking |  -.1846701   .1604165    -1.15   0.250    -.4990806    .1297403
+         cluster_os__embedded |  -.8760854   .2255967    -3.88   0.000    -1.318247   -.4339239
+     cluster_scripting__shell |  -1.576131   .3108646    -5.07   0.000    -2.185414   -.9668472
+   cluster_security__identity |   .0626881   .1497473     0.42   0.675    -.2308112    .3561874
+  cluster_systems_programming |   .4802035     .20883     2.30   0.021     .0709041    .8895028
+cluster_testing_qa__debugging |  -.3032268    .123349    -2.46   0.014    -.5449863   -.0614672
+                      edu_bin |   .6946419   .1278241     5.43   0.000     .4441113    .9451724
+                      exp_bin |  -.3044537   .1435059    -2.12   0.034    -.5857202   -.0231873
+                              |
+              sector_nace_num |
+                           J  |   .2958074   .2504079     1.18   0.237    -.1949831     .786598
+                           K  |   .4005356   .3243891     1.23   0.217    -.2352555    1.036327
+                           M  |   .1833113   .3938114     0.47   0.642    -.5885448    .9551675
+                       Other  |   .3329121   .3787908     0.88   0.379    -.4095042    1.075328
+                           Q  |   1.755286   .4827038     3.64   0.000     .8092038    2.701368
+                     Unknown  |    .273138   .3359029     0.81   0.416    -.3852196    .9314957
+                              |
+                     type_cat |
+               Unknown/Other  |   .4861386   .2397981     2.03   0.043     .0161429    .9561343
+                      Public  |   .0644535   .1743021     0.37   0.712    -.2771724    .4060795
+           Nonprofit/Gov/Edu  |   .0157246   1.215392     0.01   0.990      -2.3664    2.397849
+                              |
+                     size_cat |
+                     Unknown  |  -.0665716   .3484762    -0.19   0.848    -.7495724    .6164292
+                        1-50  |  -.1269501   .3168891    -0.40   0.689    -.7480413    .4941412
+                      51-200  |   .1948635   .2935685     0.66   0.507    -.3805202    .7702472
+                     201-500  |   .3086013   .3359973     0.92   0.358    -.3499413     .967144
+                    501-1000  |   .0389029   .4031641     0.10   0.923    -.7512843    .8290901
+                  5001-10000  |   1.212756   .2893367     4.19   0.000     .6456665    1.779846
+                      10000+  |   .4078666    .249373     1.64   0.102    -.0808955    .8966288
+                              |
+                    is_remote |   .6031002   .1509857     3.99   0.000     .3071736    .8990268
+                        _cons |  -6.310107   .3793554   -16.63   0.000     -7.05363   -5.566584
+-----------------------------------------------------------------------------------------------
+
+Iteration 0:   log pseudolikelihood =  -4450.995  
+Iteration 1:   log pseudolikelihood = -3848.4955  
+Iteration 2:   log pseudolikelihood = -3333.0622  
+Iteration 3:   log pseudolikelihood = -3227.2441  
+Iteration 4:   log pseudolikelihood = -3225.5844  
+Iteration 5:   log pseudolikelihood = -3225.5804  
+Iteration 6:   log pseudolikelihood = -3225.5804  
+
+Multinomial logistic regression                 Number of obs     =     14,184
+                                                Wald chi2(78)     =    1576.03
+                                                Prob > chi2       =     0.0000
+Log pseudolikelihood = -3225.5804               Pseudo R2         =     0.2753
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                     ai_level |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+None                          |  (base outcome)
+------------------------------+----------------------------------------------------------------
+AI_Integration                |
+cluster_architecture__methods |   .0212284    .118811     0.18   0.858    -.2116369    .2540938
+        cluster_bi__analytics |   .1963649   .1012198     1.94   0.052    -.0020223    .3947521
+  cluster_backend_development |   .2712593   .1051461     2.58   0.010     .0651767    .4773419
+       cluster_certifications |  -.2871928   .2124865    -1.35   0.177    -.7036588    .1292732
+      cluster_cloud_computing |   .4082396   .1148471     3.55   0.000     .1831434    .6333357
+     cluster_data_engineering |   .3296181   .1011506     3.26   0.001     .1313666    .5278696
+     cluster_data_science__ml |   1.511347   .1130273    13.37   0.000     1.289817    1.732876
+   cluster_databases__storage |  -.2802361   .0987615    -2.84   0.005    -.4738051   -.0866671
+   cluster_devops__containers |   .0923634   .1113186     0.83   0.407     -.125817    .3105438
+         cluster_dynamic__web |   .5337096   .1004432     5.31   0.000     .3368445    .7305748
+  cluster_enterprise__managed |  -.3182104   .1057212    -3.01   0.003    -.5254201   -.1110007
+ cluster_enterprise_platforms |   .0554323   .2257279     0.25   0.806    -.3869862    .4978509
+ cluster_frontend_development |   .2453779   .1110647     2.21   0.027     .0276951    .4630607
+      cluster_mobile__desktop |  -.3473554   .1534808    -2.26   0.024    -.6481723   -.0465386
+           cluster_networking |  -.0600764   .1198805    -0.50   0.616    -.2950379     .174885
+         cluster_os__embedded |    -.76669   .1647926    -4.65   0.000    -1.089678   -.4437023
+     cluster_scripting__shell |  -.1781676    .175844    -1.01   0.311    -.5228154    .1664802
+   cluster_security__identity |   .3303023    .106411     3.10   0.002     .1217407    .5388639
+  cluster_systems_programming |   .4990987   .1619865     3.08   0.002      .181611    .8165864
+cluster_testing_qa__debugging |   .0096088   .0935026     0.10   0.918    -.1736529    .1928704
+                      edu_bin |   .0564222   .0934846     0.60   0.546    -.1268042    .2396487
+                      exp_bin |   .1845125   .1168663     1.58   0.114    -.0445411    .4135662
+                              |
+              sector_nace_num |
+                           J  |   .0952315   .1966435     0.48   0.628    -.2901828    .4806458
+                           K  |   .3079141   .2489558     1.24   0.216    -.1800302    .7958585
+                           M  |   .0322444   .2887806     0.11   0.911     -.533755    .5982439
+                       Other  |  -.2717917   .2785667    -0.98   0.329    -.8177724     .274189
+                           Q  |    .690408   .4522241     1.53   0.127    -.1959349    1.576751
+                     Unknown  |  -.0902644   .2431735    -0.37   0.710    -.5668758    .3863469
+                              |
+                     type_cat |
+               Unknown/Other  |  -.1139406   .1840531    -0.62   0.536    -.4746779    .2467968
+                      Public  |   .1044569   .1270832     0.82   0.411    -.1446217    .3535355
+           Nonprofit/Gov/Edu  |   1.606689   .4195782     3.83   0.000     .7843307    2.429047
+                              |
+                     size_cat |
+                     Unknown  |   .2520063   .2418984     1.04   0.298    -.2221059    .7261185
+                        1-50  |  -.0034933   .2205449    -0.02   0.987    -.4357534    .4287668
+                      51-200  |   .2363586   .2017563     1.17   0.241    -.1590764    .6317937
+                     201-500  |   .4006185    .231392     1.73   0.083    -.0529015    .8541385
+                    501-1000  |   .2534636   .2509422     1.01   0.312    -.2383741    .7453012
+                  5001-10000  |  -.0268747    .244592    -0.11   0.913    -.5062663    .4525169
+                      10000+  |   .0714774    .182391     0.39   0.695    -.2860023    .4289572
+                              |
+                    is_remote |   .6531156   .1090099     5.99   0.000     .4394601    .8667711
+                        _cons |  -4.641588   .2842505   -16.33   0.000    -5.198709   -4.084467
+------------------------------+----------------------------------------------------------------
+Applied_Core_AI               |
+cluster_architecture__methods |  -.3176706   .1495759    -2.12   0.034    -.6108339   -.0245072
+        cluster_bi__analytics |    .289847   .1258697     2.30   0.021     .0431468    .5365471
+  cluster_backend_development |  -.2093437   .1412317    -1.48   0.138    -.4861527    .0674654
+       cluster_certifications |  -.5234748   .3060433    -1.71   0.087    -1.123309    .0763591
+      cluster_cloud_computing |   .6250901   .1476206     4.23   0.000     .3357591    .9144211
+     cluster_data_engineering |   .7557176   .1323025     5.71   0.000     .4964096    1.015026
+     cluster_data_science__ml |   3.879724   .1301405    29.81   0.000     3.624654    4.134795
+   cluster_databases__storage |  -.3234562   .1381076    -2.34   0.019    -.5941421   -.0527702
+   cluster_devops__containers |   .2784118   .1497228     1.86   0.063    -.0150395    .5718631
+         cluster_dynamic__web |    1.42956   .1612575     8.87   0.000     1.113501    1.745619
+  cluster_enterprise__managed |  -.3751466   .1421373    -2.64   0.008    -.6537306   -.0965625
+ cluster_enterprise_platforms |   .0955586   .3008783     0.32   0.751     -.494152    .6852692
+ cluster_frontend_development |  -.1439549   .1433788    -1.00   0.315    -.4249721    .1370624
+      cluster_mobile__desktop |  -1.034251   .2831366    -3.65   0.000    -1.589189   -.4793139
+           cluster_networking |  -.1846701   .1604165    -1.15   0.250    -.4990806    .1297403
+         cluster_os__embedded |  -.8760854   .2255967    -3.88   0.000    -1.318247   -.4339239
+     cluster_scripting__shell |  -1.576131   .3108646    -5.07   0.000    -2.185414   -.9668472
+   cluster_security__identity |   .0626881   .1497473     0.42   0.675    -.2308112    .3561874
+  cluster_systems_programming |   .4802035     .20883     2.30   0.021     .0709041    .8895028
+cluster_testing_qa__debugging |  -.3032268    .123349    -2.46   0.014    -.5449863   -.0614672
+                      edu_bin |   .6946419   .1278241     5.43   0.000     .4441113    .9451724
+                      exp_bin |  -.3044537   .1435059    -2.12   0.034    -.5857202   -.0231873
+                              |
+              sector_nace_num |
+                           J  |   .2958074   .2504079     1.18   0.237    -.1949831     .786598
+                           K  |   .4005356   .3243891     1.23   0.217    -.2352555    1.036327
+                           M  |   .1833113   .3938114     0.47   0.642    -.5885448    .9551675
+                       Other  |   .3329121   .3787908     0.88   0.379    -.4095042    1.075328
+                           Q  |   1.755286   .4827038     3.64   0.000     .8092038    2.701368
+                     Unknown  |    .273138   .3359029     0.81   0.416    -.3852196    .9314957
+                              |
+                     type_cat |
+               Unknown/Other  |   .4861386   .2397981     2.03   0.043     .0161429    .9561343
+                      Public  |   .0644535   .1743021     0.37   0.712    -.2771724    .4060795
+           Nonprofit/Gov/Edu  |   .0157246   1.215392     0.01   0.990      -2.3664    2.397849
+                              |
+                     size_cat |
+                     Unknown  |  -.0665716   .3484762    -0.19   0.848    -.7495724    .6164292
+                        1-50  |  -.1269501   .3168891    -0.40   0.689    -.7480413    .4941412
+                      51-200  |   .1948635   .2935685     0.66   0.507    -.3805202    .7702472
+                     201-500  |   .3086013   .3359973     0.92   0.358    -.3499413     .967144
+                    501-1000  |   .0389029   .4031641     0.10   0.923    -.7512843    .8290901
+                  5001-10000  |   1.212756   .2893367     4.19   0.000     .6456665    1.779846
+                      10000+  |   .4078666    .249373     1.64   0.102    -.0808955    .8966288
+                              |
+                    is_remote |   .6031002   .1509857     3.99   0.000     .3071736    .8990268
+                        _cons |  -6.310107   .3793554   -16.63   0.000     -7.05363   -5.566584
+-----------------------------------------------------------------------------------------------
+
+. 
+. esttab ame_t4_US_0 ame_t4_US_1 ame_t4_US_2 ///
+>        ame_t4_DE_0 ame_t4_DE_1 ame_t4_DE_2 ///
+>        ame_t4_IN_0 ame_t4_IN_1 ame_t4_IN_2 ///
+>        using "$outdir/Tabulka_4_Mlogit_SkillClusters.rtf", replace ///
+>     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+>     keep(cluster_* edu_bin exp_bin) ///
+>     order(cluster_* edu_bin exp_bin) ///
+>     stats(N, fmt(0) labels("N")) ///
+>     mtitles("US:None" "US:AI Integ" "US:Applied" ///
+>             "DE:None" "DE:AI Integ" "DE:Applied" ///
+>             "IN:None" "IN:AI Integ" "IN:Applied") ///
+>     title("Tabulka 4: Multinomialni logit P(AI tier), AME podle zeme a tieru — skill clustery") ///
+>     addnotes("Zavisla promenna: ai_level (0=None, 1=AI Integration, 2=Applied/Core AI)." ///
+>              "Prumerne marginalni efekty (AME) z mlogitu s robustnimi SE, base outcome = None." ///
+>              "Kontroly (neukazovane): NACE sektor, typ firmy, velikost firmy, remote." ///
+>              "Soucet AME napric tremi outcomes pro kazdou promennou je 0.")
+(note: file ./output/thesis_final_run_15_Apr_2026_14-38-12/Tabulka_4_Mlogit_SkillClusters.rtf not found)
+(output written to ./output/thesis_final_run_15_Apr_2026_14-38-12/Tabulka_4_Mlogit_SkillClusters.rtf)
+
+. 
+. 
+. * ==============================================================================
+. * 9. TABULKA 5 — OLS ln(plat) ~ SKILL CLUSTERY + AI TIERY (per zeme)
+. * ==============================================================================
+. display _n "=============================================================="
+
+==============================================================
+
+. display "9. TABULKA 5 — OLS ln(plat) per zeme"
+9. TABULKA 5 — OLS ln(plat) per zeme
+
+. display "=============================================================="
+==============================================================
+
+. 
+. * US (vc. region FE)
+. display _n "=========== Zeme = US (Tabulka 5) ==========="
+
+=========== Zeme = US (Tabulka 5) ===========
+
+. capture noisily regress ln_salary ///
+>     cluster_* ///
+>     i.ai_level ///
+>     edu_bin ///
+>     exp_bin ///
+>     i.sector_nace_num ///
+>     i.region_num ///
+>     is_remote ///
+>     ib1.type_cat ///
+>     ib5.size_cat ///
+>     if country == "US" & ln_salary != ., vce(robust)
+
+Linear regression                               Number of obs     =     14,642
+                                                F(45, 14596)      =     124.93
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.2544
+                                                Root MSE          =     .28201
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                    ln_salary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+cluster_architecture__methods |   .0407683   .0068992     5.91   0.000      .027245    .0542916
+        cluster_bi__analytics |  -.0345074   .0050462    -6.84   0.000    -.0443985   -.0246162
+  cluster_backend_development |   .0035239   .0057271     0.62   0.538    -.0077019    .0147498
+       cluster_certifications |   .0022053   .0093915     0.23   0.814    -.0162033    .0206139
+      cluster_cloud_computing |   .0527043   .0057568     9.16   0.000     .0414202    .0639884
+     cluster_data_engineering |   .0217454   .0055272     3.93   0.000     .0109114    .0325794
+     cluster_data_science__ml |   .0127542     .00907     1.41   0.160    -.0050241    .0305326
+   cluster_databases__storage |  -.0373809    .005457    -6.85   0.000    -.0480773   -.0266845
+   cluster_devops__containers |   .0536606   .0055322     9.70   0.000     .0428168    .0645043
+         cluster_dynamic__web |   .0163887    .005409     3.03   0.002     .0057863    .0269911
+  cluster_enterprise__managed |  -.0178532   .0053619    -3.33   0.001    -.0283632   -.0073431
+ cluster_enterprise_platforms |  -.0047315    .010934    -0.43   0.665    -.0261635    .0167005
+ cluster_frontend_development |  -.0008647   .0055401    -0.16   0.876     -.011724    .0099946
+      cluster_mobile__desktop |  -.0092899   .0068121    -1.36   0.173    -.0226424    .0040626
+           cluster_networking |   .0066183   .0054748     1.21   0.227    -.0041129    .0173495
+         cluster_os__embedded |  -.0006356   .0063037    -0.10   0.920    -.0129916    .0117203
+     cluster_scripting__shell |  -.0122661   .0078369    -1.57   0.118    -.0276274    .0030952
+   cluster_security__identity |   .0246795   .0053034     4.65   0.000     .0142842    .0350748
+  cluster_systems_programming |   .0925154    .006907    13.39   0.000     .0789768     .106054
+cluster_testing_qa__debugging |  -.0183283    .004978    -3.68   0.000    -.0280859   -.0085708
+                              |
+                     ai_level |
+              AI Integration  |   .0940442   .0078233    12.02   0.000     .0787095    .1093789
+             Applied/Core AI  |   .1395458   .0112911    12.36   0.000     .1174137    .1616778
+                              |
+                      edu_bin |  -.0339613   .0051899    -6.54   0.000    -.0441343   -.0237884
+                      exp_bin |   .0712804   .0065752    10.84   0.000     .0583921    .0841686
+                              |
+              sector_nace_num |
+                           J  |   .0474322   .0071399     6.64   0.000      .033437    .0614273
+                           K  |   .0162695   .0091205     1.78   0.074    -.0016077    .0341468
+                           M  |   .0538013   .0130828     4.11   0.000     .0281573    .0794452
+                       Other  |  -.0469685   .0089169    -5.27   0.000    -.0644468   -.0294903
+                           Q  |   .0038538   .0128756     0.30   0.765    -.0213839    .0290915
+                     Unknown  |   .0166977   .0100956     1.65   0.098    -.0030908    .0364863
+                              |
+                   region_num |
+                   Northeast  |   .1041611   .0086603    12.03   0.000     .0871857    .1211365
+                       South  |   .0648973   .0072076     9.00   0.000     .0507696    .0790251
+                     Unknown  |   .1875481   .0099543    18.84   0.000     .1680364    .2070598
+                        West  |   .2379809   .0077246    30.81   0.000     .2228397    .2531221
+                              |
+                    is_remote |   .0615724   .0070168     8.78   0.000     .0478187    .0753262
+                              |
+                     type_cat |
+               Unknown/Other  |  -.0331483   .0113003    -2.93   0.003    -.0552983   -.0109983
+                      Public  |   .0109942   .0065246     1.69   0.092    -.0017949    .0237833
+           Nonprofit/Gov/Edu  |   -.065486   .0118203    -5.54   0.000    -.0886554   -.0423167
+                              |
+                     size_cat |
+                     Unknown  |  -.0593537    .010484    -5.66   0.000    -.0799037   -.0388037
+                        1-50  |   -.064214   .0097319    -6.60   0.000    -.0832897   -.0451383
+                      51-200  |  -.0564329   .0092671    -6.09   0.000    -.0745976   -.0382683
+                     201-500  |   -.056646   .0100279    -5.65   0.000    -.0763019     -.03699
+                    501-1000  |  -.0228047   .0110927    -2.06   0.040    -.0445479   -.0010615
+                  5001-10000  |    .029939   .0116602     2.57   0.010     .0070835    .0527944
+                      10000+  |   .0603219   .0081591     7.39   0.000     .0443291    .0763148
+                              |
+                        _cons |   11.40072     .01303   874.96   0.000     11.37518    11.42626
+-----------------------------------------------------------------------------------------------
+
+. if _rc == 0 {
+.     estimates store ols_t5_US
+. }
+
+. 
+. foreach c in DE IN {
+  2.     display _n "=========== Zeme = `c' (Tabulka 5) ==========="
+  3.     capture noisily regress ln_salary ///
+>         cluster_* ///
+>         i.ai_level ///
+>         edu_bin ///
+>         exp_bin ///
+>         i.sector_nace_num ///
+>         is_remote ///
+>         ib1.type_cat ///
+>         ib5.size_cat ///
+>         if country == "`c'" & ln_salary != ., vce(robust)
+  4.     if _rc == 0 {
+  5.         estimates store ols_t5_`c'
+  6.     }
+  7. }
+
+=========== Zeme = DE (Tabulka 5) ===========
+
+Linear regression                               Number of obs     =        514
+                                                F(41, 472)        =       3.32
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.1996
+                                                Root MSE          =     .28649
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                    ln_salary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+cluster_architecture__methods |  -.0162948   .0354606    -0.46   0.646     -.085975    .0533853
+        cluster_bi__analytics |   .0907465   .0382841     2.37   0.018     .0155182    .1659749
+  cluster_backend_development |   .0256522   .0397132     0.65   0.519    -.0523844    .1036888
+       cluster_certifications |  -.0124146   .0588053    -0.21   0.833    -.1279671    .1031379
+      cluster_cloud_computing |  -.0003844   .0315572    -0.01   0.990    -.0623944    .0616256
+     cluster_data_engineering |   .0249212   .0375555     0.66   0.507    -.0488754    .0987178
+     cluster_data_science__ml |  -.0614105   .0645588    -0.95   0.342    -.1882688    .0654477
+   cluster_databases__storage |  -.0082707   .0284357    -0.29   0.771    -.0641469    .0476055
+   cluster_devops__containers |   .0420606   .0318454     1.32   0.187    -.0205158     .104637
+         cluster_dynamic__web |  -.0295739   .0336761    -0.88   0.380    -.0957474    .0365997
+  cluster_enterprise__managed |  -.0962893    .032193    -2.99   0.003    -.1595488   -.0330299
+ cluster_enterprise_platforms |   .1298175   .1069432     1.21   0.225    -.0803262    .3399612
+ cluster_frontend_development |   -.032541   .0365162    -0.89   0.373    -.1042955    .0392134
+      cluster_mobile__desktop |  -.0612878   .0441464    -1.39   0.166    -.1480356    .0254599
+           cluster_networking |  -.0018574   .0366724    -0.05   0.960    -.0739187     .070204
+         cluster_os__embedded |  -.0691626   .0388354    -1.78   0.076    -.1454742     .007149
+     cluster_scripting__shell |   .1290709   .0433058     2.98   0.003      .043975    .2141669
+   cluster_security__identity |   .0434188   .0342248     1.27   0.205     -.023833    .1106706
+  cluster_systems_programming |   .0122114   .0425724     0.29   0.774    -.0714435    .0958663
+cluster_testing_qa__debugging |  -.0624007   .0402474    -1.55   0.122     -.141487    .0166856
+                              |
+                     ai_level |
+              AI Integration  |   .0526068   .0400934     1.31   0.190    -.0261768    .1313904
+             Applied/Core AI  |   .1443315    .070916     2.04   0.042     .0049814    .2836815
+                              |
+                      edu_bin |   .0163603   .0306953     0.53   0.594    -.0439559    .0766766
+                      exp_bin |   .1709538   .0303744     5.63   0.000      .111268    .2306396
+                              |
+              sector_nace_num |
+                           J  |  -.1902327   .0834768    -2.28   0.023    -.3542649   -.0262005
+                           K  |   -.199669   .1191083    -1.68   0.094    -.4337172    .0343792
+                           M  |  -.2940991   .1302056    -2.26   0.024    -.5499535   -.0382447
+                       Other  |  -.2425061   .0758395    -3.20   0.001    -.3915309   -.0934813
+                           Q  |  -.2739921   .0884602    -3.10   0.002    -.4478167   -.1001675
+                     Unknown  |   -.284835   .0873867    -3.26   0.001      -.45655     -.11312
+                              |
+                    is_remote |   .0560863   .0402788     1.39   0.164    -.0230616    .1352342
+                              |
+                     type_cat |
+               Unknown/Other  |   .0129554   .0444204     0.29   0.771    -.0743308    .1002417
+                      Public  |    .097713    .040597     2.41   0.016     .0179398    .1774861
+           Nonprofit/Gov/Edu  |   -.020183   .1092673    -0.18   0.854    -.2348936    .1945276
+                              |
+                     size_cat |
+                     Unknown  |   .0403955   .0732829     0.55   0.582    -.1036056    .1843966
+                        1-50  |   .0330181   .0739592     0.45   0.655     -.112312    .1783481
+                      51-200  |  -.0122352   .0809329    -0.15   0.880    -.1712687    .1467982
+                     201-500  |  -.0857217   .0922953    -0.93   0.353    -.2670823    .0956389
+                    501-1000  |   .0675786    .091196     0.74   0.459    -.1116218    .2467789
+                  5001-10000  |  -.0775678   .0821341    -0.94   0.345    -.2389614    .0838259
+                      10000+  |   .0054249   .0892082     0.06   0.952    -.1698696    .1807193
+                              |
+                        _cons |   11.37454   .0950434   119.68   0.000     11.18778     11.5613
+-----------------------------------------------------------------------------------------------
+
+=========== Zeme = IN (Tabulka 5) ===========
+
+Linear regression                               Number of obs     =      9,199
+                                                F(41, 9157)       =      21.06
+                                                Prob > F          =     0.0000
+                                                R-squared         =     0.0961
+                                                Root MSE          =     .48264
+
+-----------------------------------------------------------------------------------------------
+                              |               Robust
+                    ln_salary |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+------------------------------+----------------------------------------------------------------
+cluster_architecture__methods |  -.0058831   .0122999    -0.48   0.632    -.0299936    .0182274
+        cluster_bi__analytics |  -.0006661   .0117121    -0.06   0.955    -.0236243    .0222922
+  cluster_backend_development |  -.0020052   .0118364    -0.17   0.865    -.0252071    .0211967
+       cluster_certifications |   .0590206   .0240214     2.46   0.014     .0119332     .106108
+      cluster_cloud_computing |   .0761381   .0134946     5.64   0.000     .0496857    .1025905
+     cluster_data_engineering |   .0554317   .0125012     4.43   0.000     .0309266    .0799368
+     cluster_data_science__ml |  -.0312214   .0217759    -1.43   0.152     -.073907    .0114641
+   cluster_databases__storage |   .0178167   .0116888     1.52   0.127    -.0050959    .0407294
+   cluster_devops__containers |   .0680939   .0130199     5.23   0.000      .042572    .0936157
+         cluster_dynamic__web |  -.0391865   .0116947    -3.35   0.001    -.0621108   -.0162622
+  cluster_enterprise__managed |   .0457762   .0125044     3.66   0.000     .0212648    .0702877
+ cluster_enterprise_platforms |   .0149367   .0302797     0.49   0.622    -.0444183    .0742917
+ cluster_frontend_development |  -.0159321   .0118853    -1.34   0.180    -.0392298    .0073657
+      cluster_mobile__desktop |  -.0725288   .0135237    -5.36   0.000    -.0990383   -.0460194
+           cluster_networking |  -.0001386   .0126577    -0.01   0.991    -.0249506    .0246733
+         cluster_os__embedded |   .0106201   .0148464     0.72   0.474    -.0184822    .0397224
+     cluster_scripting__shell |   .0314145   .0177936     1.77   0.078     -.003465     .066294
+   cluster_security__identity |   .0400453   .0127964     3.13   0.002     .0149616     .065129
+  cluster_systems_programming |   .0311368   .0195591     1.59   0.111    -.0072034     .069477
+cluster_testing_qa__debugging |   .0249568   .0108896     2.29   0.022     .0036108    .0463028
+                              |
+                     ai_level |
+              AI Integration  |    .044073   .0299403     1.47   0.141    -.0146167    .1027628
+             Applied/Core AI  |   .1806621   .0421543     4.29   0.000     .0980303    .2632939
+                              |
+                      edu_bin |  -.0180081   .0105097    -1.71   0.087    -.0386095    .0025933
+                      exp_bin |   .1068804   .0118206     9.04   0.000     .0837094    .1300515
+                              |
+              sector_nace_num |
+                           J  |  -.0866347   .0152171    -5.69   0.000    -.1164637   -.0568057
+                           K  |  -.0659081   .0195119    -3.38   0.001    -.1041557   -.0276605
+                           M  |  -.0509028   .0238478    -2.13   0.033    -.0976497   -.0041558
+                       Other  |  -.0112471   .0249576    -0.45   0.652    -.0601695    .0376754
+                           Q  |  -.0558797   .0422789    -1.32   0.186    -.1387559    .0269965
+                     Unknown  |  -.0823974   .0227924    -3.62   0.000    -.1270757   -.0377191
+                              |
+                    is_remote |   .2393452   .0216467    11.06   0.000     .1969129    .2817775
+                              |
+                     type_cat |
+               Unknown/Other  |   .0709739   .0240387     2.95   0.003     .0238528    .1180951
+                      Public  |  -.0123791   .0130067    -0.95   0.341    -.0378752    .0131169
+           Nonprofit/Gov/Edu  |  -.0604478   .0670072    -0.90   0.367    -.1917969    .0709012
+                              |
+                     size_cat |
+                     Unknown  |    .028764   .0308373     0.93   0.351    -.0316841     .089212
+                        1-50  |  -.0226251   .0238547    -0.95   0.343    -.0693856    .0241353
+                      51-200  |  -.1013034   .0211537    -4.79   0.000    -.1427695   -.0598374
+                     201-500  |  -.0358649   .0260831    -1.38   0.169    -.0869935    .0152637
+                    501-1000  |   .0316929    .032901     0.96   0.335    -.0328004    .0961863
+                  5001-10000  |  -.0698028   .0205747    -3.39   0.001    -.1101338   -.0294718
+                      10000+  |  -.0745786    .016138    -4.62   0.000    -.1062127   -.0429445
+                              |
+                        _cons |   8.758635   .0262074   334.20   0.000     8.707263    8.810007
+-----------------------------------------------------------------------------------------------
+
+. 
+. esttab ols_t5_US ols_t5_DE ols_t5_IN using "$outdir/Tabulka_5_OLS_lnMzda.rtf", replace ///
+>     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+>     keep(cluster_* 1.ai_level 2.ai_level edu_bin exp_bin) ///
+>     order(1.ai_level 2.ai_level cluster_* edu_bin exp_bin) ///
+>     stats(N r2, fmt(0 3) labels("N" "R2")) ///
+>     mtitles("USA" "Nemecko" "Indie") ///
+>     title("Tabulka 5: OLS ln(plat) — skill clustery + AI tiery, separatne per zeme") ///
+>     addnotes("Zavisla promenna: ln(rocni plat v USD)." ///
+>              "Robustni standardni chyby v zavorkach." ///
+>              "Kontroly (neukazovane): NACE sektor, typ firmy, velikost firmy, remote (+ region FE pro USA)." ///
+>              "Referencni AI uroven: None." ///
+>              "cluster_generative_ai vyrazen z RHS kvuli cirkularite s ai_level (GenAI override).")
+(note: file ./output/thesis_final_run_15_Apr_2026_14-38-12/Tabulka_5_OLS_lnMzda.rtf not found)
+(output written to ./output/thesis_final_run_15_Apr_2026_14-38-12/Tabulka_5_OLS_lnMzda.rtf)
+
+. 
+. 
+. * ==============================================================================
+. * 10. GRAFY — ROZLOZENI ln(plat) PODLE AI UROVNE (kernel density per zeme)
+. * ==============================================================================
+. display _n "=============================================================="
+
+==============================================================
+
+. display "10. GRAFY — ROZLOZENI ln(plat) PODLE AI UROVNE"
+10. GRAFY — ROZLOZENI ln(plat) PODLE AI UROVNE
+
+. display "=============================================================="
+==============================================================
+
+. 
+. foreach c in US DE IN {
+  2.     capture noisily twoway ///
+>         (kdensity ln_salary if country == "`c'" & ai_level == 0, lcolor(gs10) lpattern(solid)) ///
+>         (kdensity ln_salary if country == "`c'" & ai_level == 1, lcolor(navy) lpattern(dash)) ///
+>         (kdensity ln_salary if country == "`c'" & ai_level == 2, lcolor(maroon) lpattern(shortdash)), ///
+>         title("`c': Rozlozeni ln(plat) podle urovne AI pozadavku", size(medium)) ///
+>         xtitle("ln(rocni plat, USD)") ytitle("Hustota") ///
+>         legend(order(1 "None" 2 "AI Integration" 3 "Applied/Core AI") rows(1) size(small)) ///
+>         graphregion(color(white)) bgcolor(white)
+  3.     if _rc == 0 {
+  4.         graph export "$outdir/Graf_Mzda_AI_`c'.png", replace width(1200)
+  5.     }
+  6. }
+(note: file ./output/thesis_final_run_15_Apr_2026_14-38-12/Graf_Mzda_AI_US.png not found)
+(file ./output/thesis_final_run_15_Apr_2026_14-38-12/Graf_Mzda_AI_US.png written in PNG format)
+(note: file ./output/thesis_final_run_15_Apr_2026_14-38-12/Graf_Mzda_AI_DE.png not found)
+(file ./output/thesis_final_run_15_Apr_2026_14-38-12/Graf_Mzda_AI_DE.png written in PNG format)
+(note: file ./output/thesis_final_run_15_Apr_2026_14-38-12/Graf_Mzda_AI_IN.png not found)
+(file ./output/thesis_final_run_15_Apr_2026_14-38-12/Graf_Mzda_AI_IN.png written in PNG format)
+
+. 
+. * Doplnkova deskripce platu po ai_level a zemich (pro text kapitoly Mzdy)
+. display _n "--- Deskripce platu (USD) po ai_level a zemich ---"
+
+--- Deskripce platu (USD) po ai_level a zemich ---
+
+. foreach c in US DE IN {
+  2.     display _n "Zeme = `c'"
+  3.     tabstat salary_mid ln_salary if country == "`c'", by(ai_level) ///
+>         stat(count mean sd p25 p50 p75) columns(statistics)
+  4. }
+
+Zeme = US
+
+Summary for variables: salary_mid ln_salary
+     by categories of: ai_level (Uroven AI pozadavku (0/1/2))
+
+       ai_level |         N      mean        sd       p25       p50       p75
+----------------+------------------------------------------------------------
+           None |     11482  119320.7  38848.23     92193  113881.5    140000
+                |     11482  11.64025  .3139308  11.43164  11.64291   11.8494
+----------------+------------------------------------------------------------
+ AI Integration |      2066  140347.4  46997.14    106389    134334    167500
+                |      2066   11.7979    .33202  11.57486  11.80808  12.02874
+----------------+------------------------------------------------------------
+Applied/Core AI |      1094  150497.5   48356.8    115403    148495    179000
+                |      1094  11.87195  .3181903  11.65619   11.9083  12.09514
+----------------+------------------------------------------------------------
+          Total |     14642    124617  42148.67     95000  117868.5    147734
+                |     14642  11.67981  .3261007  11.46163  11.67733  11.90317
+-----------------------------------------------------------------------------
+
+Zeme = DE
+
+Summary for variables: salary_mid ln_salary
+     by categories of: ai_level (Uroven AI pozadavku (0/1/2))
+
+       ai_level |         N      mean        sd       p25       p50       p75
+----------------+------------------------------------------------------------
+           None |       394  80405.06  24813.66   65822.5   78637.5     90870
+                |       394  11.24996  .3052509  11.09472   11.2726  11.41718
+----------------+------------------------------------------------------------
+ AI Integration |        74  84023.61  22864.34     66405     82715     99025
+                |        74  11.30161  .2787382  11.10353  11.32306  11.50313
+----------------+------------------------------------------------------------
+Applied/Core AI |        46  93027.31  28518.22  75571.22  91743.75    108345
+                |        46  11.38928  .3407656  11.23283  11.42663  11.59308
+----------------+------------------------------------------------------------
+          Total |       514  82055.64  25117.08   66987.5   79103.5     93200
+                |       514  11.26986  .3071683  11.11226  11.27851   11.4425
+-----------------------------------------------------------------------------
+
+Zeme = IN
+
+Summary for variables: salary_mid ln_salary
+     by categories of: ai_level (Uroven AI pozadavku (0/1/2))
+
+       ai_level |         N      mean        sd       p25       p50       p75
+----------------+------------------------------------------------------------
+           None |      8492  8127.626  6854.735  5113.636  6478.273   8382.83
+                |      8492  8.843634   .491258  8.539666  8.776209  9.033941
+----------------+------------------------------------------------------------
+ AI Integration |       364    9322.7   8459.37  5216.756  6818.182  9524.449
+                |       364  8.930241  .5695226  8.559629  8.827348  9.161615
+----------------+------------------------------------------------------------
+Applied/Core AI |       343  12121.99  13953.97  5495.818  7276.273  10259.17
+                |       343  9.065072  .7147369  8.611743  8.892374  9.235928
+----------------+------------------------------------------------------------
+          Total |      9199  8323.851  7352.054  5113.636  6535.034  8446.625
+                |      9199  8.855318  .5065257  8.539666  8.784933  9.041522
+-----------------------------------------------------------------------------
+
+. 
+. 
+. * ==============================================================================
+. * 11. ZAVER
+. * ==============================================================================
+. * Vratit cluster_generative_ai pro pripad dalsi prace s datasetem
+. rename _excl_genai cluster_generative_ai
+
+. 
+. display _n "=============================================================="
+
+==============================================================
+
+. display "FINALNI TEZISTOVA ANALYZA DOKONCENA"
+FINALNI TEZISTOVA ANALYZA DOKONCENA
+
+. display "=============================================================="
+==============================================================
+
+. display "Vystupy ulozeny do: $outdir"
+Vystupy ulozeny do: ./output/thesis_final_run_15_Apr_2026_14-38-12
+
+. display "Log: $outdir/ai_skills_thesis_final.log"
+Log: ./output/thesis_final_run_15_Apr_2026_14-38-12/ai_skills_thesis_final.log
+
+. 
+. save "$outdir/ai_skills_thesis_final_processed.dta", replace
+(note: file ./output/thesis_final_run_15_Apr_2026_14-38-12/ai_skills_thesis_final_processed.dta not found)
+file ./output/thesis_final_run_15_Apr_2026_14-38-12/ai_skills_thesis_final_processed.dta saved
+
+. 
+. log close
+      name:  <unnamed>
+       log:  C:\Users\murcj\Projects\glassdoor-jobs-ai-skills\analysis\stata\output/thesis_final_run_15_Apr_2026_14-38-12/ai_skills_thesis_final.log
+  log type:  text
+ closed on:  15 Apr 2026, 14:45:15
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
