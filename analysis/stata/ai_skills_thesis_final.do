@@ -521,6 +521,19 @@ capture noisily regress ln_salary ///
     if country == "US" & ln_salary != ., vce(cluster firm_cluster)
 if _rc == 0 {
     estimates store ols_t5_US
+    display _n "--- VIF Kontrola (US) ---"
+    quietly regress ln_salary ///
+        cluster_* ///
+        i.ai_level ///
+        edu_bin edu_missing ///
+        exp_bin exp_missing ///
+        i.sector_nace_num ///
+        i.region_num ///
+        is_remote ///
+        ib1.type_cat ///
+        ib5.size_cat ///
+        if country == "US" & ln_salary != .
+    capture noisily estat vif
 }
 
 foreach c in DE IN {
@@ -537,6 +550,18 @@ foreach c in DE IN {
         if country == "`c'" & ln_salary != ., vce(cluster firm_cluster)
     if _rc == 0 {
         estimates store ols_t5_`c'
+        display _n "--- VIF Kontrola (`c') ---"
+        quietly regress ln_salary ///
+            cluster_* ///
+            i.ai_level ///
+            edu_bin edu_missing ///
+            exp_bin exp_missing ///
+            i.sector_nace_num ///
+            is_remote ///
+            ib1.type_cat ///
+            ib5.size_cat ///
+            if country == "`c'" & ln_salary != .
+        capture noisily estat vif
     }
 }
 
