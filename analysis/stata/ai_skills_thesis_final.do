@@ -465,12 +465,15 @@ esttab matrix(T1, fmt(%9.0fc %5.2f %9.0fc %5.2f %9.0fc %5.2f)) ///
 * Reporting: prumerne marginalni efekty (AME), robustni SE clusterovane na firmu.
 
 * --- 6.0 Crosstab diagnostika: kontrola minimálních počtů pozorování pro logit modely ---
-display _n "--- 6.0 Crosstab diagnostika (minimum obs v logit/mlogit predictors) ---"
-foreach var in job_family_num size_cat type_cat is_remote edu_bin exp_bin sector_nace_num {
-    display "Crosstab `var' vs has_ai"
-    tab `var' has_ai, missing
-    display "Crosstab `var' vs ai_level"
-    tab `var' ai_level, missing
+display _n "--- 6.0 Crosstab diagnostika (minimum obs v logit/mlogit predictors per zeme) ---"
+foreach c in US DE IN {
+    display _n "=== Diagnostika pro zemi: `c' ==="
+    foreach var in job_family_num size_cat type_cat is_remote edu_bin exp_bin sector_nace_num {
+        display "Crosstab `var' vs has_ai (`c')"
+        tab `var' has_ai if country == "`c'", missing
+        display "Crosstab `var' vs ai_level (`c')"
+        tab `var' ai_level if country == "`c'", missing
+    }
 }
 
 display _n "=============================================================="
@@ -521,6 +524,21 @@ foreach c in US DE IN {
         estadd local ctrl_size   "Ano"
         estadd local ctrl_remote "Ano"
         estimates store ame_t2sk_`c'
+        
+        * Hosmer-Lemeshow Goodness of Fit (vyzaduje model bez klastrovani)
+        capture quietly logit has_ai ///
+            cluster_* ///
+            edu_bin edu_missing ///
+            exp_bin exp_missing ///
+            ib`nace_base'.sector_nace_num ///
+            ib1.type_cat ///
+            ib5.size_cat ///
+            is_remote ///
+            if country == "`c'"
+        if _rc == 0 {
+            display _n ">> Hosmer-Lemeshow GOF test pro `c' (bez klastrovani vzorku)"
+            capture noisily estat gof, group(10)
+        }
     }
     else {
         display as error "Logit T2 (skill clustery) pro `c' selhal (rc=" _rc ")"
@@ -555,6 +573,19 @@ display "=============================================================="
 
 foreach c in US DE IN {
     display _n "=========== Zeme = `c' (Tabulka 3) ==========="
+    
+    * IIA Hausman test (vyzaduje model bez vce(cluster), otestujeme vynechani Core AI)
+    capture quietly mlogit ai_level cluster_* edu_bin edu_missing exp_bin exp_missing ib`nace_base'.sector_nace_num ib1.type_cat ib5.size_cat is_remote if country == "`c'", baseoutcome(0)
+    if _rc == 0 {
+        estimates store mfull_`c'
+        capture quietly mlogit ai_level cluster_* edu_bin edu_missing exp_bin exp_missing ib`nace_base'.sector_nace_num ib1.type_cat ib5.size_cat is_remote if country == "`c'" & ai_level != 2, baseoutcome(0)
+        if _rc == 0 {
+            estimates store msub_`c'
+            display _n ">> IIA Hausman Test pro `c' (Full vs subset bez Applied/Core AI)"
+            capture noisily hausman msub_`c' mfull_`c', alleqs constant
+        }
+    }
+
     * Tri beh modelu (pro kazdy outcome zvlast), protoze margins post prepisuje
     * e(b). Pouzivame AME predict(outcome(k)) pro k=0,1,2.
     foreach o in 0 1 2 {
