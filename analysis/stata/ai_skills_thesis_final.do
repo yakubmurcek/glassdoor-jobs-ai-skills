@@ -463,6 +463,16 @@ esttab matrix(T1, fmt(%9.0fc %5.2f %9.0fc %5.2f %9.0fc %5.2f)) ///
 *   - Levy panel (3 sloupce): P(AI) ~ job_family + controls
 *   - Pravy panel (3 sloupce): P(AI) ~ skill clustery + controls
 * Reporting: prumerne marginalni efekty (AME), robustni SE clusterovane na firmu.
+
+* --- 6.0 Crosstab diagnostika: kontrola minimálních počtů pozorování pro logit modely ---
+display _n "--- 6.0 Crosstab diagnostika (minimum obs v logit/mlogit predictors) ---"
+foreach var in job_family_num size_cat type_cat is_remote edu_bin exp_bin sector_nace_num {
+    display "Crosstab `var' vs has_ai"
+    tab `var' has_ai, missing
+    display "Crosstab `var' vs ai_level"
+    tab `var' ai_level, missing
+}
+
 display _n "=============================================================="
 display "6. TABULKA 2 — BINARNI LOGIT, JOB FAMILY + SKILL CLUSTERY (6 sloupcu)"
 display "=============================================================="
