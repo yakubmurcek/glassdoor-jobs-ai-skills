@@ -13,21 +13,29 @@
 *   Graf_*:     Frekvencni kernel density ln(plat) x ai_level per zeme
 *   Priloha A:  Heckman selection model pro ln(plat) — robustness
 *   Priloha B:  Cross-country Wald testy (v logu, viz sekce 12)
+*   Priloha C:  OLS ln(plat) s plnou sadou skill clusteru (robustness k Tabulce 4)
 *
 * Kontroly (neukazovane v tabulkach): NACE sektor, typ firmy, velikost firmy,
 *   remote, region FE (jen US v OLS). Vzdelani: edu_bin (Bc.+) + edu_missing.
 *   Praxe: exp_bin (>=1 rok) + exp_missing. Referencni zeme v pooled modelech
 *   je US; referencni job family je Software Engineer.
 *
-* Klicove upravy:
-*   - cluster_generative_ai -> AI Integration tier override (§3.2b)
-*   - cluster_generative_ai vyrazen z RHS logit/mlogit/OLS kvuli cirkularite
+* Klicove upravy (dle feedbacku vedouciho):
+*   - AI tiers a skill clustery ponechany v puvodni LLM definici (zadny override)
+*   - Logit + mlogit: VSECHNY skill clustery v RHS vcetne cluster_generative_ai
+*     a cluster_data_science__ml. Mlogit = reverse-engineering AI tierov (popisne,
+*     nekauzalni — co typicky charakterizuje inzeraty v kazdem tieru).
+*   - OLS ln(plat): hlavni specifikace BEZ cluster_generative_ai a
+*     cluster_data_science__ml (jsou konstrukcne cast ai_level -> cirkularita).
+*     Interpretace: mzdova premie role vcetne znalosti AI technologii. Plna
+*     specifikace s temito clustery jako robustness v Priloze C.
 *   - SE clusterovane na firmu (firm_cluster) ve vsech regresich
 *   - edu_missing a exp_missing dummy odliseni "nepozaduje se" vs. "neuvedeno"
 *   - Baseline job family = Software Engineer (nejcastejsi, neutralni)
-*   - Priloha A: Heckman pro selection bias v ln(plat)
+*   - Priloha A: Heckman pro selection bias v ln(plat) (stejna spec. jako Tabulka 4)
 *   - Priloha B: pooled modely s country interakcemi + Wald testy
-*   - Pouze jedna specifikace per tabulka (plny model), zadne inkrementalni varianty
+*   - Priloha C: OLS ln(plat) s plnou sadou clusteru (robustness check)
+*   - Pouze jedna hlavni specifikace per tabulka; robustness v priloze
 *
 * Autor: Yakub Murcek
 * Datum: Duben 2026
@@ -51,7 +59,7 @@ display "Aktualni pracovni slozka: " c(pwd)
 version 15.1
 clear all
 set more off
-set max_memory 8g, permanently
+set max_memory 8g
 
 local c_date = c(current_date)
 local c_time = c(current_time)
@@ -109,7 +117,7 @@ label variable country_id "Země původu inzerátu (DE=1, IN=2, US=3)"
 
 
 * ==============================================================================
-* 3. CISTENI A PRIPRAVA DAT (vcetne GenAI override)
+* 3. CISTENI A PRIPRAVA DAT
 * ==============================================================================
 display _n "=============================================================="
 display "3. CISTENI A PRIPRAVA DAT"
@@ -129,11 +137,16 @@ drop if post_year <= 2023
 display "Po vyrazeni <= 2023: " _N
 
 * --- 3.1 AI tier klasifikace ---
-replace desc_tier_llm = "missing" if desc_tier_llm == ""
+* Inzeraty bez LLM klasifikace nelze spolehlive zaradit do AI tier (nejsou
+* to autenticke "none" ale chybejici hodnoty) — vyradime je z analyzy.
+count if desc_tier_llm == ""
+display "Inzeraty bez LLM klasifikace (desc_tier_llm prazdne): " r(N)
+drop if desc_tier_llm == ""
+display "Po vyrazeni chybejici LLM klasifikace: " _N
 replace desc_tier_llm = "applied_ai" if desc_tier_llm == "core_ai"
 
 * --- 3.2 has_ai + ai_level ---
-gen has_ai = (desc_tier_llm != "none" & desc_tier_llm != "missing")
+gen has_ai = (desc_tier_llm != "none")
 label variable has_ai "AI Job (1=AI Integration nebo Applied/Core AI)"
 
 gen ai_level = 0
@@ -143,30 +156,18 @@ label define ailevel_lbl 0 "None" 1 "AI Integration" 2 "Applied/Core AI"
 label values ai_level ailevel_lbl
 label variable ai_level "Úroveň AI požadavku (0/1/2)"
 
-* --- 3.2b GenAI skill cluster -> AI Integration tier override ---
-* Pokud inzerat ma cluster_generative_ai == 1 a je v None tieru, prirad do AI Integration.
-* Pravidlo NEPONIZUJE inzeraty, ktere uz jsou v Applied/Core AI.
-* Dusledek: cluster_generative_ai je mechanicky vazan na ai_level>=1 a musi byt
-* vyrazen z RHS regresnich modelu, kde ai_level/has_ai je LHS (cirkularita).
-display _n "--- 3.2b GenAI -> AI Integration override ---"
-display "Pred override: inzeraty s cluster_generative_ai==1 podle ai_level:"
-tab ai_level if cluster_generative_ai == 1, missing
-
-count if cluster_generative_ai == 1 & ai_level == 0
-local n_genai_override = r(N)
-replace ai_level = 1 if cluster_generative_ai == 1 & ai_level == 0
-replace has_ai = 1 if ai_level >= 1
-replace desc_tier_llm = "ai_integration" if ai_level == 1 & desc_tier_llm == "none"
-
-display "Pocet inzeratu presunutych z None -> AI Integration: `n_genai_override'"
-display _n "Po override: inzeraty s cluster_generative_ai==1 podle ai_level:"
-tab ai_level if cluster_generative_ai == 1, missing
-
-* --- 3.2c Diagnosticke crosstaby (dokumentace rozhodnuti, ML override neprovadime) ---
-display _n "--- 3.2c Crosstab: cluster_data_science__ml x ai_level (ML NENI overridnut) ---"
-tab cluster_data_science__ml ai_level, row col
-display _n "--- 3.2c Crosstab: cluster_generative_ai x ai_level (post-override, kontrola) ---"
+* --- 3.2b Diagnostika prekryvu GenAI / ML clusteru x AI tier ---
+* AI tiers (ai_level, has_ai) zustavaji odvozene pouze z LLM klasifikace
+* desc_tier_llm; zadny override neprovadime (pozadavek vedouciho — zachovat
+* puvodni definice). Clustery cluster_generative_ai a cluster_data_science__ml
+* vsak maji silnou konstrukcni vazbu na AI tiery (LLM je pri klasifikaci
+* implicitne zohlednuje), coz je duvod, proc jsou v OLS mezd vyrazeny z RHS
+* (viz sekce 8). V logit/mlogit zustavaji — tam je to zadouci, protoze mlogit
+* slouzi jako reverse-engineering AI tieru.
+display _n "--- 3.2b Crosstab: cluster_generative_ai x ai_level ---"
 tab cluster_generative_ai ai_level, row col
+display _n "--- 3.2b Crosstab: cluster_data_science__ml x ai_level ---"
+tab cluster_data_science__ml ai_level, row col
 
 preserve
     contract cluster_generative_ai ai_level
@@ -227,8 +228,19 @@ destring salary_min salary_mid salary_max, replace force
 local eur_usd = 1.165
 local inr_usd = 88
 
-drop if country == "DE" & !inlist(pay_currency, "EUR", "")
-drop if country == "IN" & pay_currency == "" & salary_mid != .
+* Neplatny/nesedici currency neznamena, ze cely inzerat mame vyhodit
+* (porad je pouzitelny pro logit/mlogit na has_ai). Pouze invalidujeme plat.
+count if country == "DE" & !inlist(pay_currency, "EUR", "") & salary_mid != .
+display "DE inzeraty s neocekavanou menou (plat nastaven na missing): " r(N)
+foreach var of varlist salary_min salary_mid salary_max {
+    replace `var' = . if country == "DE" & !inlist(pay_currency, "EUR", "")
+}
+
+count if country == "IN" & pay_currency == "" & salary_mid != .
+display "IN inzeraty bez uvedene meny (plat nastaven na missing): " r(N)
+foreach var of varlist salary_min salary_mid salary_max {
+    replace `var' = . if country == "IN" & pay_currency == ""
+}
 
 foreach var of varlist salary_min salary_mid salary_max {
     replace `var' = `var' * `eur_usd' if pay_currency == "EUR"
@@ -243,7 +255,20 @@ foreach var of varlist salary_min salary_mid salary_max {
     replace `var' = `var' * 12   if pay_period == "MONTHLY"
 }
 
-replace salary_mid = . if salary_mid < 3000 | salary_mid > 500000
+* Country-specific salary floor. Cilem je vyradit zjevne chybne konverze
+* a neserozni inzeraty, nikoli legitimni entry-level pozice.
+* IN: ~170 000 INR/rok (~1 933 USD) = reportovana minimalni mzda IT juniora;
+* DE/US: 3 000 USD/rok = filtr absurdne nizkych castek (ucednicke pozice,
+* chyby v konverzi). Horni hranice 500 000 USD spolecna (outlier cap).
+count if salary_mid != . & country == "IN" & salary_mid < 2000
+display "IN platy pod 2000 USD/rok (vyrazeno jako outliery): " r(N)
+count if salary_mid != . & inlist(country, "US", "DE") & salary_mid < 3000
+display "US/DE platy pod 3000 USD/rok (vyrazeno jako outliery): " r(N)
+count if salary_mid != . & salary_mid > 500000
+display "Platy nad 500 000 USD/rok (vyrazeno jako outliery): " r(N)
+replace salary_mid = . if country == "IN" & salary_mid < 2000
+replace salary_mid = . if inlist(country, "US", "DE") & salary_mid < 3000
+replace salary_mid = . if salary_mid > 500000 & salary_mid != .
 label variable salary_mid "Roční plat – střední hodnota (USD)"
 
 gen ln_salary = ln(salary_mid)
@@ -356,6 +381,38 @@ quietly levelsof job_family_num if job_family == "Software Engineer", local(_sw_
 local sw_base : word 1 of `_sw_list'
 display "Baseline job_family_num (Software Engineer) = `sw_base'"
 
+* --- 3.15 Baseline NACE sektor = J (Information & Communication) ---
+* Diplomka se zameruje na IT inzeraty, drtiva vetsina vzorku je J; baseline
+* = J dava smysluplnou interpretaci "odchylka od IT sektoru".
+quietly levelsof sector_nace_num if sector_nace == "J", local(_nace_list)
+local nace_base : word 1 of `_nace_list'
+if "`nace_base'" == "" {
+    display as error "Sector_nace_num = J (Information & Communication) nenalezeno — fallback na default baseline"
+    local nace_base 1
+}
+display "Baseline sector_nace_num (J = Information & Communication) = `nace_base'"
+
+* --- 3.16 Baseline region_num = South (nejvetsi US region) ---
+* Jen pro US specifikaci; pri absenci region == "South" padame zpet na
+* region s nejvyssi cetnosti v US vzorku.
+quietly levelsof region_num if region == "South", local(_reg_list)
+local region_base : word 1 of `_reg_list'
+if "`region_base'" == "" {
+    display as error "Region == South nenalezeno — fallback na nejcetnejsi region"
+    quietly levelsof region_num if country == "US", local(_us_reg_levels)
+    local best_count = 0
+    local best_level = 1
+    foreach lv of local _us_reg_levels {
+        quietly count if region_num == `lv' & country == "US"
+        if r(N) > `best_count' {
+            local best_count = r(N)
+            local best_level = `lv'
+        }
+    }
+    local region_base `best_level'
+}
+display "Baseline region_num (South) = `region_base'"
+
 
 * ==============================================================================
 * 4. TABULKA 1 — VYSKYT AI POZADAVKU PO ZEMICH (DESKRIPCE)
@@ -396,17 +453,7 @@ esttab matrix(T1, fmt(%9.0fc %5.2f %9.0fc %5.2f %9.0fc %5.2f)) ///
     title("Tabulka 1: Rozložení úrovní AI v IT inzerátech podle země") ///
     addnotes("N = počet inzerátů s danou úrovní AI v rámci země." ///
              "% = sloupcové procento (součet v rámci země = 100 %)." ///
-             "Po GenAI override (§3.2b): inzeráty s cluster_generative_ai == 1 původně v None tieru byly přesunuty do AI Integration.")
-
-
-* ==============================================================================
-* 5. PRIPRAVA PRO LOGIT/MLOGIT — vyrazeni cluster_generative_ai z RHS
-* ==============================================================================
-* cluster_generative_ai je po §3.2b override mechanicky vazan na ai_level>=1
-* (vsechny inzeraty s tim clusterem maji ai_level v {1,2}). Proto ho v logit/
-* mlogit modelech vyrazujeme z RHS. cluster_data_science__ml zustava jako bezny
-* skill cluster (override se neprovadi).
-rename cluster_generative_ai _excl_genai
+             "AI tiery odvozeny pouze z LLM klasifikace desc_tier_llm (bez post-hoc override ze skill clusterů).")
 
 
 * ==============================================================================
@@ -427,7 +474,7 @@ foreach c in US DE IN {
         ib`sw_base'.job_family_num ///
         edu_bin edu_missing ///
         exp_bin exp_missing ///
-        i.sector_nace_num ///
+        ib`nace_base'.sector_nace_num ///
         ib1.type_cat ///
         ib5.size_cat ///
         is_remote ///
@@ -452,7 +499,7 @@ foreach c in US DE IN {
         cluster_* ///
         edu_bin edu_missing ///
         exp_bin exp_missing ///
-        i.sector_nace_num ///
+        ib`nace_base'.sector_nace_num ///
         ib1.type_cat ///
         ib5.size_cat ///
         is_remote ///
@@ -485,7 +532,7 @@ esttab ame_t2jf_US ame_t2jf_DE ame_t2jf_IN ame_t2sk_US ame_t2sk_DE ame_t2sk_IN /
     addnotes("Závislá proměnná: has_ai (1=AI Integration nebo Applied/Core AI, 0=None)." ///
              "Průměrné marginální efekty (AME) z logitu, SE klastrované na firmu v závorkách." ///
              "Referenční job family: Software Engineer." ///
-             "cluster_generative_ai vyřazen z RHS kvůli cirkularitě (GenAI → AI Integration override)." ///
+             "Všechny skill clustery (včetně cluster_generative_ai a cluster_data_science__ml) jsou součástí RHS; AI tiery jsou odvozené pouze z LLM klasifikace desc_tier_llm." ///
              "edu_missing / exp_missing: dummy pro inzeráty bez uvedeného vzdělání / praxe.")
 
 
@@ -505,7 +552,7 @@ foreach c in US DE IN {
             cluster_* ///
             edu_bin edu_missing ///
             exp_bin exp_missing ///
-            i.sector_nace_num ///
+            ib`nace_base'.sector_nace_num ///
             ib1.type_cat ///
             ib5.size_cat ///
             is_remote ///
@@ -539,26 +586,66 @@ esttab ame_t3_US_0 ame_t3_US_1 ame_t3_US_2 ///
     title("Tabulka 3: Multinomiální logit P(AI tier) — AME podle země a úrovně") ///
     addnotes("Závislá proměnná: ai_level (0=None, 1=AI Integration, 2=Applied/Core AI)." ///
              "Průměrné marginální efekty (AME) z mlogitu, SE klastrované na firmu v závorkách, base outcome = None." ///
-             "cluster_generative_ai vyřazen z RHS kvůli cirkularitě (GenAI override)." ///
+             "Všechny skill clustery (včetně cluster_generative_ai a cluster_data_science__ml) jsou v RHS." ///
+             "Interpretace: reverzní inženýrství AI tiers — jaké inzeráty/skills LLM typicky klasifikuje do jednotlivých úrovní (popisné, nikoli kauzální)." ///
              "Součet AME napříč třemi outcomes pro každou proměnnou je 0.")
 
 
 * ==============================================================================
 * 8. TABULKA 4 — OLS ln(plat) ~ SKILL CLUSTERY + AI TIERY (per zeme)
 * ==============================================================================
+* Hlavni specifikace: cluster_generative_ai a cluster_data_science__ml JSOU
+* VYRAZENY z RHS, protoze jsou konstrukcne cast ai_level (LLM je pri klasifikaci
+* do AI tiers implicitne zohlednuje -> cirkularita). Koeficienty i.ai_level
+* tim pádem zachytavaji mzdovou premii role *vcetne* znalosti AI technologii,
+* ktere ta role implicitne predpoklada. Plna specifikace s temito clustery
+* zpet v RHS = Priloha C (sekce 8b, robustness check).
 display _n "=============================================================="
 display "8. TABULKA 4 — OLS ln(plat) per zeme"
 display "=============================================================="
 
+* --- 8.0 Minimum-N diagnostika per zeme ---
+* OLS mzdovy model je citlivy na maly vzorek a rozlozeni ai_level.
+* Prah: alespon 200 inzeratu s platem per zeme + alespon 10 v kazdem
+* ne-baseline ai_level (jinak koeficient 1.ai_level / 2.ai_level nelze
+* spolehlive interpretovat). Pri nedostatku se varuje, ale OLS se presto
+* spusti (Heckman v Priloze A slouzi jako robustness pro DE).
+display _n "--- 8.0 Minimum-N diagnostika (OLS mzdovy model) ---"
+foreach c in US DE IN {
+    count if country == "`c'" & ln_salary != .
+    local n_sal = r(N)
+    count if country == "`c'" & ln_salary != . & ai_level == 0
+    local n_sal_0 = r(N)
+    count if country == "`c'" & ln_salary != . & ai_level == 1
+    local n_sal_1 = r(N)
+    count if country == "`c'" & ln_salary != . & ai_level == 2
+    local n_sal_2 = r(N)
+    display "`c': N(plat)=`n_sal' | ai_level 0=`n_sal_0', 1=`n_sal_1', 2=`n_sal_2'"
+    if `n_sal' < 200 {
+        display as error "  VAROVANI: `c' ma mene nez 200 inzeratu s platem — OLS podhodnoceny."
+    }
+    if `n_sal_1' < 10 | `n_sal_2' < 10 {
+        display as error "  VAROVANI: `c' ma < 10 obs v nejakem ai_level tieru — koeficient na okraji interpretovatelnosti."
+    }
+}
+
+* Lokalni makro: vsechny skill clustery krome cluster_generative_ai a
+* cluster_data_science__ml (tj. RHS pro hlavni OLS specifikaci).
+unab all_clusters : cluster_*
+local ols_excl cluster_generative_ai cluster_data_science__ml
+local ols_clusters : list all_clusters - ols_excl
+display _n "OLS skill clustery (bez GenAI a DS/ML):"
+display "`ols_clusters'"
+
 * US (vc. region FE)
 display _n "=========== Zeme = US (Tabulka 4) ==========="
 capture noisily regress ln_salary ///
-    cluster_* ///
+    `ols_clusters' ///
     i.ai_level ///
     edu_bin edu_missing ///
     exp_bin exp_missing ///
-    i.sector_nace_num ///
-    i.region_num ///
+    ib`nace_base'.sector_nace_num ///
+    ib`region_base'.region_num ///
     is_remote ///
     ib1.type_cat ///
     ib5.size_cat ///
@@ -572,12 +659,12 @@ if _rc == 0 {
     estimates store ols_t4_US
     display _n "--- VIF Kontrola (US) ---"
     quietly regress ln_salary ///
-        cluster_* ///
+        `ols_clusters' ///
         i.ai_level ///
         edu_bin edu_missing ///
         exp_bin exp_missing ///
-        i.sector_nace_num ///
-        i.region_num ///
+        ib`nace_base'.sector_nace_num ///
+        ib`region_base'.region_num ///
         is_remote ///
         ib1.type_cat ///
         ib5.size_cat ///
@@ -588,11 +675,11 @@ if _rc == 0 {
 foreach c in DE IN {
     display _n "=========== Zeme = `c' (Tabulka 4) ==========="
     capture noisily regress ln_salary ///
-        cluster_* ///
+        `ols_clusters' ///
         i.ai_level ///
         edu_bin edu_missing ///
         exp_bin exp_missing ///
-        i.sector_nace_num ///
+        ib`nace_base'.sector_nace_num ///
         is_remote ///
         ib1.type_cat ///
         ib5.size_cat ///
@@ -606,11 +693,11 @@ foreach c in DE IN {
         estimates store ols_t4_`c'
         display _n "--- VIF Kontrola (`c') ---"
         quietly regress ln_salary ///
-            cluster_* ///
+            `ols_clusters' ///
             i.ai_level ///
             edu_bin edu_missing ///
             exp_bin exp_missing ///
-            i.sector_nace_num ///
+            ib`nace_base'.sector_nace_num ///
             is_remote ///
             ib1.type_cat ///
             ib5.size_cat ///
@@ -631,8 +718,78 @@ esttab ols_t4_US ols_t4_DE ols_t4_IN using "$outdir/Tabulka_4_OLS_lnMzda.rtf", r
     addnotes("Závislá proměnná: ln(roční plat v USD)." ///
              "Standardní chyby klastrované na firmu v závorkách." ///
              "Referenční AI úroveň: None." ///
-             "cluster_generative_ai vyřazen z RHS kvůli cirkularitě s ai_level (GenAI override)." ///
+             "cluster_generative_ai a cluster_data_science__ml záměrně vynechány z RHS — jsou konstrukčně součástí klasifikace ai_level (cirkularita). Koeficienty i.ai_level tak zachycují mzdovou prémii role včetně implicitních AI znalostí." ///
+             "Plná specifikace s oběma clustery zpět v RHS jako robustness viz Příloha C." ///
              "Pozor: v DE je pokrytí platu velmi nízké — viz Heckman robustness v Příloze A.")
+
+
+* ==============================================================================
+* 8b. PRILOHA C — OLS ln(plat) s plnou sadou skill clusteru (robustness)
+* ==============================================================================
+* Robustnostni kontrola k Tabulce 4: stejna specifikace, ale s navratem
+* cluster_generative_ai a cluster_data_science__ml zpet do RHS. Pokud budou
+* koeficienty i.ai_level stabilni oproti Tabulce 4, je to signal, ze efekt
+* AI tieru zachycuje roli (nikoli jen prekryv s GenAI/ML skills).
+display _n "=============================================================="
+display "8b. PRILOHA C — OLS ln(plat) s plnou sadou skill clusteru (robustness)"
+display "=============================================================="
+
+* US (vc. region FE)
+display _n "=========== Zeme = US (Priloha C) ==========="
+capture noisily regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    edu_bin edu_missing ///
+    exp_bin exp_missing ///
+    ib`nace_base'.sector_nace_num ///
+    ib`region_base'.region_num ///
+    is_remote ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    if country == "US" & ln_salary != ., vce(cluster firm_cluster)
+if _rc == 0 {
+    estadd local ctrl_nace   "Ano"
+    estadd local ctrl_type   "Ano"
+    estadd local ctrl_size   "Ano"
+    estadd local ctrl_remote "Ano"
+    estadd local ctrl_region "Ano"
+    estimates store ols_robC_US
+}
+
+foreach c in DE IN {
+    display _n "=========== Zeme = `c' (Priloha C) ==========="
+    capture noisily regress ln_salary ///
+        cluster_* ///
+        i.ai_level ///
+        edu_bin edu_missing ///
+        exp_bin exp_missing ///
+        ib`nace_base'.sector_nace_num ///
+        is_remote ///
+        ib1.type_cat ///
+        ib5.size_cat ///
+        if country == "`c'" & ln_salary != ., vce(cluster firm_cluster)
+    if _rc == 0 {
+        estadd local ctrl_nace   "Ano"
+        estadd local ctrl_type   "Ano"
+        estadd local ctrl_size   "Ano"
+        estadd local ctrl_remote "Ano"
+        estadd local ctrl_region "-"
+        estimates store ols_robC_`c'
+    }
+}
+
+esttab ols_robC_US ols_robC_DE ols_robC_IN using "$outdir/Priloha_C_OLS_FullClusters.rtf", replace ///
+    label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+    keep(cluster_* 1.ai_level 2.ai_level edu_bin edu_missing exp_bin exp_missing) ///
+    order(1.ai_level 2.ai_level cluster_* edu_bin edu_missing exp_bin exp_missing) ///
+    stats(ctrl_nace ctrl_type ctrl_size ctrl_remote ctrl_region N r2, ///
+          fmt(%s %s %s %s %s %9.0fc %5.3f) ///
+          labels("NACE sektor" "Typ firmy" "Velikost firmy" "Remote" "Region FE (US)" "N" "R²")) ///
+    mtitles("USA" "Německo" "Indie") ///
+    title("Příloha C: OLS ln(plat) — plná sada skill clusterů (robustness k Tabulce 4)") ///
+    addnotes("Robustnostní specifikace k Tabulce 4 s návratem cluster_generative_ai a cluster_data_science__ml do RHS." ///
+             "Stabilita koeficientů 1.ai_level a 2.ai_level mezi Tabulkou 4 a Přílohou C indikuje, že efekt AI tierů zachycuje roli, nikoli jen překryv s GenAI/ML skills." ///
+             "Standardní chyby klastrované na firmu v závorkách.")
 
 
 * ==============================================================================
@@ -711,20 +868,20 @@ display "=============================================================="
 foreach c in US DE IN {
     display _n "=========== Zeme = `c' (Heckman) ==========="
     capture noisily heckman ln_salary ///
-        cluster_* ///
+        `ols_clusters' ///
         i.ai_level ///
         edu_bin edu_missing ///
         exp_bin exp_missing ///
-        i.sector_nace_num ///
+        ib`nace_base'.sector_nace_num ///
         ib1.type_cat ///
         ib5.size_cat ///
         is_remote ///
         if country == "`c'", ///
-        select(has_salary = cluster_* ///
+        select(has_salary = `ols_clusters' ///
                             i.ai_level ///
                             edu_bin edu_missing ///
                             exp_bin exp_missing ///
-                            i.sector_nace_num ///
+                            ib`nace_base'.sector_nace_num ///
                             ib1.type_cat ///
                             ib5.size_cat ///
                             is_remote) ///
@@ -744,7 +901,8 @@ capture esttab heck_t4_US heck_t4_DE heck_t4_IN using "$outdir/Priloha_A_Heckman
     stats(N, fmt(0) labels("N")) ///
     mtitles("USA" "Německo" "Indie") ///
     title("Příloha A: Heckman selection model — ln(plat) s korekcí selekce") ///
-    addnotes("Rovnice výběru: P(plat inzerován) — Probit se stejnými kontrolami jako ve 2. fázi." ///
+    addnotes("Stejná specifikace jako Tabulka 4 (bez cluster_generative_ai a cluster_data_science__ml)." ///
+             "Rovnice výběru: P(plat inzerován) — Probit se stejnými kontrolami jako ve 2. fázi." ///
              "Identifikace jen funkční formou IMR (bez exclusion restrikce) — slouží jako robustness." ///
              "Porovnat směr a velikost koeficientů s OLS v Tabulce 4, zvláště pro DE.")
 
@@ -766,7 +924,7 @@ display _n "--- 12.1 Pooled logit has_ai ~ job_family x country (Tabulka 2 JF te
 capture noisily logit has_ai ///
     ib`sw_base'.job_family_num##ib3.country_id ///
     edu_bin edu_missing exp_bin exp_missing ///
-    i.sector_nace_num ib1.type_cat ib5.size_cat is_remote, ///
+    ib`nace_base'.sector_nace_num ib1.type_cat ib5.size_cat is_remote, ///
     vce(cluster firm_cluster)
 if _rc == 0 {
     display _n "Wald test: vsechny interakce job_family x country = 0"
@@ -785,7 +943,7 @@ capture noisily logit has_ai ///
     c.cluster_data_science__ml#ib3.country_id ///
     c.cluster_backend_development#ib3.country_id ///
     edu_bin edu_missing exp_bin exp_missing ///
-    i.sector_nace_num ib1.type_cat ib5.size_cat is_remote, ///
+    ib`nace_base'.sector_nace_num ib1.type_cat ib5.size_cat is_remote, ///
     vce(cluster firm_cluster)
 if _rc == 0 {
     display _n "Wald test: klicove skill cluster interakce = 0"
@@ -795,12 +953,14 @@ if _rc == 0 {
 }
 
 * --- 12.3 Pooled OLS ln(plat): AI tier x country ---
+* POZN: Stejna specifikace jako Tabulka 4 (bez cluster_generative_ai a
+* cluster_data_science__ml) kvuli konzistenci s hlavnim OLS modelem.
 display _n "--- 12.3 Pooled OLS ln_salary ~ ai_level x country (Tabulka 4 test) ---"
 capture noisily regress ln_salary ///
     i.ai_level##ib3.country_id ///
-    cluster_* ///
+    `ols_clusters' ///
     edu_bin edu_missing exp_bin exp_missing ///
-    i.sector_nace_num ib1.type_cat ib5.size_cat is_remote ///
+    ib`nace_base'.sector_nace_num ib1.type_cat ib5.size_cat is_remote ///
     if ln_salary != ., vce(cluster firm_cluster)
 if _rc == 0 {
     display _n "Wald test: interakce ai_level x country = 0 (AI-premium se mezi zememi lisi?)"
@@ -811,9 +971,6 @@ if _rc == 0 {
 * ==============================================================================
 * 13. ZAVER
 * ==============================================================================
-* Vratit cluster_generative_ai pro pripad dalsi prace s datasetem
-rename _excl_genai cluster_generative_ai
-
 display _n "=============================================================="
 display "FINALNI TEZISTOVA ANALYZA DOKONCENA"
 display "=============================================================="
