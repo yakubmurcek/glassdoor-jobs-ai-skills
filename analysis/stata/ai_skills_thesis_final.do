@@ -283,13 +283,12 @@ gen size_cat = .
 replace size_cat = 0 if inlist(size, "Unknown", "Unbekannt")
 replace size_cat = 1 if inlist(size, "1 to 50 Employees", "1 bis 50 Mitarbeiter")
 replace size_cat = 2 if inlist(size, "51 to 200 Employees", "51 bis 200 Mitarbeiter")
-replace size_cat = 3 if inlist(size, "201 to 500 Employees", "201 bis 500 Mitarbeiter")
-replace size_cat = 4 if inlist(size, "501 to 1000 Employees", "501 bis 1.000 Mitarbeiter")
+replace size_cat = 3 if inlist(size, "201 to 500 Employees", "201 bis 500 Mitarbeiter", "501 to 1000 Employees", "501 bis 1.000 Mitarbeiter")
 replace size_cat = 5 if inlist(size, "1001 to 5000 Employees", "1.001 bis 5.000 Mitarbeiter")
 replace size_cat = 6 if inlist(size, "5001 to 10000 Employees", "5.001 bis 10.000 Mitarbeiter")
 replace size_cat = 7 if inlist(size, "10000+ Employees", "Mehr als 10.000 Mitarbeiter")
-label define size_lbl 0 "Unknown" 1 "1-50" 2 "51-200" 3 "201-500" ///
-    4 "501-1000" 5 "1001-5000" 6 "5001-10000" 7 "10000+"
+label define size_lbl 0 "Unknown" 1 "1-50" 2 "51-200" 3 "201-1000" ///
+    5 "1001-5000" 6 "5001-10000" 7 "10000+"
 label values size_cat size_lbl
 label variable size_cat "Velikost firmy (ordinální)"
 
@@ -299,15 +298,16 @@ replace type_cat = 0 if inlist(type, "", "Unknown", "Contract", "Self-employed",
 replace type_cat = 0 if inlist(type, "Unbekannt", "Auftragsunternehmen", "Selbstständig", "Privatpraxis/Kanzlei")
 replace type_cat = 1 if inlist(type, "Company - Private", "Subsidiary or Business Segment", "Privatunternehmen", "Tochtergesellschaft oder Geschäftsbereich")
 replace type_cat = 2 if inlist(type, "Company - Public", "Aktiengesellschaft")
-replace type_cat = 4 if inlist(type, "Nonprofit Organization", "Non-profit Organisation", "Government", "College / University", "School / School District", "Hospital")
-replace type_cat = 4 if inlist(type, "Gemeinnützige Organisation", "Öffentlicher Dienst", "Hochschule/Universität", "Schule/Schulbezirk", "Krankenhaus")
-label define type_lbl 0 "Unknown/Other" 1 "Private/Subsidiary" 2 "Public" 4 "Nonprofit/Gov/Edu"
+replace type_cat = 0 if inlist(type, "Nonprofit Organization", "Non-profit Organisation", "Government", "College / University", "School / School District", "Hospital")
+replace type_cat = 0 if inlist(type, "Gemeinnützige Organisation", "Öffentlicher Dienst", "Hochschule/Universität", "Schule/Schulbezirk", "Krankenhaus")
+label define type_lbl 0 "Unknown/Other/Gov" 1 "Private/Subsidiary" 2 "Public"
 label values type_cat type_lbl
 label variable type_cat "Typ firmy"
 
 * --- 3.8 NACE sektor ---
+* Sektory s menším počtem N (< 20) sloučeny přímo do Other.
 replace sector_nace = "Unknown" if sector_nace == ""
-replace sector_nace = "Other" if !inlist(sector_nace, "J", "C", "K", "M", "Q", "Unknown")
+replace sector_nace = "Other" if !inlist(sector_nace, "J", "C", "Unknown")
 encode sector_nace, generate(sector_nace_num)
 label variable sector_nace_num "NACE sektor"
 
@@ -318,12 +318,16 @@ replace is_remote = 1 if strpos(lower(remote_work_types), "remote") > 0
 label variable is_remote "Možnost remote práce (1=ano)"
 
 * --- 3.10 Job family ---
-* Ponechavame plnou taxonomii z Python pipeline (10 kategorii). Drive byly
-* Frontend & Design / QA & Testing / Security / Systems & Embedded slouceny do
-* "Other" kvuli malym N; pri soucasnem vzorku (US 17k, DE 6.4k, IN 14k) je
-* drzet oddelene informativnejsi. "Other" si ponechavame jen pro inzeraty,
-* ktere regex neklasifikoval.
+* Sloučení malých kategorií do "Other" kvůli sparse cells v mlogit
+* (ai_level=2 × job_family pro DE/IN: Security=1, Frontend=3, QA=7).
+* Shodně s verzí 2024 (ai_skills_analysis_comparative.do ř. 296-300)
+* a s doporučením vedoucího "raději slučovat než vyhazovat".
+* Výsledná taxonomie: 7 kategorií - Data & AI, DevOps & Cloud,
+* Management, Software Developer, Software Engineer, Sr+ SW Engineer,
+* Other. Všechny klíčové AI-signálové kategorie zachovány.
 replace job_family = "Unknown" if job_family == ""
+replace job_family = "Other" if inlist(job_family, ///
+    "Frontend & Design", "QA & Testing", "Security", "Systems & Embedded")
 encode job_family, generate(job_family_num)
 label variable job_family_num "Rodina pozice (job family)"
 
