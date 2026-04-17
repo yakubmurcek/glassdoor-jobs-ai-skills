@@ -1474,14 +1474,40 @@ estimates store s13_lg_M3circ_ame
 * ------------------------------------------------------------------
 * 13.16 Analyza skill_count: prumery per AI tier + t-test (US)
 * ------------------------------------------------------------------
-display _n "--- 13.16a Prumery skill_count per ai_level (US, pro text §5.5.1) ---"
-tabstat skill_count if country == "US", by(ai_level) statistics(n mean sd min max)
+* Generovani skill_count z `hardskills` (carkami oddelene skills).
+* Shodne se starym ai_skills_analysis.do (§3.16). capture confirm osetri
+* pripad, kdy uz existuje z drivejsiho behu nebo kdy hardskills nejsou
+* stringove (napr. po nejakem destring).
+capture confirm variable skill_count
+if _rc != 0 {
+    capture confirm string variable hardskills
+    if _rc == 0 {
+        gen skill_count = 1 + length(hardskills) - length(subinstr(hardskills, ",", "", .))
+        replace skill_count = 0 if hardskills == ""
+        label variable skill_count "Pocet pozadovanych hard skills"
+        display "skill_count vygenerovan z hardskills (string)."
+    }
+    else {
+        display as error "hardskills neni stringova nebo neexistuje — skill_count preskocen."
+        display as error "Overte import CSV v sekci 2 — hardskills musi byt textovy sloupec."
+    }
+}
 
-display _n "--- 13.16b T-test skill_count by has_ai (rovne variance, US) ---"
-ttest skill_count if country == "US", by(has_ai)
+* Pokud se skill_count nepodarilo vytvorit, cely blok 13.16 preskocime.
+capture confirm variable skill_count
+if _rc == 0 {
+    display _n "--- 13.16a Prumery skill_count per ai_level (US, pro text §5.5.1) ---"
+    tabstat skill_count if country == "US", by(ai_level) statistics(n mean sd min max)
 
-display _n "--- 13.16c Welch t-test skill_count by has_ai (nerovne variance, US) ---"
-ttest skill_count if country == "US", by(has_ai) unequal
+    display _n "--- 13.16b T-test skill_count by has_ai (rovne variance, US) ---"
+    ttest skill_count if country == "US", by(has_ai)
+
+    display _n "--- 13.16c Welch t-test skill_count by has_ai (nerovne variance, US) ---"
+    ttest skill_count if country == "US", by(has_ai) unequal
+}
+else {
+    display as error "13.16 preskocen — skill_count neni dostupny."
+}
 
 * ------------------------------------------------------------------
 * 13.17 Exporty: RTF tabulky pro inkrementalni modely
