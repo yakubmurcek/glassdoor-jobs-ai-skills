@@ -16,9 +16,11 @@
 *   Priloha C:  OLS ln(plat) s plnou sadou skill clusteru (robustness k Tabulce 4)
 *
 * Kontroly (neukazovane v tabulkach): NACE sektor, typ firmy, velikost firmy,
-*   remote, region FE (jen US v OLS). Vzdelani: edu_bin (Bc.+) + edu_missing.
-*   Praxe: exp_bin (>=1 rok) + exp_missing. Referencni zeme v pooled modelech
-*   je US; referencni job family je Software Engineer.
+*   remote, region FE (jen US v OLS). Vzdelani: edu_ols (5 urovni, ref. Bachelor)
+*   pouzito v OLS / Heckman; edu_logit (3 urovne, ref. Bachelor+) pouzito v
+*   binarnim logitu; v mlogitu edu vyrazeno kvuli sparse cells (viz sekce 7).
+*   Praxe: exp_category (4 urovne, ref. Mid 3-5 let) ve vsech modelech.
+*   Referencni zeme v pooled modelech je US; ref. job family Software Engineer.
 *
 * Klicove upravy (dle feedbacku vedouciho):
 *   - AI tiers a skill clustery ponechany v puvodni LLM definici (zadny override)
@@ -30,7 +32,8 @@
 *     Interpretace: mzdova premie role vcetne znalosti AI technologii. Plna
 *     specifikace s temito clustery jako robustness v Priloze C.
 *   - SE clusterovane na firmu (firm_cluster) ve vsech regresich
-*   - edu_missing a exp_missing dummy odliseni "nepozaduje se" vs. "neuvedeno"
+*   - Vzdelani/praxe jako kategoricke (edu_ols 5 ur., edu_logit 3 ur., exp_category 4 ur.);
+*     kategorie "Missing" odlisena od "nepozaduje se", shodne s verzi 2024
 *   - Baseline job family = Software Engineer (nejcastejsi, neutralni)
 *   - Priloha A: Heckman pro selection bias v ln(plat) (stejna spec. jako Tabulka 4)
 *   - Priloha B: pooled modely s country interakcemi + Wald testy
@@ -178,7 +181,12 @@ preserve
     export delimited "$outdir/Crosstab_ML_Tier.csv", replace delimiter(";")
 restore
 
-* --- 3.3 Vzdelani: edu_bin (Bc.+ ano/ne) ---
+* --- 3.3 Vzdelani: edu_ols (5 urovni) + edu_logit (3 urovne) ---
+* Shodne s `ai_skills_analysis_comparative.do` (2024): granularni edu_ols
+* pro OLS (zachovava nelinearity HS -> Master), komprimovana edu_logit
+* pro binarni logit (sloucene HS/Assoc kvuli sparse cells). Missing se
+* v obou skalach drzi jako samostatna kategorie ("nepozaduje se"
+* vs. konkretni uroven).
 gen education_hybrid = lower(edulevel_llm)
 replace education_hybrid = subinstr(education_hybrid, "'s", "", .)
 replace education_hybrid = "highschool" if education_hybrid == "high school"
@@ -189,37 +197,49 @@ replace education_hybrid = "master" if education_hybrid == "phd"
 replace education_hybrid = "associate" if education_hybrid == "diploma"
 replace education_hybrid = "missing" if !inlist(education_hybrid, "highschool", "associate", "bachelor", "master", "missing")
 
-gen edu_bin = inlist(education_hybrid, "bachelor", "master")
-label define edu_bin_lbl 0 "Nižší/neuvedeno" 1 "Bc.+"
-label values edu_bin edu_bin_lbl
-label variable edu_bin "Bakalář+ explicitně požadován"
+* edu_ols: 5-urovnova granularni (pro OLS — Tabulka 4, Priloha A Heckman, Priloha C)
+gen edu_ols = .
+replace edu_ols = 0 if education_hybrid == "missing"
+replace edu_ols = 1 if education_hybrid == "highschool"
+replace edu_ols = 2 if education_hybrid == "associate"
+replace edu_ols = 3 if education_hybrid == "bachelor"
+replace edu_ols = 4 if education_hybrid == "master"
+label define edu_ols_lbl 0 "Missing" 1 "High School" 2 "Associate" 3 "Bachelor" 4 "Master+"
+label values edu_ols edu_ols_lbl
+label variable edu_ols "Vzdělání (5 úrovní pro OLS)"
 
-* edu_missing: dummy odliseni "nepozaduje se" vs. "neuvedeno"
-gen edu_missing = (education_hybrid == "missing")
-label define edu_miss_lbl 0 "Vzdělání uvedeno" 1 "Neuvedeno"
-label values edu_missing edu_miss_lbl
-label variable edu_missing "Vzdělání v inzerátu neuvedeno"
+* edu_logit: 3-urovnova pro binarni logit (Tabulka 2) — HS+Associate sloucene.
+* Reference: ib2.edu_logit (Bachelor or Higher).
+gen edu_logit = .
+replace edu_logit = 0 if inlist(education_hybrid, "missing", "")
+replace edu_logit = 1 if inlist(education_hybrid, "highschool", "associate")
+replace edu_logit = 2 if inlist(education_hybrid, "bachelor", "master")
+label define edu_logit_lbl 0 "Missing" 1 "HS / Associate" 2 "Bachelor or Higher"
+label values edu_logit edu_logit_lbl
+label variable edu_logit "Vzdělání (3 úrovně pro binární logit)"
 
-display _n "--- 3.3 edu_bin + edu_missing rozdeleni po zemich ---"
-tab edu_bin country, col
-tab edu_missing country, col
+display _n "--- 3.3 edu_ols rozdělení po zemích ---"
+tab edu_ols country, col
+display _n "--- 3.3 edu_logit rozdělení po zemích ---"
+tab edu_logit country, col
 
-* --- 3.4 Zkusenosti: exp_bin (>=1 rok ano/ne) ---
+* --- 3.4 Zkusenosti: exp_category (4 urovne) ---
+* Shodne s `ai_skills_analysis_comparative.do` (2024). Reference: ib3.exp_category
+* (Mid 3-5 let) — statisticky nejcastejsi i vecne nejprimerenejsi kategorie.
 destring experience_min_llm, replace force
-gen exp_missing = missing(experience_min_llm)
-gen exp_bin = (experience_min_llm >= 1) if !missing(experience_min_llm)
-replace exp_bin = 0 if missing(exp_bin)
-label define exp_bin_lbl 0 "< 1 rok / neuvedeno" 1 ">= 1 rok praxe"
-label values exp_bin exp_bin_lbl
-label variable exp_bin "Praxe ≥ 1 rok explicitně požadována"
+label variable experience_min_llm "Min. požadované roky zkušeností"
 
-label define exp_miss_lbl 0 "Praxe uvedena" 1 "Neuvedeno"
-label values exp_missing exp_miss_lbl
-label variable exp_missing "Praxe v inzerátu neuvedena"
+gen exp_category = .
+replace exp_category = 0 if experience_min_llm == .
+replace exp_category = 2 if experience_min_llm >= 0 & experience_min_llm <= 2
+replace exp_category = 3 if experience_min_llm >  2 & experience_min_llm <= 5
+replace exp_category = 4 if experience_min_llm >  5 & experience_min_llm <  .
+label define exp_lbl 0 "Missing" 2 "Junior (0-2)" 3 "Mid (3-5)" 4 "Senior+ (6+)"
+label values exp_category exp_lbl
+label variable exp_category "Seniorita (4 úrovně, min. roky praxe)"
 
-display _n "--- 3.4 exp_bin + exp_missing rozdeleni po zemich ---"
-tab exp_bin country, col
-tab exp_missing country, col
+display _n "--- 3.4 exp_category rozdělení po zemích ---"
+tab exp_category country, col
 
 * --- 3.5 Plat — prevod na USD a rocni bazi ---
 destring salary_min salary_mid salary_max, replace force
@@ -472,13 +492,29 @@ esttab matrix(T1, fmt(%9.0fc %5.2f %9.0fc %5.2f %9.0fc %5.2f)) ///
 display _n "--- 6.0 Crosstab diagnostika (minimum obs v logit/mlogit predictors per zeme) ---"
 foreach c in US DE IN {
     display _n "=== Diagnostika pro zemi: `c' ==="
-    foreach var in job_family_num size_cat type_cat is_remote edu_bin exp_bin sector_nace_num {
+    foreach var in job_family_num size_cat type_cat is_remote edu_ols edu_logit exp_category sector_nace_num {
         display "Crosstab `var' vs has_ai (`c')"
         tab `var' has_ai if country == "`c'", missing
         display "Crosstab `var' vs ai_level (`c')"
         tab `var' ai_level if country == "`c'", missing
     }
 }
+
+* --- 6.0b Skill clustery vs ai_level (DE, IN) — overeni sparse cells ---
+* US ma vzdy dost dat; u DE/IN kontrolujeme, ze zadny cluster x Applied AI
+* nema pathologicky malou bunku (< 10 obs).
+display _n "--- 6.0b Skill clustery vs ai_level (DE, IN) ---"
+foreach c in DE IN {
+    display _n "=== Skill clustery x ai_level pro `c' ==="
+    foreach clvar of varlist cluster_* {
+        display "Crosstab `clvar' vs ai_level (`c')"
+        tab `clvar' ai_level if country == "`c'", row
+    }
+}
+
+* --- 6.0c Pokryti platu (has_salary) per zeme — informativni pro Heckman / OLS ---
+display _n "--- 6.0c Pokryti inzerovaneho platu per zeme ---"
+tab country has_salary, row missing
 
 display _n "=============================================================="
 display "6. TABULKA 2 — BINARNI LOGIT, JOB FAMILY + SKILL CLUSTERY (6 sloupcu)"
@@ -489,8 +525,8 @@ foreach c in US DE IN {
     display _n "=========== Zeme = `c' (T2 job family) ==========="
     capture noisily logit has_ai ///
         ib`sw_base'.job_family_num ///
-        edu_bin edu_missing ///
-        exp_bin exp_missing ///
+        ib2.edu_logit ///
+        ib3.exp_category ///
         ib`nace_base'.sector_nace_num ///
         ib1.type_cat ///
         ib5.size_cat ///
@@ -514,8 +550,8 @@ foreach c in US DE IN {
     display _n "=========== Zeme = `c' (T2 skill clustery) ==========="
     capture noisily logit has_ai ///
         cluster_* ///
-        edu_bin edu_missing ///
-        exp_bin exp_missing ///
+        ib2.edu_logit ///
+        ib3.exp_category ///
         ib`nace_base'.sector_nace_num ///
         ib1.type_cat ///
         ib5.size_cat ///
@@ -528,12 +564,12 @@ foreach c in US DE IN {
         estadd local ctrl_size   "Ano"
         estadd local ctrl_remote "Ano"
         estimates store ame_t2sk_`c'
-        
+
         * Hosmer-Lemeshow Goodness of Fit (vyzaduje model bez klastrovani)
         capture quietly logit has_ai ///
             cluster_* ///
-            edu_bin edu_missing ///
-            exp_bin exp_missing ///
+            ib2.edu_logit ///
+            ib3.exp_category ///
             ib`nace_base'.sector_nace_num ///
             ib1.type_cat ///
             ib5.size_cat ///
@@ -553,8 +589,8 @@ foreach c in US DE IN {
 esttab ame_t2jf_US ame_t2jf_DE ame_t2jf_IN ame_t2sk_US ame_t2sk_DE ame_t2sk_IN ///
     using "$outdir/Tabulka_2_Logit_AI.rtf", replace ///
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
-    keep(*.job_family_num cluster_* edu_bin edu_missing exp_bin exp_missing) ///
-    order(*.job_family_num cluster_* edu_bin edu_missing exp_bin exp_missing) ///
+    keep(*.job_family_num cluster_* *.edu_logit *.exp_category) ///
+    order(*.job_family_num cluster_* *.edu_logit *.exp_category) ///
     stats(ctrl_nace ctrl_type ctrl_size ctrl_remote N, ///
           fmt(%s %s %s %s %9.0fc) ///
           labels("NACE sektor" "Typ firmy" "Velikost firmy" "Remote" "N")) ///
@@ -565,7 +601,7 @@ esttab ame_t2jf_US ame_t2jf_DE ame_t2jf_IN ame_t2sk_US ame_t2sk_DE ame_t2sk_IN /
              "Průměrné marginální efekty (AME) z logitu, SE klastrované na firmu v závorkách." ///
              "Referenční job family: Software Engineer." ///
              "Všechny skill clustery (včetně cluster_generative_ai a cluster_data_science__ml) jsou součástí RHS; AI tiery jsou odvozené pouze z LLM klasifikace desc_tier_llm." ///
-             "edu_missing / exp_missing: dummy pro inzeráty bez uvedeného vzdělání / praxe.")
+             "edu_logit: 3 úrovně (referenční Bachelor+); exp_category: 4 úrovně (referenční Mid 3–5 let).")
 
 
 * ==============================================================================
@@ -578,11 +614,17 @@ display "=============================================================="
 foreach c in US DE IN {
     display _n "=========== Zeme = `c' (Tabulka 3) ==========="
     
+    * POZN: vzdelani (edu_logit) z mlogitu ZAMERNE vyrazeno — kategorie
+    * HS/Associate x Applied/Core AI ma v DE/IN < 25 pozorovani (quasi-
+    * complete separation risk). Stejny pristup pouzila verze 2024
+    * (ai_skills_analysis_comparative.do). Seniorita (exp_category) je
+    * zachovana, ma dostatecne buňky napric outcomy.
+
     * IIA Hausman test (vyzaduje model bez vce(cluster), otestujeme vynechani Core AI)
-    capture quietly mlogit ai_level cluster_* edu_bin edu_missing exp_bin exp_missing ib`nace_base'.sector_nace_num ib1.type_cat ib5.size_cat is_remote if country == "`c'", baseoutcome(0)
+    capture quietly mlogit ai_level cluster_* ib3.exp_category ib`nace_base'.sector_nace_num ib1.type_cat ib5.size_cat is_remote if country == "`c'", baseoutcome(0)
     if _rc == 0 {
         estimates store mfull_`c'
-        capture quietly mlogit ai_level cluster_* edu_bin edu_missing exp_bin exp_missing ib`nace_base'.sector_nace_num ib1.type_cat ib5.size_cat is_remote if country == "`c'" & ai_level != 2, baseoutcome(0)
+        capture quietly mlogit ai_level cluster_* ib3.exp_category ib`nace_base'.sector_nace_num ib1.type_cat ib5.size_cat is_remote if country == "`c'" & ai_level != 2, baseoutcome(0)
         if _rc == 0 {
             estimates store msub_`c'
             display _n ">> IIA Hausman Test pro `c' (Full vs subset bez Applied/Core AI)"
@@ -595,8 +637,7 @@ foreach c in US DE IN {
     foreach o in 0 1 2 {
         capture noisily mlogit ai_level ///
             cluster_* ///
-            edu_bin edu_missing ///
-            exp_bin exp_missing ///
+            ib3.exp_category ///
             ib`nace_base'.sector_nace_num ///
             ib1.type_cat ///
             ib5.size_cat ///
@@ -621,8 +662,8 @@ esttab ame_t3_US_0 ame_t3_US_1 ame_t3_US_2 ///
        ame_t3_IN_0 ame_t3_IN_1 ame_t3_IN_2 ///
        using "$outdir/Tabulka_3_Mlogit_AI_Tier.rtf", replace ///
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
-    keep(cluster_* edu_bin edu_missing exp_bin exp_missing) ///
-    order(cluster_* edu_bin edu_missing exp_bin exp_missing) ///
+    keep(cluster_* *.exp_category) ///
+    order(cluster_* *.exp_category) ///
     stats(ctrl_nace ctrl_type ctrl_size ctrl_remote N, ///
           fmt(%s %s %s %s %9.0fc) ///
           labels("NACE sektor" "Typ firmy" "Velikost firmy" "Remote" "N")) ///
@@ -632,6 +673,7 @@ esttab ame_t3_US_0 ame_t3_US_1 ame_t3_US_2 ///
     addnotes("Závislá proměnná: ai_level (0=None, 1=AI Integration, 2=Applied/Core AI)." ///
              "Průměrné marginální efekty (AME) z mlogitu, SE klastrované na firmu v závorkách, base outcome = None." ///
              "Všechny skill clustery (včetně cluster_generative_ai a cluster_data_science__ml) jsou v RHS." ///
+             "Vzdělání (edu_logit) z mlogitu vyřazeno kvůli sparse cells HS/Assoc × Applied AI v DE/IN (shodně s verzí 2024)." ///
              "Interpretace: reverzní inženýrství AI tiers — jaké inzeráty/skills LLM typicky klasifikuje do jednotlivých úrovní (popisné, nikoli kauzální)." ///
              "Součet AME napříč třemi outcomes pro každou proměnnou je 0.")
 
@@ -687,8 +729,8 @@ display _n "=========== Zeme = US (Tabulka 4) ==========="
 capture noisily regress ln_salary ///
     `ols_clusters' ///
     i.ai_level ///
-    edu_bin edu_missing ///
-    exp_bin exp_missing ///
+    ib3.edu_ols ///
+    ib3.exp_category ///
     ib`nace_base'.sector_nace_num ///
     ib`region_base'.region_num ///
     is_remote ///
@@ -706,8 +748,8 @@ if _rc == 0 {
     quietly regress ln_salary ///
         `ols_clusters' ///
         i.ai_level ///
-        edu_bin edu_missing ///
-        exp_bin exp_missing ///
+        ib3.edu_ols ///
+        ib3.exp_category ///
         ib`nace_base'.sector_nace_num ///
         ib`region_base'.region_num ///
         is_remote ///
@@ -722,8 +764,8 @@ foreach c in DE IN {
     capture noisily regress ln_salary ///
         `ols_clusters' ///
         i.ai_level ///
-        edu_bin edu_missing ///
-        exp_bin exp_missing ///
+        ib3.edu_ols ///
+        ib3.exp_category ///
         ib`nace_base'.sector_nace_num ///
         is_remote ///
         ib1.type_cat ///
@@ -740,8 +782,8 @@ foreach c in DE IN {
         quietly regress ln_salary ///
             `ols_clusters' ///
             i.ai_level ///
-            edu_bin edu_missing ///
-            exp_bin exp_missing ///
+            ib3.edu_ols ///
+            ib3.exp_category ///
             ib`nace_base'.sector_nace_num ///
             is_remote ///
             ib1.type_cat ///
@@ -753,8 +795,8 @@ foreach c in DE IN {
 
 esttab ols_t4_US ols_t4_DE ols_t4_IN using "$outdir/Tabulka_4_OLS_lnMzda.rtf", replace ///
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
-    keep(cluster_* 1.ai_level 2.ai_level edu_bin edu_missing exp_bin exp_missing) ///
-    order(1.ai_level 2.ai_level cluster_* edu_bin edu_missing exp_bin exp_missing) ///
+    keep(cluster_* 1.ai_level 2.ai_level *.edu_ols *.exp_category) ///
+    order(1.ai_level 2.ai_level cluster_* *.edu_ols *.exp_category) ///
     stats(ctrl_nace ctrl_type ctrl_size ctrl_remote ctrl_region N r2, ///
           fmt(%s %s %s %s %s %9.0fc %5.3f) ///
           labels("NACE sektor" "Typ firmy" "Velikost firmy" "Remote" "Region FE (US)" "N" "R²")) ///
@@ -784,8 +826,8 @@ display _n "=========== Zeme = US (Priloha C) ==========="
 capture noisily regress ln_salary ///
     cluster_* ///
     i.ai_level ///
-    edu_bin edu_missing ///
-    exp_bin exp_missing ///
+    ib3.edu_ols ///
+    ib3.exp_category ///
     ib`nace_base'.sector_nace_num ///
     ib`region_base'.region_num ///
     is_remote ///
@@ -806,8 +848,8 @@ foreach c in DE IN {
     capture noisily regress ln_salary ///
         cluster_* ///
         i.ai_level ///
-        edu_bin edu_missing ///
-        exp_bin exp_missing ///
+        ib3.edu_ols ///
+        ib3.exp_category ///
         ib`nace_base'.sector_nace_num ///
         is_remote ///
         ib1.type_cat ///
@@ -825,8 +867,8 @@ foreach c in DE IN {
 
 esttab ols_robC_US ols_robC_DE ols_robC_IN using "$outdir/Priloha_C_OLS_FullClusters.rtf", replace ///
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
-    keep(cluster_* 1.ai_level 2.ai_level edu_bin edu_missing exp_bin exp_missing) ///
-    order(1.ai_level 2.ai_level cluster_* edu_bin edu_missing exp_bin exp_missing) ///
+    keep(cluster_* 1.ai_level 2.ai_level *.edu_ols *.exp_category) ///
+    order(1.ai_level 2.ai_level cluster_* *.edu_ols *.exp_category) ///
     stats(ctrl_nace ctrl_type ctrl_size ctrl_remote ctrl_region N r2, ///
           fmt(%s %s %s %s %s %9.0fc %5.3f) ///
           labels("NACE sektor" "Typ firmy" "Velikost firmy" "Remote" "Region FE (US)" "N" "R²")) ///
@@ -915,8 +957,8 @@ foreach c in US DE IN {
     capture noisily heckman ln_salary ///
         `ols_clusters' ///
         i.ai_level ///
-        edu_bin edu_missing ///
-        exp_bin exp_missing ///
+        ib3.edu_ols ///
+        ib3.exp_category ///
         ib`nace_base'.sector_nace_num ///
         ib1.type_cat ///
         ib5.size_cat ///
@@ -924,8 +966,8 @@ foreach c in US DE IN {
         if country == "`c'", ///
         select(has_salary = `ols_clusters' ///
                             i.ai_level ///
-                            edu_bin edu_missing ///
-                            exp_bin exp_missing ///
+                            ib3.edu_ols ///
+                            ib3.exp_category ///
                             ib`nace_base'.sector_nace_num ///
                             ib1.type_cat ///
                             ib5.size_cat ///
@@ -941,8 +983,8 @@ foreach c in US DE IN {
 
 capture esttab heck_t4_US heck_t4_DE heck_t4_IN using "$outdir/Priloha_A_Heckman_lnMzda.rtf", replace ///
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
-    keep(cluster_* 1.ai_level 2.ai_level edu_bin edu_missing exp_bin exp_missing) ///
-    order(1.ai_level 2.ai_level cluster_* edu_bin edu_missing exp_bin exp_missing) ///
+    keep(cluster_* 1.ai_level 2.ai_level *.edu_ols *.exp_category) ///
+    order(1.ai_level 2.ai_level cluster_* *.edu_ols *.exp_category) ///
     stats(N, fmt(0) labels("N")) ///
     mtitles("USA" "Německo" "Indie") ///
     title("Příloha A: Heckman selection model — ln(plat) s korekcí selekce") ///
@@ -968,7 +1010,7 @@ display "=============================================================="
 display _n "--- 12.1 Pooled logit has_ai ~ job_family x country (Tabulka 2 JF test) ---"
 capture noisily logit has_ai ///
     ib`sw_base'.job_family_num##ib3.country_id ///
-    edu_bin edu_missing exp_bin exp_missing ///
+    ib2.edu_logit ib3.exp_category ///
     ib`nace_base'.sector_nace_num ib1.type_cat ib5.size_cat is_remote, ///
     vce(cluster firm_cluster)
 if _rc == 0 {
@@ -987,7 +1029,7 @@ capture noisily logit has_ai ///
     c.cluster_cloud_computing#ib3.country_id ///
     c.cluster_data_science__ml#ib3.country_id ///
     c.cluster_backend_development#ib3.country_id ///
-    edu_bin edu_missing exp_bin exp_missing ///
+    ib2.edu_logit ib3.exp_category ///
     ib`nace_base'.sector_nace_num ib1.type_cat ib5.size_cat is_remote, ///
     vce(cluster firm_cluster)
 if _rc == 0 {
@@ -1004,7 +1046,7 @@ display _n "--- 12.3 Pooled OLS ln_salary ~ ai_level x country (Tabulka 4 test) 
 capture noisily regress ln_salary ///
     i.ai_level##ib3.country_id ///
     `ols_clusters' ///
-    edu_bin edu_missing exp_bin exp_missing ///
+    ib3.edu_ols ib3.exp_category ///
     ib`nace_base'.sector_nace_num ib1.type_cat ib5.size_cat is_remote ///
     if ln_salary != ., vce(cluster firm_cluster)
 if _rc == 0 {
