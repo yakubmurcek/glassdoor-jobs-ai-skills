@@ -229,6 +229,10 @@ tab edu_logit country, col
 destring experience_min_llm, replace force
 label variable experience_min_llm "Min. požadované roky zkušeností"
 
+* Kvadraticky clen pro Mincerovu specifikaci (sekce 13)
+gen experience_sq = experience_min_llm^2
+label variable experience_sq "Zkušenosti na druhou (Mincer)"
+
 gen exp_category = .
 replace exp_category = 0 if experience_min_llm == .
 replace exp_category = 2 if experience_min_llm >= 0 & experience_min_llm <= 2
@@ -1056,7 +1060,472 @@ if _rc == 0 {
 
 
 * ==============================================================================
-* 13. ZAVER
+* 13. INKREMENTALNI MODELY NA US PODVZORKU (pro praktickou cast §5.3 - §5.5)
+* ==============================================================================
+* Kontext: text v docs/prakticka_cast.md je strukturovan jako inkrementalni
+* vypravovani Model A -> B -> C (OLS) a M1 -> M2 -> M3 (logit/mlogit) na
+* US datech. Tato sekce replikuje spec ze starsiho `ai_skills_analysis.do`
+* (verzija 2025-04-14), ale:
+*   - na US podvzorku (`if country == "US"`) pro zachovani srovnatelnosti
+*     s textem, kde US je hlavni pripadova studie,
+*   - s vce(robust) — shodne se starym ai_skills_analysis.do a s textem
+*     v prakticka_cast.md §5.3–§5.5 (hlavni US kapitola). Hlavni tabulky
+*     2–4 a Prilohy A–C pouzivaji vce(cluster firm_cluster) kvuli srovnani
+*     napric US/DE/IN; zde je pro US-inkrementalni cast ponechano robust.
+*   - se stejnym kategorickym edu_ols / edu_logit / exp_category schematem.
+*
+* Per-country finalni tabulky 2–4 (sekce 6–8) a srovnani US vs DE vs IN
+* (sekce 12 / Priloha B) zustavaji nedotcene — tato sekce je aditivni.
+*
+* Rename trick: cluster_generative_ai a cluster_data_science__ml docasne
+* prejmenujeme, aby `cluster_*` v hlavnich spec A/B/C a M1/M2/M3 reflektovaly
+* pouze NE-cirkularni clustery. Sensitivitní modely (Model C-nocirc, M3-circ)
+* pak tyto clustery vrati zpet pro kvantifikaci cirkularity.
+
+display _n "=============================================================="
+display "13. INKREMENTALNI MODELY NA US PODVZORKU"
+display "=============================================================="
+
+* Docasne prejmenovani cirkularnich clusteru (aby cluster_* je neobsahovalo)
+rename cluster_generative_ai    _excl_genai_s13
+rename cluster_data_science__ml _excl_dsml_s13
+
+* ------------------------------------------------------------------
+* 13.1 OLS Model A: Firemni profil (US)
+* ------------------------------------------------------------------
+display _n "--- 13.1 OLS Model A: Firemni profil (US, ln_salary) ---"
+display "ln(plat) ~ i.ai_level + sektor + region + remote + typ_firmy + velikost_firmy"
+regress ln_salary ///
+    i.ai_level ///
+    ib`nace_base'.sector_nace_num ///
+    ib`region_base'.region_num ///
+    is_remote ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    if country == "US" & ln_salary != ., vce(robust)
+estimates store s13_ols_A
+display _n "Model A: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+
+* ------------------------------------------------------------------
+* 13.2 OLS Model B: + Lidsky kapital (US)
+* ------------------------------------------------------------------
+display _n "--- 13.2 OLS Model B: + Lidsky kapital (US) ---"
+display "ln(plat) ~ Model A + edu_ols + exp_category"
+regress ln_salary ///
+    i.ai_level ///
+    ib`nace_base'.sector_nace_num ///
+    ib`region_base'.region_num ///
+    is_remote ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib3.edu_ols ///
+    ib3.exp_category ///
+    if country == "US" & ln_salary != ., vce(robust)
+estimates store s13_ols_B
+display _n "Model B: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+
+* ------------------------------------------------------------------
+* 13.3 OLS Model C: Plny model (US, bez GenAI/DS-ML)
+* ------------------------------------------------------------------
+display _n "--- 13.3 OLS Model C: Plny model (US, tech skills + job_family) ---"
+display "ln(plat) ~ Model B + cluster_* (bez GenAI/DS-ML) + job_family"
+regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    ib`nace_base'.sector_nace_num ///
+    ib`region_base'.region_num ///
+    is_remote ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`sw_base'.job_family_num ///
+    ib3.edu_ols ///
+    ib3.exp_category ///
+    if country == "US" & ln_salary != ., vce(robust)
+estimates store s13_ols_C
+display _n "Model C: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+
+* VIF pro Model C
+display _n "--- 13.3b VIF diagnostika Model C (US) ---"
+quietly regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    ib`nace_base'.sector_nace_num ///
+    ib`region_base'.region_num ///
+    is_remote ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`sw_base'.job_family_num ///
+    ib3.edu_ols ///
+    ib3.exp_category ///
+    if country == "US" & ln_salary != .
+vif
+
+* ------------------------------------------------------------------
+* 13.4 OLS Model C-nojf: Mediace pres job_family
+* ------------------------------------------------------------------
+display _n "--- 13.4 OLS Model C bez job_family (mediace) ---"
+regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    ib`nace_base'.sector_nace_num ///
+    ib`region_base'.region_num ///
+    is_remote ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib3.edu_ols ///
+    ib3.exp_category ///
+    if country == "US" & ln_salary != ., vce(robust)
+estimates store s13_ols_Cnojf
+display _n "Model C-nojf: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+
+* ------------------------------------------------------------------
+* 13.5 OLS Model C-Mincer: kontinualni zkusenost + exp^2
+* ------------------------------------------------------------------
+* POZN: Jiny vzorek nez Model C — missing experience_min_llm = drop (vs.
+* kategorie 0 u exp_category). Srovnani R2 je orientacni.
+display _n "--- 13.5 OLS Model C-Mincer (experience + experience^2) ---"
+display "POZN: Jiny vzorek (missing exp dropped misto kategorie)"
+regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    ib`nace_base'.sector_nace_num ///
+    ib`region_base'.region_num ///
+    is_remote ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`sw_base'.job_family_num ///
+    ib3.edu_ols ///
+    experience_min_llm experience_sq ///
+    if country == "US" & ln_salary != ., vce(robust)
+estimates store s13_ols_Cmincer
+display _n "Model C-Mincer: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
+
+* ------------------------------------------------------------------
+* 13.6 Srovnani OLS modelu
+* ------------------------------------------------------------------
+display _n "--- 13.6 Srovnani OLS Model A/B/C/C-nojf/C-Mincer (US) ---"
+estimates table s13_ols_A s13_ols_B s13_ols_Cnojf s13_ols_C s13_ols_Cmincer, ///
+    star stats(N r2 r2_a) b(%7.4f)
+
+* ------------------------------------------------------------------
+* 13.7 Wald F-testy: nested bloky (A->B, B->C)
+* ------------------------------------------------------------------
+* Testujeme, zda pridane bloky (lidsky kapital / tech skills + pozice)
+* vyznamne zlepsuji model. Postup: plna specifikace s testparm pro
+* jednotlive bloky, vce(robust).
+display _n "--- 13.7 Wald F-testy nested modelu (A -> B -> C) ---"
+quietly regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    ib`nace_base'.sector_nace_num ///
+    ib`region_base'.region_num ///
+    is_remote ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`sw_base'.job_family_num ///
+    ib3.edu_ols ///
+    ib3.exp_category ///
+    if country == "US" & ln_salary != ., vce(robust)
+
+display _n "Wald F-test A -> B: spolecna signifikance lidskeho kapitalu (edu + exp)"
+testparm ib3.edu_ols i.exp_category
+
+display _n "Wald F-test B -> C: spolecna signifikance tech skills + pozice (cluster_* + job_family)"
+testparm cluster_* i.job_family_num
+
+* ------------------------------------------------------------------
+* 13.8 OLS Model C-nocirc: sensitivity s GenAI + DS/ML
+* ------------------------------------------------------------------
+* Vratime cirkularni clustery zpet a odhadneme plny model pro srovnani
+* dopadu cirkularity. Shodne s principem Prilohy C (ale zde jen US).
+display _n "--- 13.8 OLS Model C-circ (vse vcetne GenAI + DS/ML, US) ---"
+rename _excl_genai_s13  cluster_generative_ai
+rename _excl_dsml_s13   cluster_data_science__ml
+
+regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    ib`nace_base'.sector_nace_num ///
+    ib`region_base'.region_num ///
+    is_remote ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`sw_base'.job_family_num ///
+    ib3.edu_ols ///
+    ib3.exp_category ///
+    if country == "US" & ln_salary != ., vce(robust)
+estimates store s13_ols_Ccirc
+display _n "Model C-circ (s GenAI + DS/ML): R2 = " e(r2) ", N = " e(N)
+
+display _n "--- 13.8b Srovnani Model C (bez) vs C-circ (s cirkularnimi clustery) ---"
+estimates table s13_ols_C s13_ols_Ccirc, star stats(N r2 r2_a) b(%7.4f)
+
+* Ponechame cluster_* KOMPLETNI (s GenAI/DS-ML) pro M3-circ sensitivity.
+* Pred logit M1/M2/M3 je zase prejmenujeme pryc.
+
+* ------------------------------------------------------------------
+* 13.9 LOGIT M1 / M2 / M3 — inkrementalni (US, bez GenAI/DS-ML)
+* ------------------------------------------------------------------
+rename cluster_generative_ai    _excl_genai_s13
+rename cluster_data_science__ml _excl_dsml_s13
+
+display _n "--- 13.9a Logit M1: Profil firmy (US) ---"
+logit has_ai ///
+    ib`nace_base'.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`region_base'.region_num ///
+    if country == "US", or vce(robust)
+estimates store s13_lg_M1
+display _n "AME Logit M1 (US):"
+margins, dydx(*) post
+estimates store s13_lg_M1_ame
+
+display _n "--- 13.9b Logit M2: Profil role (US) ---"
+logit has_ai ///
+    cluster_* ///
+    ib`sw_base'.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category ///
+    if country == "US", or vce(robust)
+estimates store s13_lg_M2
+display _n "AME Logit M2 (US):"
+margins, dydx(*) post
+estimates store s13_lg_M2_ame
+
+display _n "--- 13.9c Logit M3: Kompletni (US) ---"
+logit has_ai ///
+    ib`nace_base'.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`region_base'.region_num ///
+    cluster_* ///
+    ib`sw_base'.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category ///
+    if country == "US", or vce(robust)
+estimates store s13_lg_M3
+display _n "AME Logit M3 (US):"
+margins, dydx(*) post
+estimates store s13_lg_M3_ame
+
+* ------------------------------------------------------------------
+* 13.10 Logit M3: Linktest (spec test)
+* ------------------------------------------------------------------
+display _n "--- 13.10 Logit M3 linktest (US) ---"
+quietly logit has_ai ///
+    ib`nace_base'.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`region_base'.region_num ///
+    cluster_* ///
+    ib`sw_base'.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category ///
+    if country == "US", vce(robust)
+linktest
+
+* ------------------------------------------------------------------
+* 13.11 Logit M3: ROC / AUC + classification
+* ------------------------------------------------------------------
+display _n "--- 13.11a Logit M3 lroc (AUC) / US ---"
+quietly logit has_ai ///
+    ib`nace_base'.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`region_base'.region_num ///
+    cluster_* ///
+    ib`sw_base'.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category ///
+    if country == "US"
+lroc, nograph
+display _n "--- 13.11b Logit M3 classification table (US) ---"
+estat classification
+
+display _n "--- 13.11c Logit M3 Hosmer-Lemeshow GOF (US) ---"
+estat gof, group(10)
+
+* ------------------------------------------------------------------
+* 13.12 Logit M3 bez job_family (test mediace)
+* ------------------------------------------------------------------
+display _n "--- 13.12a Logit M3 bez job_family (US) ---"
+logit has_ai ///
+    ib`nace_base'.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`region_base'.region_num ///
+    cluster_* ///
+    ib2.edu_logit ///
+    ib3.exp_category ///
+    if country == "US", or vce(robust)
+estimates store s13_lg_M3nojf
+display _n "AME Logit M3-nojf (US):"
+margins, dydx(*) post
+estimates store s13_lg_M3nojf_ame
+
+display _n "--- 13.12b Logit M3 bez job_family a seniority (US) ---"
+logit has_ai ///
+    ib`nace_base'.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`region_base'.region_num ///
+    cluster_* ///
+    ib2.edu_logit ///
+    if country == "US", or vce(robust)
+estimates store s13_lg_M3nojfnoexp
+display _n "AME Logit M3-nojf-noexp (US):"
+margins, dydx(*) post
+estimates store s13_lg_M3nojfnoexp_ame
+
+* ------------------------------------------------------------------
+* 13.13 MLOGIT M1 / M2 / M3 — inkrementalni (US, bez GenAI/DS-ML)
+* ------------------------------------------------------------------
+* Mlogit (stejne jako Tabulka 3): edu vyrazeno kvuli sparse cells u
+* HS/Associate × Applied/Core AI. Kontrola vzdelani je v binarnim logitu.
+display _n "--- 13.13a Mlogit M1: Profil firmy (US) ---"
+mlogit ai_level ///
+    ib`nace_base'.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`region_base'.region_num ///
+    if country == "US", baseoutcome(0) rrr vce(robust)
+estimates store s13_ml_M1
+
+display _n "--- 13.13b Mlogit M2: Profil role (US) ---"
+mlogit ai_level ///
+    cluster_* ///
+    ib`sw_base'.job_family_num ///
+    ib3.exp_category ///
+    if country == "US", baseoutcome(0) rrr vce(robust)
+estimates store s13_ml_M2
+
+display _n "--- 13.13c Mlogit M3: Kompletni (US) ---"
+mlogit ai_level ///
+    ib`nace_base'.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`region_base'.region_num ///
+    cluster_* ///
+    ib`sw_base'.job_family_num ///
+    ib3.exp_category ///
+    if country == "US", baseoutcome(0) rrr vce(robust)
+estimates store s13_ml_M3
+
+display _n "--- 13.13d Mlogit M3 AME: P(AI Integration) ---"
+margins, dydx(*) predict(outcome(1))
+display _n "--- 13.13e Mlogit M3 AME: P(Applied/Core AI) ---"
+margins, dydx(*) predict(outcome(2))
+
+* ------------------------------------------------------------------
+* 13.14 Mlogit M3a / M3b — mediace (job_family, seniority)
+* ------------------------------------------------------------------
+display _n "--- 13.14a Mlogit M3a (bez job_family) ---"
+mlogit ai_level ///
+    ib`nace_base'.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`region_base'.region_num ///
+    cluster_* ///
+    ib3.exp_category ///
+    if country == "US", baseoutcome(0) rrr vce(robust)
+estimates store s13_ml_M3a
+display _n "--- 13.14a1 Mlogit M3a AME: P(AI Integration) ---"
+margins, dydx(*) predict(outcome(1))
+display _n "--- 13.14a2 Mlogit M3a AME: P(Applied/Core AI) ---"
+margins, dydx(*) predict(outcome(2))
+
+display _n "--- 13.14b Mlogit M3b (bez job_family a seniority) ---"
+mlogit ai_level ///
+    ib`nace_base'.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`region_base'.region_num ///
+    cluster_* ///
+    if country == "US", baseoutcome(0) rrr vce(robust)
+estimates store s13_ml_M3b
+display _n "--- 13.14b1 Mlogit M3b AME: P(AI Integration) ---"
+margins, dydx(*) predict(outcome(1))
+display _n "--- 13.14b2 Mlogit M3b AME: P(Applied/Core AI) ---"
+margins, dydx(*) predict(outcome(2))
+
+* ------------------------------------------------------------------
+* 13.15 Sensitivity: Logit M3-circ (s GenAI + DS/ML)
+* ------------------------------------------------------------------
+rename _excl_genai_s13  cluster_generative_ai
+rename _excl_dsml_s13   cluster_data_science__ml
+
+display _n "--- 13.15 Logit M3-circ (US, cluster_* vcetne GenAI + DS/ML) ---"
+logit has_ai ///
+    ib`nace_base'.sector_nace_num ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`region_base'.region_num ///
+    cluster_* ///
+    ib`sw_base'.job_family_num ///
+    ib2.edu_logit ///
+    ib3.exp_category ///
+    if country == "US", or vce(robust)
+estimates store s13_lg_M3circ
+display _n "AME Logit M3-circ (US, ilustrace cirkularity):"
+margins, dydx(*) post
+estimates store s13_lg_M3circ_ame
+
+* ------------------------------------------------------------------
+* 13.16 Analyza skill_count: prumery per AI tier + t-test (US)
+* ------------------------------------------------------------------
+display _n "--- 13.16a Prumery skill_count per ai_level (US, pro text §5.5.1) ---"
+tabstat skill_count if country == "US", by(ai_level) statistics(n mean sd min max)
+
+display _n "--- 13.16b T-test skill_count by has_ai (rovne variance, US) ---"
+ttest skill_count if country == "US", by(has_ai)
+
+display _n "--- 13.16c Welch t-test skill_count by has_ai (nerovne variance, US) ---"
+ttest skill_count if country == "US", by(has_ai) unequal
+
+* ------------------------------------------------------------------
+* 13.17 Exporty: RTF tabulky pro inkrementalni modely
+* ------------------------------------------------------------------
+display _n "--- 13.17 Export inkrementalnich modelu do RTF ---"
+
+* Tabulka 13a: OLS Model A / B / C-nojf / C / C-Mincer
+esttab s13_ols_A s13_ols_B s13_ols_Cnojf s13_ols_C s13_ols_Cmincer ///
+    using "$outdir/Tabulka_13a_OLS_incremental_US.rtf", replace ///
+    label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+    stats(N r2 r2_a, fmt(0 3 3) labels("N" "R2" "Adj R2")) ///
+    mtitles("Model A" "Model B" "C - bez JF" "Model C" "C - Mincer") ///
+    title("Tabulka 13a: Inkrementalni OLS modely ln(plat) - US podvzorek") ///
+    addnotes("SE klastrovane na firm_cluster. Reference: ai_level=0 (None), edu_ols=Bachelor, exp_category=Mid (3-5 let).")
+
+* Tabulka 13b: Logit M1 / M2 / M3 / M3-nojf / M3-nojf-noexp / M3-circ (AME)
+esttab s13_lg_M1_ame s13_lg_M2_ame s13_lg_M3_ame ///
+       s13_lg_M3nojf_ame s13_lg_M3nojfnoexp_ame s13_lg_M3circ_ame ///
+    using "$outdir/Tabulka_13b_Logit_incremental_US_AME.rtf", replace ///
+    label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+    stats(N, fmt(0) labels("N")) ///
+    mtitles("M1" "M2" "M3" "M3-nojf" "M3-nojf-noexp" "M3-circ") ///
+    title("Tabulka 13b: Inkrementalni logit P(AI) AME - US podvzorek") ///
+    addnotes("AME (dy/dx). SE klastrovane na firm_cluster. M3-circ = sensitivity s GenAI+DS/ML (cirkularni).")
+
+* Tabulka 13c: Mlogit M1 / M2 / M3 / M3a / M3b (koeficienty, ne AME — AME
+* per outcome by explodovalo tabulku na 10 sloupcu; pro text sekce 5.5.1–
+* 5.5.3 staci koeficienty + LL)
+esttab s13_ml_M1 s13_ml_M2 s13_ml_M3 s13_ml_M3a s13_ml_M3b ///
+    using "$outdir/Tabulka_13c_Mlogit_incremental_US.rtf", replace ///
+    label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+    stats(N ll chi2, fmt(0 3 3) labels("N" "Log-likelihood" "chi2")) ///
+    mtitles("M1" "M2" "M3" "M3a (bez JF)" "M3b (bez JF+exp)") ///
+    title("Tabulka 13c: Inkrementalni mlogit P(AI tier) - US podvzorek") ///
+    addnotes("RRR koeficienty (baseoutcome=None). SE klastrovane na firm_cluster. Dve rovnice per model: AI Integration (vs None), Applied/Core AI (vs None).")
+
+display _n "--- Sekce 13 dokoncena ---"
+display "RTF tabulky: Tabulka_13a_OLS_incremental_US.rtf,"
+display "             Tabulka_13b_Logit_incremental_US_AME.rtf,"
+display "             Tabulka_13c_Mlogit_incremental_US.rtf"
+
+
+* ==============================================================================
+* 14. ZAVER
 * ==============================================================================
 display _n "=============================================================="
 display "FINALNI TEZISTOVA ANALYZA DOKONCENA"
