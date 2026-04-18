@@ -7,16 +7,20 @@
 *
 * Vystupy (RTF do Wordu):
 *   Tabulka 1:  Vyskyt AI pozadavku po zemich (sloupcova %, N + %)
-*   Tabulka 2:  Binarni logit P(AI) — job family ^ skill clustery (AME, 6 sloupcu)
-*   Tabulka 3:  Mlogit P(AI tier) ~ skill clustery (AME, 9 sloupcu)
-*   Tabulka 4:  OLS ln(plat) ~ skill clustery + AI tiery (3 sloupce, per zeme)
+*   Tabulka 2:  Binarni logit P(AI) — job family (AME, 3 sloupce per zeme)
+*   Tabulka 3:  Binarni logit P(AI) — skill clustery (AME, 3 sloupce per zeme)
+*   Tabulka 4:  Mlogit P(AI tier) ~ skill clustery (AME, 9 sloupcu)
+*   Tabulka 5:  OLS ln(plat) ~ skill clustery + AI tiery (3 sloupce, per zeme)
 *   Graf_*:     Frekvencni kernel density ln(plat) x ai_level per zeme
 *   Priloha A:  Heckman selection model pro ln(plat) — robustness
 *   Priloha B:  Cross-country Wald testy (v logu, viz sekce 12)
-*   Priloha C:  OLS ln(plat) s plnou sadou skill clusteru (robustness k Tabulce 4)
+*   Priloha C:  OLS ln(plat) s plnou sadou skill clusteru (robustness k Tabulce 5)
+*   Priloha D:  US OLS s region FE (robustness vuci regionalni heterogenite)
 *
 * Kontroly (neukazovane v tabulkach): NACE sektor, typ firmy, velikost firmy,
-*   remote, region FE (jen US v OLS). Vzdelani: edu_ols (5 urovni, ref. Bachelor)
+*   remote. Region FE (US Census) pouze v Priloze D jako robustness — hlavni
+*   Tabulka 5 je symetricka napric zememi bez region FE (DE/IN ekvivalentni
+*   promennou v datech nemaji). Vzdelani: edu_ols (5 urovni, ref. Bachelor)
 *   pouzito v OLS / Heckman; edu_logit (3 urovne, ref. Bachelor+) pouzito v
 *   binarnim logitu; v mlogitu edu vyrazeno kvuli sparse cells (viz sekce 7).
 *   Praxe: exp_category (4 urovne, ref. Mid 3-5 let) ve vsech modelech.
@@ -35,9 +39,10 @@
 *   - Vzdelani/praxe jako kategoricke (edu_ols 5 ur., edu_logit 3 ur., exp_category 4 ur.);
 *     kategorie "Missing" odlisena od "nepozaduje se", shodne s verzi 2024
 *   - Baseline job family = Software Engineer (nejcastejsi, neutralni)
-*   - Priloha A: Heckman pro selection bias v ln(plat) (stejna spec. jako Tabulka 4)
+*   - Priloha A: Heckman pro selection bias v ln(plat) (stejna spec. jako Tabulka 5)
 *   - Priloha B: pooled modely s country interakcemi + Wald testy
 *   - Priloha C: OLS ln(plat) s plnou sadou clusteru (robustness check)
+*   - Priloha D: US OLS s region FE (robustness vuci regionalni heterogenite)
 *   - Pouze jedna hlavni specifikace per tabulka; robustness v priloze
 *
 * Autor: Yakub Murcek
@@ -197,7 +202,7 @@ replace education_hybrid = "master" if education_hybrid == "phd"
 replace education_hybrid = "associate" if education_hybrid == "diploma"
 replace education_hybrid = "missing" if !inlist(education_hybrid, "highschool", "associate", "bachelor", "master", "missing")
 
-* edu_ols: 5-urovnova granularni (pro OLS — Tabulka 4, Priloha A Heckman, Priloha C)
+* edu_ols: 5-urovnova granularni (pro OLS — Tabulka 5, Priloha A Heckman, Priloha C)
 gen edu_ols = .
 replace edu_ols = 0 if education_hybrid == "missing"
 replace edu_ols = 1 if education_hybrid == "highschool"
@@ -485,7 +490,7 @@ esttab matrix(T1, fmt(%9.0fc %5.2f %9.0fc %5.2f %9.0fc %5.2f)) ///
 
 
 * ==============================================================================
-* 6. TABULKA 2 — BINARNI LOGIT P(AI) ~ JOB FAMILY ^ SKILL CLUSTERY (AME, per zeme)
+* 6. TABULKY 2 + 3 — BINARNI LOGIT P(AI) ~ JOB FAMILY ^ SKILL CLUSTERY (AME, per zeme)
 * ==============================================================================
 * Dva komplementarni modely per zeme (celkem 6 sloupcu):
 *   - Levy panel (3 sloupce): P(AI) ~ job_family + controls
@@ -521,7 +526,7 @@ display _n "--- 6.0c Pokryti inzerovaneho platu per zeme ---"
 tab country has_salary, row missing
 
 display _n "=============================================================="
-display "6. TABULKA 2 — BINARNI LOGIT, JOB FAMILY + SKILL CLUSTERY (6 sloupcu)"
+display "6. TABULKY 2 + 3 — BINARNI LOGIT, JOB FAMILY (T2) a SKILL CLUSTERY (T3)"
 display "=============================================================="
 
 * --- 6a. Job family panel ---
@@ -551,7 +556,7 @@ foreach c in US DE IN {
 
 * --- 6b. Skill clustery panel ---
 foreach c in US DE IN {
-    display _n "=========== Zeme = `c' (T2 skill clustery) ==========="
+    display _n "=========== Zeme = `c' (T3 skill clustery) ==========="
     capture noisily logit has_ai ///
         cluster_* ///
         ib2.edu_logit ///
@@ -585,39 +590,55 @@ foreach c in US DE IN {
         }
     }
     else {
-        display as error "Logit T2 (skill clustery) pro `c' selhal (rc=" _rc ")"
+        display as error "Logit T3 (skill clustery) pro `c' selhal (rc=" _rc ")"
     }
 }
 
-* --- 6c. Export Tabulky 2 (merged 6 sloupcu) ---
-esttab ame_t2jf_US ame_t2jf_DE ame_t2jf_IN ame_t2sk_US ame_t2sk_DE ame_t2sk_IN ///
-    using "$outdir/Tabulka_2_Logit_AI.rtf", replace ///
+* --- 6c. Export Tabulky 2 (job family, 3 sloupce) ---
+esttab ame_t2jf_US ame_t2jf_DE ame_t2jf_IN ///
+    using "$outdir/Tabulka_2_Logit_JobFamily.rtf", replace ///
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
-    keep(*.job_family_num cluster_* *.edu_logit *.exp_category) ///
-    order(*.job_family_num cluster_* *.edu_logit *.exp_category) ///
+    keep(*.job_family_num *.edu_logit *.exp_category) ///
+    order(*.job_family_num *.edu_logit *.exp_category) ///
     stats(ctrl_nace ctrl_type ctrl_size ctrl_remote N, ///
           fmt(%s %s %s %s %9.0fc) ///
           labels("NACE sektor" "Typ firmy" "Velikost firmy" "Remote" "N")) ///
-    mgroups("Job family" "Skill clustery", pattern(1 0 0 1 0 0)) ///
-    mtitles("USA" "Německo" "Indie" "USA" "Německo" "Indie") ///
-    title("Tabulka 2: Binární logit P(AI požadavek = ano) — AME podle země") ///
+    mtitles("USA" "Německo" "Indie") ///
+    title("Tabulka 2: Binární logit P(AI požadavek = ano) — job family (AME podle země)") ///
     addnotes("Závislá proměnná: has_ai (1=AI Integration nebo Applied/Core AI, 0=None)." ///
              "Průměrné marginální efekty (AME) z logitu, SE klastrované na firmu v závorkách." ///
              "Referenční job family: Software Engineer." ///
-             "Všechny skill clustery (včetně cluster_generative_ai a cluster_data_science__ml) jsou součástí RHS; AI tiery jsou odvozené pouze z LLM klasifikace desc_tier_llm." ///
+             "Tato specifikace neobsahuje skill clustery — ty jsou samostatně v Tabulce 3 se stejnými kontrolami. Oddělené modely umožňují čistou interpretaci profesních a dovednostních efektů bez vzájemné kanibalizace koeficientů (job family a skill clustery jsou silně korelované)." ///
+             "edu_logit: 3 úrovně (referenční Bachelor+); exp_category: 4 úrovně (referenční Mid 3–5 let).")
+
+* --- 6d. Export Tabulky 3 (skill clustery, 3 sloupce) ---
+esttab ame_t2sk_US ame_t2sk_DE ame_t2sk_IN ///
+    using "$outdir/Tabulka_3_Logit_SkillClusters.rtf", replace ///
+    label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+    keep(cluster_* *.edu_logit *.exp_category) ///
+    order(cluster_* *.edu_logit *.exp_category) ///
+    stats(ctrl_nace ctrl_type ctrl_size ctrl_remote N, ///
+          fmt(%s %s %s %s %9.0fc) ///
+          labels("NACE sektor" "Typ firmy" "Velikost firmy" "Remote" "N")) ///
+    mtitles("USA" "Německo" "Indie") ///
+    title("Tabulka 3: Binární logit P(AI požadavek = ano) — skill clustery (AME podle země)") ///
+    addnotes("Závislá proměnná: has_ai (1=AI Integration nebo Applied/Core AI, 0=None)." ///
+             "Průměrné marginální efekty (AME) z logitu, SE klastrované na firmu v závorkách." ///
+             "Všechny skill clustery (včetně cluster_generative_ai a cluster_data_science__ml) jsou součástí RHS jako binární (0/1) prediktory; AME udává změnu pravděpodobnosti AI požadavku při přítomnosti daného clusteru." ///
+             "Tato specifikace neobsahuje job_family (zachycení profesních efektů viz Tabulka 2 se stejnými kontrolami)." ///
              "edu_logit: 3 úrovně (referenční Bachelor+); exp_category: 4 úrovně (referenční Mid 3–5 let).")
 
 
 * ==============================================================================
-* 7. TABULKA 3 — MLOGIT P(AI tier) ~ SKILL CLUSTERY (AME, 9 sloupcu)
+* 7. TABULKA 4 — MLOGIT P(AI tier) ~ SKILL CLUSTERY (AME, 9 sloupcu)
 * ==============================================================================
 display _n "=============================================================="
-display "7. TABULKA 3 — MLOGIT, SKILL CLUSTERY"
+display "7. TABULKA 4 — MLOGIT, SKILL CLUSTERY"
 display "=============================================================="
 
 foreach c in US DE IN {
-    display _n "=========== Zeme = `c' (Tabulka 3) ==========="
-    
+    display _n "=========== Zeme = `c' (Tabulka 4) ==========="
+
     * POZN: vzdelani (edu_logit) z mlogitu ZAMERNE vyrazeno — kategorie
     * HS/Associate x Applied/Core AI ma v DE/IN < 25 pozorovani (quasi-
     * complete separation risk). Stejny pristup pouzila verze 2024
@@ -656,7 +677,7 @@ foreach c in US DE IN {
             estimates store ame_t3_`c'_`o'
         }
         else {
-            display as error "Mlogit Tabulka 3 pro `c' outcome `o' selhal (rc=" _rc ")"
+            display as error "Mlogit Tabulka 4 pro `c' outcome `o' selhal (rc=" _rc ")"
         }
     }
 }
@@ -664,7 +685,7 @@ foreach c in US DE IN {
 esttab ame_t3_US_0 ame_t3_US_1 ame_t3_US_2 ///
        ame_t3_DE_0 ame_t3_DE_1 ame_t3_DE_2 ///
        ame_t3_IN_0 ame_t3_IN_1 ame_t3_IN_2 ///
-       using "$outdir/Tabulka_3_Mlogit_AI_Tier.rtf", replace ///
+       using "$outdir/Tabulka_4_Mlogit_AI_Tier.rtf", replace ///
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
     keep(cluster_* *.exp_category) ///
     order(cluster_* *.exp_category) ///
@@ -673,7 +694,7 @@ esttab ame_t3_US_0 ame_t3_US_1 ame_t3_US_2 ///
           labels("NACE sektor" "Typ firmy" "Velikost firmy" "Remote" "N")) ///
     mgroups("USA" "Německo" "Indie", pattern(1 0 0 1 0 0 1 0 0)) ///
     mtitles("None" "Integ." "Applied" "None" "Integ." "Applied" "None" "Integ." "Applied") ///
-    title("Tabulka 3: Multinomiální logit P(AI tier) — AME podle země a úrovně") ///
+    title("Tabulka 4: Multinomiální logit P(AI tier) — AME podle země a úrovně") ///
     addnotes("Závislá proměnná: ai_level (0=None, 1=AI Integration, 2=Applied/Core AI)." ///
              "Průměrné marginální efekty (AME) z mlogitu, SE klastrované na firmu v závorkách, base outcome = None." ///
              "Všechny skill clustery (včetně cluster_generative_ai a cluster_data_science__ml) jsou v RHS." ///
@@ -683,7 +704,7 @@ esttab ame_t3_US_0 ame_t3_US_1 ame_t3_US_2 ///
 
 
 * ==============================================================================
-* 8. TABULKA 4 — OLS ln(plat) ~ SKILL CLUSTERY + AI TIERY (per zeme)
+* 8. TABULKA 5 — OLS ln(plat) ~ SKILL CLUSTERY + AI TIERY (per zeme)
 * ==============================================================================
 * Hlavni specifikace: cluster_generative_ai a cluster_data_science__ml JSOU
 * VYRAZENY z RHS, protoze jsou konstrukcne cast ai_level (LLM je pri klasifikaci
@@ -692,7 +713,7 @@ esttab ame_t3_US_0 ame_t3_US_1 ame_t3_US_2 ///
 * ktere ta role implicitne predpoklada. Plna specifikace s temito clustery
 * zpet v RHS = Priloha C (sekce 8b, robustness check).
 display _n "=============================================================="
-display "8. TABULKA 4 — OLS ln(plat) per zeme"
+display "8. TABULKA 5 — OLS ln(plat) per zeme"
 display "=============================================================="
 
 * --- 8.0 Minimum-N diagnostika per zeme ---
@@ -728,15 +749,14 @@ local ols_clusters : list all_clusters - ols_excl
 display _n "OLS skill clustery (bez GenAI a DS/ML):"
 display "`ols_clusters'"
 
-* US (vc. region FE)
-display _n "=========== Zeme = US (Tabulka 4) ==========="
+* US (symetricka specifikace s DE/IN — bez region FE; region FE varianta viz Priloha D)
+display _n "=========== Zeme = US (Tabulka 5) ==========="
 capture noisily regress ln_salary ///
     `ols_clusters' ///
     i.ai_level ///
     ib3.edu_ols ///
     ib3.exp_category ///
     ib`nace_base'.sector_nace_num ///
-    ib`region_base'.region_num ///
     is_remote ///
     ib1.type_cat ///
     ib5.size_cat ///
@@ -746,7 +766,6 @@ if _rc == 0 {
     estadd local ctrl_type   "Ano"
     estadd local ctrl_size   "Ano"
     estadd local ctrl_remote "Ano"
-    estadd local ctrl_region "Ano"
     estimates store ols_t4_US
     display _n "--- VIF Kontrola (US) ---"
     quietly regress ln_salary ///
@@ -755,7 +774,6 @@ if _rc == 0 {
         ib3.edu_ols ///
         ib3.exp_category ///
         ib`nace_base'.sector_nace_num ///
-        ib`region_base'.region_num ///
         is_remote ///
         ib1.type_cat ///
         ib5.size_cat ///
@@ -764,7 +782,7 @@ if _rc == 0 {
 }
 
 foreach c in DE IN {
-    display _n "=========== Zeme = `c' (Tabulka 4) ==========="
+    display _n "=========== Zeme = `c' (Tabulka 5) ==========="
     capture noisily regress ln_salary ///
         `ols_clusters' ///
         i.ai_level ///
@@ -780,7 +798,6 @@ foreach c in DE IN {
         estadd local ctrl_type   "Ano"
         estadd local ctrl_size   "Ano"
         estadd local ctrl_remote "Ano"
-        estadd local ctrl_region "-"
         estimates store ols_t4_`c'
         display _n "--- VIF Kontrola (`c') ---"
         quietly regress ln_salary ///
@@ -797,18 +814,19 @@ foreach c in DE IN {
     }
 }
 
-esttab ols_t4_US ols_t4_DE ols_t4_IN using "$outdir/Tabulka_4_OLS_lnMzda.rtf", replace ///
+esttab ols_t4_US ols_t4_DE ols_t4_IN using "$outdir/Tabulka_5_OLS_lnMzda.rtf", replace ///
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
     keep(cluster_* 1.ai_level 2.ai_level *.edu_ols *.exp_category) ///
     order(1.ai_level 2.ai_level cluster_* *.edu_ols *.exp_category) ///
-    stats(ctrl_nace ctrl_type ctrl_size ctrl_remote ctrl_region N r2, ///
-          fmt(%s %s %s %s %s %9.0fc %5.3f) ///
-          labels("NACE sektor" "Typ firmy" "Velikost firmy" "Remote" "Region FE (US)" "N" "R²")) ///
+    stats(ctrl_nace ctrl_type ctrl_size ctrl_remote N r2, ///
+          fmt(%s %s %s %s %9.0fc %5.3f) ///
+          labels("NACE sektor" "Typ firmy" "Velikost firmy" "Remote" "N" "R²")) ///
     mtitles("USA" "Německo" "Indie") ///
-    title("Tabulka 4: OLS ln(plat) — skill clustery + AI tiery, separátně podle země") ///
+    title("Tabulka 5: OLS ln(plat) — skill clustery + AI tiery, separátně podle země") ///
     addnotes("Závislá proměnná: ln(roční plat v USD)." ///
              "Standardní chyby klastrované na firmu v závorkách." ///
              "Referenční AI úroveň: None." ///
+             "Symetrická specifikace napříč zeměmi bez regionálních fixních efektů. Varianta s US Census region FE viz Příloha D (robustness)." ///
              "cluster_generative_ai a cluster_data_science__ml záměrně vynechány z RHS — jsou konstrukčně součástí klasifikace ai_level (cirkularita). Koeficienty i.ai_level tak zachycují mzdovou prémii role včetně implicitních AI znalostí." ///
              "Plná specifikace s oběma clustery zpět v RHS jako robustness viz Příloha C." ///
              "Pozor: v DE je pokrytí platu velmi nízké — viz Heckman robustness v Příloze A.")
@@ -817,15 +835,15 @@ esttab ols_t4_US ols_t4_DE ols_t4_IN using "$outdir/Tabulka_4_OLS_lnMzda.rtf", r
 * ==============================================================================
 * 8b. PRILOHA C — OLS ln(plat) s plnou sadou skill clusteru (robustness)
 * ==============================================================================
-* Robustnostni kontrola k Tabulce 4: stejna specifikace, ale s navratem
+* Robustnostni kontrola k Tabulce 5: stejna specifikace, ale s navratem
 * cluster_generative_ai a cluster_data_science__ml zpet do RHS. Pokud budou
-* koeficienty i.ai_level stabilni oproti Tabulce 4, je to signal, ze efekt
+* koeficienty i.ai_level stabilni oproti Tabulce 5, je to signal, ze efekt
 * AI tieru zachycuje roli (nikoli jen prekryv s GenAI/ML skills).
 display _n "=============================================================="
 display "8b. PRILOHA C — OLS ln(plat) s plnou sadou skill clusteru (robustness)"
 display "=============================================================="
 
-* US (vc. region FE)
+* US (symetricka specifikace s DE/IN — bez region FE)
 display _n "=========== Zeme = US (Priloha C) ==========="
 capture noisily regress ln_salary ///
     cluster_* ///
@@ -833,7 +851,6 @@ capture noisily regress ln_salary ///
     ib3.edu_ols ///
     ib3.exp_category ///
     ib`nace_base'.sector_nace_num ///
-    ib`region_base'.region_num ///
     is_remote ///
     ib1.type_cat ///
     ib5.size_cat ///
@@ -843,7 +860,6 @@ if _rc == 0 {
     estadd local ctrl_type   "Ano"
     estadd local ctrl_size   "Ano"
     estadd local ctrl_remote "Ano"
-    estadd local ctrl_region "Ano"
     estimates store ols_robC_US
 }
 
@@ -864,7 +880,6 @@ foreach c in DE IN {
         estadd local ctrl_type   "Ano"
         estadd local ctrl_size   "Ano"
         estadd local ctrl_remote "Ano"
-        estadd local ctrl_region "-"
         estimates store ols_robC_`c'
     }
 }
@@ -873,13 +888,63 @@ esttab ols_robC_US ols_robC_DE ols_robC_IN using "$outdir/Priloha_C_OLS_FullClus
     label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
     keep(cluster_* 1.ai_level 2.ai_level *.edu_ols *.exp_category) ///
     order(1.ai_level 2.ai_level cluster_* *.edu_ols *.exp_category) ///
+    stats(ctrl_nace ctrl_type ctrl_size ctrl_remote N r2, ///
+          fmt(%s %s %s %s %9.0fc %5.3f) ///
+          labels("NACE sektor" "Typ firmy" "Velikost firmy" "Remote" "N" "R²")) ///
+    mtitles("USA" "Německo" "Indie") ///
+    title("Příloha C: OLS ln(plat) — plná sada skill clusterů (robustness k Tabulce 5)") ///
+    addnotes("Robustnostní specifikace k Tabulce 5 s návratem cluster_generative_ai a cluster_data_science__ml do RHS." ///
+             "Stabilita koeficientů 1.ai_level a 2.ai_level mezi Tabulkou 4 a Přílohou C indikuje, že efekt AI tierů zachycuje roli, nikoli jen překryv s GenAI/ML skills." ///
+             "Standardní chyby klastrované na firmu v závorkách.")
+
+
+* ==============================================================================
+* 8c. PRILOHA D — US OLS ln(plat) s region FE (robustness k Tabulce 5)
+* ==============================================================================
+* Robustnostni kontrola k Tabulce 5 pro USA: stejna specifikace jako hlavni US
+* OLS, ale s pridanymi 4 US Census regions jako fixnimi efekty (South jako
+* referencni). Cilem je doložit, ze regionalni heterogenita mezd v USA (West /
+* Northeast maji vyssi mzdy a vyssi koncentraci AI) nezavadi podstatne zkresleni
+* do AI koeficientu; hlavni Tabulka 5 je bez region FE kvuli symetrii s DE/IN
+* (ty ekvivalentni regionalni promennou v datech nemaji).
+display _n "=============================================================="
+display "8c. PRILOHA D — US OLS ln(plat) s region FE (robustness)"
+display "=============================================================="
+
+display _n "=========== Zeme = US (Priloha D — s region FE) ==========="
+capture noisily regress ln_salary ///
+    `ols_clusters' ///
+    i.ai_level ///
+    ib3.edu_ols ///
+    ib3.exp_category ///
+    ib`nace_base'.sector_nace_num ///
+    ib`region_base'.region_num ///
+    is_remote ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    if country == "US" & ln_salary != ., vce(cluster firm_cluster)
+if _rc == 0 {
+    estadd local ctrl_nace   "Ano"
+    estadd local ctrl_type   "Ano"
+    estadd local ctrl_size   "Ano"
+    estadd local ctrl_remote "Ano"
+    estadd local ctrl_region "Ano"
+    estimates store ols_robD_US_regFE
+}
+
+* Export side-by-side: hlavni US OLS (bez region FE, z Tabulky 4) vs. Priloha D (s region FE).
+capture esttab ols_t4_US ols_robD_US_regFE using "$outdir/Priloha_D_OLS_US_RegionFE.rtf", replace ///
+    label b(3) se(3) star(* 0.05 ** 0.01 *** 0.001) ///
+    keep(cluster_* 1.ai_level 2.ai_level *.edu_ols *.exp_category) ///
+    order(1.ai_level 2.ai_level cluster_* *.edu_ols *.exp_category) ///
     stats(ctrl_nace ctrl_type ctrl_size ctrl_remote ctrl_region N r2, ///
           fmt(%s %s %s %s %s %9.0fc %5.3f) ///
-          labels("NACE sektor" "Typ firmy" "Velikost firmy" "Remote" "Region FE (US)" "N" "R²")) ///
-    mtitles("USA" "Německo" "Indie") ///
-    title("Příloha C: OLS ln(plat) — plná sada skill clusterů (robustness k Tabulce 4)") ///
-    addnotes("Robustnostní specifikace k Tabulce 4 s návratem cluster_generative_ai a cluster_data_science__ml do RHS." ///
-             "Stabilita koeficientů 1.ai_level a 2.ai_level mezi Tabulkou 4 a Přílohou C indikuje, že efekt AI tierů zachycuje roli, nikoli jen překryv s GenAI/ML skills." ///
+          labels("NACE sektor" "Typ firmy" "Velikost firmy" "Remote" "Region FE (US Census)" "N" "R²")) ///
+    mtitles("US bez region FE" "US s region FE") ///
+    title("Příloha D: USA OLS ln(plat) — robustness vůči regionální heterogenitě") ///
+    addnotes("Levý sloupec: hlavní specifikace z Tabulky 4 (bez region FE, symetrická s DE/IN)." ///
+             "Pravý sloupec: identická specifikace doplněná o fixní efekty pro 4 US Census regions (South jako referenční, dále Midwest, Northeast, West)." ///
+             "Srovnání sloupců umožňuje kvantifikovat, o kolik procentních bodů se koeficienty AI tierů a skill clusterů posunou po zavedení regionálních FE." ///
              "Standardní chyby klastrované na firmu v závorkách.")
 
 
@@ -992,10 +1057,10 @@ capture esttab heck_t4_US heck_t4_DE heck_t4_IN using "$outdir/Priloha_A_Heckman
     stats(N, fmt(0) labels("N")) ///
     mtitles("USA" "Německo" "Indie") ///
     title("Příloha A: Heckman selection model — ln(plat) s korekcí selekce") ///
-    addnotes("Stejná specifikace jako Tabulka 4 (bez cluster_generative_ai a cluster_data_science__ml)." ///
+    addnotes("Stejná specifikace jako Tabulka 5 (bez cluster_generative_ai a cluster_data_science__ml)." ///
              "Rovnice výběru: P(plat inzerován) — Probit se stejnými kontrolami jako ve 2. fázi." ///
              "Identifikace jen funkční formou IMR (bez exclusion restrikce) — slouží jako robustness." ///
-             "Porovnat směr a velikost koeficientů s OLS v Tabulce 4, zvláště pro DE.")
+             "Porovnat směr a velikost koeficientů s OLS v Tabulce 5, zvláště pro DE.")
 
 
 * ==============================================================================
@@ -1026,7 +1091,7 @@ if _rc == 0 {
 * Hlavni efekty vsech skill clusteru pres cluster_*; navic pridavame jen
 * interakce (# misto ##) pro tri klicove clustery, aby se main effects
 * nedublikovaly.
-display _n "--- 12.2 Pooled logit has_ai ~ skill_clusters x country (Tabulka 2 skill test) ---"
+display _n "--- 12.2 Pooled logit has_ai ~ skill_clusters x country (Tabulka 3 test) ---"
 capture noisily logit has_ai ///
     cluster_* ///
     ib3.country_id ///
@@ -1044,9 +1109,9 @@ if _rc == 0 {
 }
 
 * --- 12.3 Pooled OLS ln(plat): AI tier x country ---
-* POZN: Stejna specifikace jako Tabulka 4 (bez cluster_generative_ai a
+* POZN: Stejna specifikace jako Tabulka 5 (bez cluster_generative_ai a
 * cluster_data_science__ml) kvuli konzistenci s hlavnim OLS modelem.
-display _n "--- 12.3 Pooled OLS ln_salary ~ ai_level x country (Tabulka 4 test) ---"
+display _n "--- 12.3 Pooled OLS ln_salary ~ ai_level x country (Tabulka 5 test) ---"
 capture noisily regress ln_salary ///
     i.ai_level##ib3.country_id ///
     `ols_clusters' ///
@@ -1381,7 +1446,7 @@ estimates store s13_lg_M3nojfnoexp_ame
 * ------------------------------------------------------------------
 * 13.13 MLOGIT M1 / M2 / M3 — inkrementalni (US, bez GenAI/DS-ML)
 * ------------------------------------------------------------------
-* Mlogit (stejne jako Tabulka 3): edu vyrazeno kvuli sparse cells u
+* Mlogit (stejne jako Tabulka 4): edu vyrazeno kvuli sparse cells u
 * HS/Associate × Applied/Core AI. Kontrola vzdelani je v binarnim logitu.
 display _n "--- 13.13a Mlogit M1: Profil firmy (US) ---"
 mlogit ai_level ///
