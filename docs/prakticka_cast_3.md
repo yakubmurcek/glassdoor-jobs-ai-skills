@@ -63,13 +63,13 @@ Waldův test společné signifikance interakcí job_family × country v pooled l
 
 ## 5.3 Používání vs. vývoj AI (multinomický logit)
 
-Binární logit v sekci 5.2 odpovídá na otázku, které profily souvisejí s AI požadavkem obecně. Stěžejním přínosem této práce je však rozlišení mezi pozicemi, které AI pouze integrují do svých procesů (AI Integration), a pozicemi, kde se AI přímo vyvíjí (Applied/Core AI). K tomuto účelu byl pro každou zemi odhadnut multinomický logistický model s třemi kategoriemi výsledné proměnné (None jako referenční, AI Integration, Applied/Core AI).
+Binární logit v sekci 5.2 odpovídá na otázku, které profily souvisejí s AI požadavkem obecně. Jedním z přínosů a zaměření této práce je však samotné rozlišení na pozice, které AI pouze integrují do svých stávajícíchprocesů (AI Integration), a dále ty pozice, kde se AI přímo vyvíjí či je k tomu blízko (Applied/Core AI). K tomuto účelu byl pro každou zemi odhadnut multinomický logistický model s třemi kategoriemi výsledné proměnné (None jako referenční, AI Integration, Applied/Core AI).
 
-Specifikace multinomického logitu se od binárního logitu liší. Vzdělání (edu_logit) bylo z modelu vyřazeno kvůli nedostatečnému počtu pozorování v kombinaci HS / Associate × Applied/Core AI (v Indii 1 pozorování, v Německu 6), které porušuje pravidlo minimálně 50 pozorování na buňku pro stabilní MLE odhad. Profesní skupina byla z modelu rovněž vyřazena, jelikož u Applied/Core AI v Německu a Indii by kombinace s některými kategoriemi (Frontend & Design, QA & Testing, Security) opět způsobovala quasi-complete separation. Vliv vzdělání a profesní skupiny na AI požadavek obecně je však kontrolován v binárním logitu (sekce 5.2) a v mzdovém modelu (sekce 5.4). Multinomický model obsahuje všech 21 skill clusterů včetně Generative AI a Data Science / ML (důvod stejný jako u Tabulky 2) a kontrolní proměnné (zkušenosti, NACE sektor, typ organizace, velikost firmy, region u USA, remote práce).
+Specifikace multinomického logitu se od binárního logitu mírně liší. Vzdělání (edu_logit) bylo z modelu vyřazeno kvůli nedostatečnému počtu pozorování. Profesní skupina byla z modelu již vyřazena, jelikož práce se primárně zaměřuje na zkoumání vlivu dovedností. Následující multinomický model obsahuje všech 21 skill clusterů včetně Generative AI a Data Science / ML a kontrolní proměnné (zkušenosti, NACE sektor, typ organizace, velikost firmy, region u USA, remote práce).
 
 **Tabulka 3 — Multinomický logit ai_level, AME v p. b. per země a tier**
 
-| Cluster                  |  USA AI Int. |     USA App. | Německo AI Int. | Německo App. | Indie AI Int. |  Indie App. |
+| Skill Cluster            |  USA AI Int. |     USA App. | Německo AI Int. | Německo App. | Indie AI Int. |  Indie App. |
 | ------------------------ | -----------: | -----------: | --------------: | -----------: | ------------: | ----------: |
 | Generative AI            | +23,3 \*\*\* |  +9,9 \*\*\* |    +22,5 \*\*\* | +14,0 \*\*\* |   +7,0 \*\*\* | +5,2 \*\*\* |
 | Data Science / ML        | +14,2 \*\*\* | +12,6 \*\*\* |       +2,4 \*\* | +12,3 \*\*\* |       +0,6 \* | +5,8 \*\*\* |
@@ -97,11 +97,7 @@ Specifikace multinomického logitu se od binárního logitu liší. Vzdělání 
 
 _AI Int. = AI Integration; App. = Applied/Core AI. Signifikance: \* p < 0,05; \*\* p < 0,01; \*\*\* p < 0,001; ns = nesignifikantní._
 
-**Společné prediktory obou AI tierů**
-
-Některé skill clustery zvyšují pravděpodobnost obou typů AI pozic ve všech třech zemích, avšak s různou intenzitou. Dynamic Web je konzistentně pozitivní pro Applied/Core AI ve všech zemích a pro AI Integration v USA, což potvrzuje, že moderní webové technologie jsou nedílnou součástí jak vývoje, tak nasazení AI aplikací. Cloud Computing predikuje AI Integration v USA a Německu, ale pro Applied/Core AI je pozitivní pouze v USA. To naznačuje, že cloudová infrastruktura je primárně prostředkem nasazení hotových AI služeb, méně samotného vývoje AI systémů. Cluster Enterprise / Managed a Scripting / Shell oba konzistentně snižují pravděpodobnost AI pozic ve všech zemích a u obou tierů, potvrzujíc, že tradiční legacy technologie jsou s AI nekompatibilní bez ohledu na úroveň AI zapojení.
-
-**Diskriminátory mezi AI Integration a Applied/Core AI**
+Některé skill clustery zvyšují pravděpodobnost obou úrovní požadavků AI (AI Integration a Applied/Core AI) ve všech třech zemích, avšak s různou intenzitou. Dynamic Web je konzistentně pozitivní pro Applied/Core AI ve všech zemích a pro AI Integration v USA, což potvrzuje, že moderní webové technologie jsou nedílnou součástí jak vývoje, tak nasazení AI aplikací. Cloud Computing predikuje AI Integration v USA a Německu, pro Applied/Core AI je pozitivní pouze v USA, a v Indii je překvapivě nesignifikantní. S výjimkou Indie tyto výsledky naznačují, že cloudová infrastruktura je primárně prostředkem nasazení hotových AI služeb, méně už samotného vývoje AI systémů. Cluster Enterprise / Managed a Scripting / Shell oba konzistentně snižují pravděpodobnost AI pozic ve všech zemích a u obou tierů, potvrzujíc, že tradiční legacy technologie jsou s AI nekompatibilní bez ohledu na úroveň AI zapojení.
 
 Analyticky nejnosnější jsou skill clustery, jejichž efekt se mezi AI tiery kvalitativně liší, případně směřuje na opačné strany. Tyto clustery umožňují rozlišit mezi používáním AI a samotným vývojem AI a představují hlavní analytický přínos multinomického modelu.
 
