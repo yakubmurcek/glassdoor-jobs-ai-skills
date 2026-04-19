@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Mockupy 7 grafů</title>
+<style>
+body { font-family: -apple-system, sans-serif; max-width: 900px; margin: 2em auto; padding: 0 1em; }
+h2 { margin-top: 2em; border-bottom: 1px solid #ccc; padding-bottom: .3em; }
+img { max-width: 100%; border: 1px solid #eee; }
+p { color: #555; }
+</style>
+</head>
+<body>
+<h1>Mockupy 7 grafů k diplomové práci</h1>
+<p>Čísla jsou přibližná / odhadnutá z textu. Finální verze ze Staty bude s přesnými hodnotami a CI.</p>
+
+<h2>1 — Složení AI požadavků podle země (stacked bar)</h2>
+<p>USA a DE mají podobný celkový podíl AI, ale DE má relativně víc Applied/Core AI. Indie výrazně níž.</p>
+<img src="01_ai_tier_by_country.png" alt="Graf 1">
+
+<h2>2 — AI požadavek podle profesní skupiny (US, horizontal bar)</h2>
+<p>Koncentrace v Data &amp; AI (55,7 %) je extrémně viditelná; šedá čára = průměr 20,6 %.</p>
+<img src="02_ai_share_by_jobfamily.png" alt="Graf 2">
+
+<h2>3 — Binární logit: AME skill clusterů (US, forest plot)</h2>
+<p>„Technologická propast" na jeden pohled: modré moderní cloud/web stack, červené legacy / enterprise.</p>
+<img src="03_logit_ame_us.png" alt="Graf 3">
+
+<h2>4 — Mlogit: Integration vs Applied/Core AI (US, dumbbell)</h2>
+<p>Data Engineering a Systems Programming mají body na opačných stranách → čistí diskriminátoři. Frontend / Enterprise Platforms táhnou jen Integration.</p>
+<img src="04_mlogit_dumbbell_us.png" alt="Graf 4">
+
+<h2>5 — AME skill clusterů napříč zeměmi (heatmap)</h2>
+<p>GenAI a DS/ML dominantní všude, Frontend jen v US, Data Engineering silnější v DE, Enterprise/Managed negativní hlavně v US.</p>
+<img src="05_heatmap_crosscountry.png" alt="Graf 5">
+
+<h2>6 — Dekompozice AI prémie: Model A → B → C (US)</h2>
+<p>Applied/Core AI padá prudčeji než Integration → víc absorbuje tech profil pozice.</p>
+<img src="06_premium_decomposition.png" alt="Graf 6">
+
+<h2>7 — AI mzdová prémie napříč zeměmi (clustered bar, ns = šrafované)</h2>
+<p>USA × IN podobné, DE šrafované jako statisticky nesignifikantní kvůli malému N = 514.</p>
+<img src="07_premium_crosscountry.png" alt="Graf 7">
+
+</body>
+</html>
