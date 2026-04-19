@@ -1,6 +1,51 @@
-# 5 Výsledky empirické analýzy — komparativní verze (§5.2 a dále)
+# 5 Výsledky empirické analýzy
 
-_Poznámka: sekce 5.1 (deskriptivní statistika) zůstává beze změny z předchozí verze práce. Tento soubor obsahuje přepracované sekce 5.2 až 5.4 v komparativní podobě, založené přímo na per-country Tabulkách 2, 3, 4 a 5 z finálního běhu analýzy._
+Tato kapitola představuje výsledky empirické analýzy poptávky po AI dovednostech v IT inzerátech ve třech zemích — USA, Německu a Indii. Nejprve je popsán zkoumaný vzorek a jeho základní charakteristiky (§5.1). Následně jsou ve třech paralelních modelech odhadnuty determinanty AI požadavku (§5.2), kvalitativní profily dvou úrovní AI pozic (§5.3) a mzdová prémie za AI (§5.4). Kapitolu uzavírá hlubší inkrementální a mediační analýza na americkém vzorku (§5.5), která těží z jeho velikosti a ilustruje mechanismy stojící za komparativními zjištěními.
+
+## 5.1 Deskriptivní statistika
+
+Finální analytický vzorek obsahuje 38 436 inzerátů ze tří zemí, z toho 17 848 z USA (46,4 %), 14 186 z Indie (36,9 %) a 6 402 z Německa (16,7 %). Americký vzorek je největší, a umožňuje proto v §5.5 hlubší inkrementální dekompozici, na kterou by DE a IN vzorek neměl dostatečnou statistickou sílu. Všechny tři vzorky prošly stejným pipeline extrakce AI dovedností (deterministický slovník + LLM analýza, sjednoceno přes union), takže jsou přímo srovnatelné.
+
+**Výskyt AI požadavků.** AI adopce se mezi zeměmi výrazně liší (viz Tabulka 1). V USA vyžaduje alespoň nějakou úroveň AI dovedností 20,6 % inzerátů (13,2 % AI Integration, 7,4 % Applied/Core AI). Německo má podobný celkový podíl 18,3 % (9,7 % AI Integration, 8,6 % Applied/Core AI) — pozoruhodné, že podíl pokročilých Applied/Core rolí v Německu dokonce mírně převyšuje podíl v USA. Indie má výrazně nižší celkový podíl AI inzerátů, pouze 6,3 % (2,8 % AI Integration, 3,5 % Applied/Core AI). Nižší AI podíl v IN pravděpodobně odráží odlišnou strukturu trhu práce — větší zastoupení outsourcingových a mezinárodních IT service rolí (Infosys, Wipro, TCS, Accenture) s nižším průměrným technologickým profilem pozic.
+
+**Tabulka 1** _Rozložení úrovní AI v IT inzerátech podle země_
+
+| AI úroveň | USA (N) | USA (%) | DE (N) | DE (%) | IN (N) | IN (%) |
+|---|---:|---:|---:|---:|---:|---:|
+| None | 14 181 | 79,5 | 5 232 | 81,7 | 13 294 | 93,7 |
+| AI Integration | 2 354 | 13,2 | 622 | 9,7 | 394 | 2,8 |
+| Applied/Core AI | 1 313 | 7,4 | 548 | 8,6 | 498 | 3,5 |
+| **Celkem** | **17 848** | **100,0** | **6 402** | **100,0** | **14 186** | **100,0** |
+
+_Poznámka: AI úrovně odvozeny pouze z LLM klasifikace desc\_tier\_llm (bez post-hoc override ze skill clusterů). Detailní definice úrovní viz metodická kapitola 4._
+
+**Pokrytí informace o mzdě.** Inzerovanou mzdu obsahuje jen část vzorku a pokrytí se mezi zeměmi dramaticky liší: v USA 82,0 % inzerátů (14 642 z 17 848), v Indii 68,6 % (9 735 z 14 186) a v Německu pouze 8,0 % (514 z 6 402). Malá velikost německého mzdového vzorku vede k očekávaně sníženě statistické síle v §5.4 a je klíčovým metodologickým omezením komparativních OLS modelů. Systematičnost výběru (zda inzeráty s uvedeným platem jsou reprezentativní) ověřuje Heckmanův test v Příloze C a diskuse v §5.4.
+
+**Mzdové hladiny podle úrovně AI.** Mzdy jsou v celé analýze konvertovány na roční ekvivalent v USD (pro DE přes EUR→USD kurz, pro IN přes INR→USD a přepočet měsíc/rok). Obrázek 1 ukazuje rozložení ročních mezd podle úrovně AI pro každou zemi zvlášť; Tabulka 2 shrnuje klíčové statistiky.
+
+[Obrázek 1 — Graf rozdělení ročních mezd dle úrovně AI, facet per země (US / DE / IN)]
+
+**Tabulka 2** _Mzdové hladiny (roční USD) podle úrovně AI a země_
+
+| Země | AI úroveň | N | Průměr | Medián | Hrubá prémie vs. None |
+|---|---|---:|---:|---:|---:|
+| USA | None | 11 601 | 119 524 | 114 000 | — |
+| USA | AI Integration | 1 947 | 140 424 | 135 000 | +20 900 (+17,5 %) |
+| USA | Applied/Core AI | 1 094 | 150 498 | 148 495 | +30 975 (+25,9 %) |
+| DE | None | 396 | 80 389 | 78 638 | — |
+| DE | AI Integration | 72 | 84 210 | 84 171 | +3 821 (+4,8 %) |
+| DE | Applied/Core AI | 46 | 93 027 | 91 744 | +12 638 (+15,7 %) |
+| IN | None | 9 104 | 7 803 | 6 343 | — |
+| IN | AI Integration | 267 | 9 964 | 7 077 | +2 161 (+27,7 %) |
+| IN | Applied/Core AI | 364 | 11 565 | 7 065 | +3 762 (+48,2 %) |
+
+_Poznámka: Hrubá prémie je nominální rozdíl průměrných mezd oproti kategorii None, bez kontroly vzdělání, zkušeností, profesní skupiny ani dalších faktorů. Čistou AI prémii po kontrole pozorovatelných kvantifikuje §5.4. Pro DE platí nízké N (zvláště u Applied/Core AI), kvůli kterému má německý odhad menší přesnost._
+
+Hrubé mzdové rozdíly potvrzují základní hypotézu, že AI pozice vyžadují vyšší kompenzaci, a to ve všech třech zemích. V USA činí hrubá prémie u Applied/Core AI přibližně 31 000 USD ročně, v Německu zhruba 13 000 USD a v Indii něco přes 3 700 USD. Relativní prémie (v procentech) je naopak nejvyšší v Indii (+48 % u Applied/Core AI), což souvisí s nízkou mzdovou základnou non-AI pozic — absolutní rozdíl je malý, ale mediánová nonAI mzda ~6 300 USD tvoří nízký jmenovatel. Důležité je, že tyto hrubé rozdíly zahrnují i vliv vzdělání, zkušeností, profesní skupiny a technologického profilu pozice. Kolik z nich představuje čistou AI prémii po kontrole pozorovatelných faktorů kvantifikuje §5.4.
+
+**Další deskriptivní zjištění.** Pro výzkumnou otázku jsou podstatné tři vzory, které jsou konzistentní napříč zeměmi a později figurují v komparativních modelech §5.2–§5.4. Za prvé, AI pozice nabízejí častěji práci na dálku než pozice bez AI — rozdíl v podílu remote inzerátů je signifikantní ve všech třech zemích a nejvýraznější je v USA (37,4 % AI vs. 26,1 % non-AI). Za druhé, AI požadavky jsou silně koncentrované v profesní skupině Data & AI, přičemž stejný vzor se projevuje ve všech třech zemích (koeficient Data & AI v binárním logitu §5.2 je vysoce signifikantní a největší v absolutní hodnotě — Tabulka 2, §5.2). Za třetí, Indie vykazuje oproti USA a Německu o poznání nižší celkový tlak na AI kompetence napříč všemi profesními skupinami s výjimkou Data & AI, což naznačuje, že indický IT trh rozvíjí AI kompetence primárně v dedikovaných datových/AI rolích, nikoli jako průřezovou dovednost, která by prostupovala všemi typy inženýrských pozic.
+
+Tyto tři deskriptivní vzory motivují strukturu následující analýzy: binární logit (§5.2) identifikuje, co predikuje AI požadavek; multinomický logit (§5.3) rozlišuje mezi povrchovou integrací a hlubokou AI expertízou; OLS regrese (§5.4) kvantifikuje mzdovou prémii po kontrole pozorovatelných faktorů. Regresní tabulky prezentuji vždy v paralelní podobě pro všechny tři země, aby byl rozdíl mezi trhy přímo viditelný v každém řádku.
 
 ## 5.2 Determinanty AI požadavku (binární logit)
 

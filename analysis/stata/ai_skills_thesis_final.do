@@ -492,6 +492,39 @@ esttab matrix(T1, fmt(%9.0fc %5.2f %9.0fc %5.2f %9.0fc %5.2f)) ///
 
 
 * ==============================================================================
+* 4b. KOMPARATIVNI DESKRIPCE — χ² ASOCIACE PRO §5.1
+* ==============================================================================
+* Doplnkove testy asociace klicovych deskriptivnich promennych s has_ai
+* per zeme. Cisla pouzije text kapitoly 5.1 (Deskriptivni statistika).
+*   - remote × has_ai per zeme
+*   - job_family × has_ai per zeme
+*   - exp_category × has_ai per zeme (pro US doplneni)
+* Vysledky jdou pouze do logu, nikoli do RTF tabulky.
+
+display _n "=============================================================="
+display "4b. χ² ASOCIACE PRO §5.1 (per zeme)"
+display "=============================================================="
+
+foreach c in US DE IN {
+    display _n "=== Zeme: `c' ==="
+    display _n "--- remote × has_ai (`c') ---"
+    tab is_remote has_ai if country == "`c'", col chi2
+    display _n "--- job_family × has_ai (`c') ---"
+    tab job_family has_ai if country == "`c'", col chi2
+    display _n "--- exp_category × has_ai (`c') ---"
+    tab exp_category has_ai if country == "`c'", col chi2
+}
+
+* Mzdovy t-test None vs AI (AI Integration + Applied/Core AI)
+* kvantifikuje hrubou AI premii per zeme pred regresni analyzou.
+display _n "--- Mzdovy t-test: None vs AI (salary_mid) per zeme ---"
+foreach c in US DE IN {
+    display _n "=== Zeme: `c' ==="
+    ttest salary_mid if country == "`c'", by(has_ai) unequal
+}
+
+
+* ==============================================================================
 * 6. TABULKY 2 + 3 — BINARNI LOGIT P(AI) ~ JOB FAMILY ^ SKILL CLUSTERY (AME, per zeme)
 * ==============================================================================
 * Dva komplementarni modely per zeme (celkem 6 sloupcu):
