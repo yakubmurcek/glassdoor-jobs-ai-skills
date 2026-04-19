@@ -1133,10 +1133,12 @@ if _rc == 0 {
 * (verzija 2025-04-14), ale:
 *   - na US podvzorku (`if country == "US"`) pro zachovani srovnatelnosti
 *     s textem, kde US je hlavni pripadova studie,
-*   - s vce(robust) — shodne se starym ai_skills_analysis.do a s textem
-*     v prakticka_cast.md §5.3–§5.5 (hlavni US kapitola). Hlavni tabulky
-*     2–4 a Prilohy A–C pouzivaji vce(cluster firm_cluster) kvuli srovnani
-*     napric US/DE/IN; zde je pro US-inkrementalni cast ponechano robust.
+*   - s vce(cluster firm_cluster) — stejny cluster-robust SE jako v hlavnich
+*     tabulkach 2-5 a Prilohach A-C. Firma je prirozeny cluster (inzeraty
+*     od stejne firmy sdileji firemni unobservables: kulturu, region, tech
+*     stack, HR slovnik), US vzorek ma ~2 inzeraty/firma. Klastrovani
+*     pres firmu tedy odpovida datove strukture a zajistuje konzistenci
+*     SE napric vsemi tabulkami v kapitole 5.
 *   - se stejnym kategorickym edu_ols / edu_logit / exp_category schematem.
 *
 * Per-country finalni tabulky 2–4 (sekce 6–8) a srovnani US vs DE vs IN
@@ -1167,7 +1169,7 @@ regress ln_salary ///
     is_remote ///
     ib1.type_cat ///
     ib5.size_cat ///
-    if country == "US" & ln_salary != ., vce(robust)
+    if country == "US" & ln_salary != ., vce(cluster firm_cluster)
 estimates store s13_ols_A
 display _n "Model A: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
 
@@ -1185,7 +1187,7 @@ regress ln_salary ///
     ib5.size_cat ///
     ib3.edu_ols ///
     ib3.exp_category ///
-    if country == "US" & ln_salary != ., vce(robust)
+    if country == "US" & ln_salary != ., vce(cluster firm_cluster)
 estimates store s13_ols_B
 display _n "Model B: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
 
@@ -1205,7 +1207,7 @@ regress ln_salary ///
     ib`sw_base'.job_family_num ///
     ib3.edu_ols ///
     ib3.exp_category ///
-    if country == "US" & ln_salary != ., vce(robust)
+    if country == "US" & ln_salary != ., vce(cluster firm_cluster)
 estimates store s13_ols_C
 display _n "Model C: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
 
@@ -1239,7 +1241,7 @@ regress ln_salary ///
     ib5.size_cat ///
     ib3.edu_ols ///
     ib3.exp_category ///
-    if country == "US" & ln_salary != ., vce(robust)
+    if country == "US" & ln_salary != ., vce(cluster firm_cluster)
 estimates store s13_ols_Cnojf
 display _n "Model C-nojf: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
 
@@ -1261,7 +1263,7 @@ regress ln_salary ///
     ib`sw_base'.job_family_num ///
     ib3.edu_ols ///
     experience_min_llm experience_sq ///
-    if country == "US" & ln_salary != ., vce(robust)
+    if country == "US" & ln_salary != ., vce(cluster firm_cluster)
 estimates store s13_ols_Cmincer
 display _n "Model C-Mincer: R2 = " e(r2) ", Adj R2 = " e(r2_a) ", N = " e(N)
 
@@ -1277,7 +1279,7 @@ estimates table s13_ols_A s13_ols_B s13_ols_Cnojf s13_ols_C s13_ols_Cmincer, ///
 * ------------------------------------------------------------------
 * Testujeme, zda pridane bloky (lidsky kapital / tech skills + pozice)
 * vyznamne zlepsuji model. Postup: plna specifikace s testparm pro
-* jednotlive bloky, vce(robust).
+* jednotlive bloky, vce(cluster firm_cluster).
 display _n "--- 13.7 Wald F-testy nested modelu (A -> B -> C) ---"
 quietly regress ln_salary ///
     cluster_* ///
@@ -1290,7 +1292,7 @@ quietly regress ln_salary ///
     ib`sw_base'.job_family_num ///
     ib3.edu_ols ///
     ib3.exp_category ///
-    if country == "US" & ln_salary != ., vce(robust)
+    if country == "US" & ln_salary != ., vce(cluster firm_cluster)
 
 display _n "Wald F-test A -> B: spolecna signifikance lidskeho kapitalu (edu + exp)"
 testparm ib3.edu_ols i.exp_category
@@ -1318,7 +1320,7 @@ regress ln_salary ///
     ib`sw_base'.job_family_num ///
     ib3.edu_ols ///
     ib3.exp_category ///
-    if country == "US" & ln_salary != ., vce(robust)
+    if country == "US" & ln_salary != ., vce(cluster firm_cluster)
 estimates store s13_ols_Ccirc
 display _n "Model C-circ (s GenAI + DS/ML): R2 = " e(r2) ", N = " e(N)
 
@@ -1340,7 +1342,7 @@ logit has_ai ///
     ib1.type_cat ///
     ib5.size_cat ///
     ib`region_base'.region_num ///
-    if country == "US", or vce(robust)
+    if country == "US", or vce(cluster firm_cluster)
 estimates store s13_lg_M1
 display _n "AME Logit M1 (US):"
 margins, dydx(*) post
@@ -1352,7 +1354,7 @@ logit has_ai ///
     ib`sw_base'.job_family_num ///
     ib2.edu_logit ///
     ib3.exp_category ///
-    if country == "US", or vce(robust)
+    if country == "US", or vce(cluster firm_cluster)
 estimates store s13_lg_M2
 display _n "AME Logit M2 (US):"
 margins, dydx(*) post
@@ -1368,7 +1370,7 @@ logit has_ai ///
     ib`sw_base'.job_family_num ///
     ib2.edu_logit ///
     ib3.exp_category ///
-    if country == "US", or vce(robust)
+    if country == "US", or vce(cluster firm_cluster)
 estimates store s13_lg_M3
 display _n "AME Logit M3 (US):"
 margins, dydx(*) post
@@ -1387,7 +1389,7 @@ quietly logit has_ai ///
     ib`sw_base'.job_family_num ///
     ib2.edu_logit ///
     ib3.exp_category ///
-    if country == "US", vce(robust)
+    if country == "US", vce(cluster firm_cluster)
 linktest
 
 * ------------------------------------------------------------------
@@ -1423,7 +1425,7 @@ logit has_ai ///
     cluster_* ///
     ib2.edu_logit ///
     ib3.exp_category ///
-    if country == "US", or vce(robust)
+    if country == "US", or vce(cluster firm_cluster)
 estimates store s13_lg_M3nojf
 display _n "AME Logit M3-nojf (US):"
 margins, dydx(*) post
@@ -1437,7 +1439,7 @@ logit has_ai ///
     ib`region_base'.region_num ///
     cluster_* ///
     ib2.edu_logit ///
-    if country == "US", or vce(robust)
+    if country == "US", or vce(cluster firm_cluster)
 estimates store s13_lg_M3nojfnoexp
 display _n "AME Logit M3-nojf-noexp (US):"
 margins, dydx(*) post
@@ -1454,7 +1456,7 @@ mlogit ai_level ///
     ib1.type_cat ///
     ib5.size_cat ///
     ib`region_base'.region_num ///
-    if country == "US", baseoutcome(0) rrr vce(robust)
+    if country == "US", baseoutcome(0) rrr vce(cluster firm_cluster)
 estimates store s13_ml_M1
 
 display _n "--- 13.13b Mlogit M2: Profil role (US) ---"
@@ -1462,7 +1464,7 @@ mlogit ai_level ///
     cluster_* ///
     ib`sw_base'.job_family_num ///
     ib3.exp_category ///
-    if country == "US", baseoutcome(0) rrr vce(robust)
+    if country == "US", baseoutcome(0) rrr vce(cluster firm_cluster)
 estimates store s13_ml_M2
 
 display _n "--- 13.13c Mlogit M3: Kompletni (US) ---"
@@ -1474,7 +1476,7 @@ mlogit ai_level ///
     cluster_* ///
     ib`sw_base'.job_family_num ///
     ib3.exp_category ///
-    if country == "US", baseoutcome(0) rrr vce(robust)
+    if country == "US", baseoutcome(0) rrr vce(cluster firm_cluster)
 estimates store s13_ml_M3
 
 display _n "--- 13.13d Mlogit M3 AME: P(AI Integration) ---"
@@ -1493,7 +1495,7 @@ mlogit ai_level ///
     ib`region_base'.region_num ///
     cluster_* ///
     ib3.exp_category ///
-    if country == "US", baseoutcome(0) rrr vce(robust)
+    if country == "US", baseoutcome(0) rrr vce(cluster firm_cluster)
 estimates store s13_ml_M3a
 display _n "--- 13.14a1 Mlogit M3a AME: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
@@ -1507,7 +1509,7 @@ mlogit ai_level ///
     ib5.size_cat ///
     ib`region_base'.region_num ///
     cluster_* ///
-    if country == "US", baseoutcome(0) rrr vce(robust)
+    if country == "US", baseoutcome(0) rrr vce(cluster firm_cluster)
 estimates store s13_ml_M3b
 display _n "--- 13.14b1 Mlogit M3b AME: P(AI Integration) ---"
 margins, dydx(*) predict(outcome(1))
@@ -1530,7 +1532,7 @@ logit has_ai ///
     ib`sw_base'.job_family_num ///
     ib2.edu_logit ///
     ib3.exp_category ///
-    if country == "US", or vce(robust)
+    if country == "US", or vce(cluster firm_cluster)
 estimates store s13_lg_M3circ
 display _n "AME Logit M3-circ (US, ilustrace cirkularity):"
 margins, dydx(*) post
