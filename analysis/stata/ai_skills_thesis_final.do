@@ -11,7 +11,7 @@
 *   Tabulka 3:  Binarni logit P(AI) — skill clustery (AME, 3 sloupce per zeme)
 *   Tabulka 4:  Mlogit P(AI tier) ~ skill clustery (AME, 9 sloupcu)
 *   Tabulka 5:  OLS ln(plat) ~ skill clustery + AI tiery (3 sloupce, per zeme)
-*   Graf_*:     Frekvencni kernel density ln(plat) x ai_level per zeme
+*   Graf_*:     Kernel density rocnich platu (USD) x ai_level per zeme
 *   Priloha A:  Heckman selection model pro ln(plat) — robustness
 *   Priloha B:  Cross-country Wald testy (v logu, viz sekce 12)
 *   Priloha C:  OLS ln(plat) s plnou sadou skill clusteru (robustness k Tabulce 5)
@@ -373,28 +373,30 @@ capture drop cluster_legacy__mainframe
 capture drop cluster_data_analysis__stats
 capture drop cluster_tools__editors
 
-* --- 3.12b Ciste CJ labely skill clusteru (pro esttab vystupy) ---
-capture label var cluster_architecture__methods  "Architektura & metody"
-capture label var cluster_bi__analytics          "BI & analytika"
-capture label var cluster_backend_development    "Backend"
-capture label var cluster_certifications         "Certifikace"
-capture label var cluster_cloud_computing        "Cloud"
-capture label var cluster_data_engineering       "Datové inženýrství"
-capture label var cluster_data_science__ml       "Data science & ML"
-capture label var cluster_databases__storage     "Databáze & storage"
-capture label var cluster_devops__containers     "DevOps & kontejnery"
-capture label var cluster_dynamic__web           "Dynamický web"
-capture label var cluster_enterprise__managed    "Enterprise (managed)"
-capture label var cluster_enterprise_platforms   "Enterprise platformy"
-capture label var cluster_frontend_development   "Frontend"
-capture label var cluster_generative_ai          "Generativní AI"
-capture label var cluster_mobile__desktop        "Mobile & desktop"
-capture label var cluster_networking             "Síťování"
-capture label var cluster_os__embedded           "OS & embedded"
-capture label var cluster_scripting__shell       "Skriptování & shell"
-capture label var cluster_security__identity     "Bezpečnost & identita"
-capture label var cluster_systems_programming    "Systémové programování"
-capture label var cluster_testing_qa__debugging  "Testování & QA"
+* --- 3.12b Anglicke labely skill clusteru (pro esttab vystupy) ---
+* Shodne s anglickymi nazvy pouzitymi v prozaickem textu kapitoly 5, aby
+* nedochazelo k nekonzistenci mezi labely v tabulkach a nazvy v textu.
+capture label var cluster_architecture__methods  "Architecture & Methods"
+capture label var cluster_bi__analytics          "BI & Analytics"
+capture label var cluster_backend_development    "Backend Development"
+capture label var cluster_certifications         "Certifications"
+capture label var cluster_cloud_computing        "Cloud Computing"
+capture label var cluster_data_engineering       "Data Engineering"
+capture label var cluster_data_science__ml       "Data Science / ML"
+capture label var cluster_databases__storage     "Databases & Storage"
+capture label var cluster_devops__containers     "DevOps & Containers"
+capture label var cluster_dynamic__web           "Dynamic Web"
+capture label var cluster_enterprise__managed    "Enterprise / Managed"
+capture label var cluster_enterprise_platforms   "Enterprise Platforms"
+capture label var cluster_frontend_development   "Frontend Development"
+capture label var cluster_generative_ai          "Generative AI"
+capture label var cluster_mobile__desktop        "Mobile & Desktop"
+capture label var cluster_networking             "Networking"
+capture label var cluster_os__embedded           "OS & Embedded"
+capture label var cluster_scripting__shell       "Scripting / Shell"
+capture label var cluster_security__identity     "Security & Identity"
+capture label var cluster_systems_programming    "Systems Programming"
+capture label var cluster_testing_qa__debugging  "Testing / QA & Debugging"
 
 * --- 3.13 Company ID + firm_cluster pro clustered SE ---
 destring company_id, replace force
@@ -949,48 +951,63 @@ capture esttab ols_t4_US ols_robD_US_regFE using "$outdir/Priloha_D_OLS_US_Regio
 
 
 * ==============================================================================
-* 10. GRAFY — ROZLOZENI ln(plat) PODLE AI UROVNE (frekvencni kernel density per zeme)
+* 10. GRAFY — ROZLOZENI ROCNICH PLATU (USD) PODLE AI UROVNE, per zeme
 * ==============================================================================
-* Smooth kernel density krivky preskalovane na frekvenci (pocet pozorovani na
-* jednotku sirky binu), nikoli na hustotu (integral = 1). Preskalujeme vynasobenim
-* density hodnot poctem pozorovani ve skupine: f_freq(x) = f_density(x) * N_group.
+* Kernel density krivky na raw USD skale (nikoliv ln). Kazda krivka je
+* normalizovana samostatne (integral = 1), takze vsechny tri AI urovne maji
+* srovnatelnou vizualni vahu a ctenar vidi primo posun peaku doprava u AI
+* inzeratu — hlavni poselstvi grafu je tvar rozdeleni a poloha peaku, nikoli
+* velikosti vzorku per AI uroven (ty jsou v deskriptivni tabulce §5.1).
+* Vyplnene prekryvajici se plochy (area) se svetle seda -> svetle modra ->
+* tmava modra, alpha transparentnost pro prekryvy. Osa X v USD s oddelovaci
+* tisicu pro okamzitou citelnost (log skala v regresnim modelu OLS, ale ne
+* v popisnem grafu).
 display _n "=============================================================="
-display "10. GRAFY — ROZLOZENI ln(plat) PODLE AI UROVNE (FREKVENCE)"
+display "10. GRAFY — ROZLOZENI ROCNICH PLATU PODLE AI UROVNE (HUSTOTA)"
 display "=============================================================="
 
 foreach c in US DE IN {
-    * Spocitat N v kazdem ai_level pro danou zemi a pripravit scaled kdensity
+    * Country label pro titulek grafu
+    local c_label = ""
+    if "`c'" == "US" local c_label "USA"
+    if "`c'" == "DE" local c_label "Německo"
+    if "`c'" == "IN" local c_label "Indie"
+
     capture drop _kx_* _kf_*
-    local plot_cmd = ""
     local plot_ok = 1
 
     foreach lv in 0 1 2 {
-        count if country == "`c'" & ai_level == `lv' & ln_salary != .
+        count if country == "`c'" & ai_level == `lv' & salary_mid != .
         local n_`lv' = r(N)
         if `n_`lv'' < 10 {
             display as text "Skupina ai_level=`lv' v `c' ma jen `n_`lv'' obs — preskakujeme kdensity."
             local plot_ok = 0
             continue
         }
-        capture noisily kdensity ln_salary if country == "`c'" & ai_level == `lv', ///
+        capture noisily kdensity salary_mid if country == "`c'" & ai_level == `lv', ///
             generate(_kx_`lv' _kf_`lv') nograph
         if _rc != 0 {
             display as error "kdensity selhal pro `c' ai_level=`lv' (rc=" _rc ")"
             local plot_ok = 0
             continue
         }
-        * Preskalovat density -> frekvence
-        replace _kf_`lv' = _kf_`lv' * `n_`lv''
+        * Per-group hustota (integral kazde krivky = 1). Nepreskalovavame
+        * podle podilu skupiny — vsechny tri krivky jsou tak vizualne
+        * srovnatelne a zdurazni se posun peaku u AI inzeratu.
     }
 
     if `plot_ok' == 1 {
+        * Vykresleni: velka skupina (None) na pozadi, AI skupiny nahore
+        * s alpha transparentnosti. Stata 15+ podporuje alpha via %XX suffix.
         capture noisily twoway ///
-            (line _kf_0 _kx_0, lcolor(gs10) lpattern(solid)) ///
-            (line _kf_1 _kx_1, lcolor(navy) lpattern(dash)) ///
-            (line _kf_2 _kx_2, lcolor(maroon) lpattern(shortdash)), ///
-            title("`c': Rozložení ln(plat) podle úrovně AI požadavku", size(medium)) ///
-            xtitle("ln(roční plat, USD)") ytitle("Frekvence") ///
-            legend(order(1 "None" 2 "AI Integration" 3 "Applied/Core AI") rows(1) size(small)) ///
+            (area _kf_0 _kx_0, color(gs14) lcolor(gs10) lwidth(medthin)) ///
+            (area _kf_1 _kx_1, color(eltblue%70) lcolor(edkblue) lwidth(medthin)) ///
+            (area _kf_2 _kx_2, color(edkblue%60) lcolor(navy) lwidth(medthin)), ///
+            title("`c_label': Rozdělení ročních platů podle úrovně AI", size(medium)) ///
+            xtitle("Roční plat (USD)") ytitle("Hustota") ///
+            xlabel(, format(%9.0fc)) ///
+            ylabel(, format(%9.2e)) ///
+            legend(order(1 "Bez AI" 2 "AI Integration" 3 "Applied/Core AI") rows(1) size(small)) ///
             graphregion(color(white)) bgcolor(white)
         if _rc == 0 {
             graph export "$outdir/Graf_Mzda_AI_`c'.png", replace width(1200)
@@ -1618,7 +1635,114 @@ display "             Tabulka_13c_Mlogit_incremental_US.rtf"
 
 
 * ==============================================================================
-* 14. ZAVER
+* 14. EXPORT PRO PYTHON GRAFY (CSV data pro analysis/charts/build_charts.py)
+* ==============================================================================
+* Tento blok NEMENI zadne odhady — pouze cte `e(b)`, `e(V)` z uz ulozenych
+* estimates a zapisuje hodnoty do CSV, ktere pak nacte Python skript.
+* Vystupy: 7 CSV souboru v $outdir/charts_data/
+display _n "=============================================================="
+display "14. EXPORT PRO PYTHON GRAFY"
+display "=============================================================="
+
+capture mkdir "$outdir/charts_data"
+
+* --- Pomocny program: zapsat koeficienty + SE + p-value + 95% CI do CSV ---
+capture program drop _export_est
+program define _export_est
+    args ename outfile keeppat
+    capture estimates restore `ename'
+    if _rc != 0 {
+        display as error "Estimate `ename' nenalezen — preskakuji `outfile'."
+        exit 0
+    }
+    tempname b V
+    matrix `b' = e(b)
+    matrix `V' = e(V)
+    local names : colnames `b'
+    local K = colsof(`b')
+    tempname fh
+    file open `fh' using "`outfile'", write replace
+    file write `fh' "coef,b,se,z,p,ci_low,ci_high" _n
+    forvalues i = 1/`K' {
+        local nm : word `i' of `names'
+        if "`keeppat'" != "" {
+            if !strmatch("`nm'", "`keeppat'") continue
+        }
+        local bi = `b'[1, `i']
+        local vi = `V'[`i', `i']
+        if `vi' <= 0 | missing(`vi') continue
+        local sei = sqrt(`vi')
+        local zi  = `bi' / `sei'
+        local pi  = 2 * (1 - normal(abs(`zi')))
+        local lo  = `bi' - 1.96 * `sei'
+        local hi  = `bi' + 1.96 * `sei'
+        file write `fh' "`nm',`bi',`sei',`zi',`pi',`lo',`hi'" _n
+    }
+    file close `fh'
+    display "Exported: `outfile'"
+end
+
+* ------------------------------------------------------------------
+* GRAF 1 — AI tier × country (crosstab pocty a %)
+* ------------------------------------------------------------------
+preserve
+    keep country ai_level
+    contract country ai_level
+    bysort country: egen _total = total(_freq)
+    gen pct = 100 * _freq / _total
+    export delimited country ai_level _freq pct ///
+        using "$outdir/charts_data/g1_ai_tier_by_country.csv", replace
+restore
+
+* ------------------------------------------------------------------
+* GRAF 2 — AI share podle job_family x country
+* ------------------------------------------------------------------
+preserve
+    collapse (mean) ai_share=has_ai (count) n=has_ai, by(country job_family_num)
+    replace ai_share = 100 * ai_share
+    capture decode job_family_num, gen(job_family)
+    if _rc != 0 gen job_family = string(job_family_num)
+    export delimited country job_family_num job_family ai_share n ///
+        using "$outdir/charts_data/g2_ai_share_by_jobfamily.csv", replace
+restore
+
+* ------------------------------------------------------------------
+* GRAF 3 — binarni logit US AME skill clusteru
+* ------------------------------------------------------------------
+_export_est ame_t2sk_US "$outdir/charts_data/g3_logit_ame_us.csv" "cluster_*"
+
+* ------------------------------------------------------------------
+* GRAF 4 — mlogit US AME (Integration vs Applied/Core AI)
+* ------------------------------------------------------------------
+_export_est ame_t3_US_1 "$outdir/charts_data/g4_mlogit_us_integration.csv" "cluster_*"
+_export_est ame_t3_US_2 "$outdir/charts_data/g4_mlogit_us_applied.csv"     "cluster_*"
+
+* ------------------------------------------------------------------
+* GRAF 5 — binarni logit AME skill clusteru napric zememi (pro heatmap)
+* ------------------------------------------------------------------
+foreach c in US DE IN {
+    _export_est ame_t2sk_`c' "$outdir/charts_data/g5_logit_ame_`c'.csv" "cluster_*"
+}
+
+* ------------------------------------------------------------------
+* GRAF 6 — OLS inkrementalni A / B / C (US) — ai_level koeficienty
+* ------------------------------------------------------------------
+_export_est s13_ols_A "$outdir/charts_data/g6_ols_A.csv" "*ai_level*"
+_export_est s13_ols_B "$outdir/charts_data/g6_ols_B.csv" "*ai_level*"
+_export_est s13_ols_C "$outdir/charts_data/g6_ols_C.csv" "*ai_level*"
+
+* ------------------------------------------------------------------
+* GRAF 7 — OLS cross-country (US / DE / IN) — ai_level koeficienty
+* ------------------------------------------------------------------
+foreach c in US DE IN {
+    _export_est ols_t4_`c' "$outdir/charts_data/g7_ols_`c'.csv" "*ai_level*"
+}
+
+display _n "Export CSV dokoncen: $outdir/charts_data/"
+
+
+* ==============================================================================
+* 15. ZAVER
 * ==============================================================================
 display _n "=============================================================="
 display "FINALNI TEZISTOVA ANALYZA DOKONCENA"
