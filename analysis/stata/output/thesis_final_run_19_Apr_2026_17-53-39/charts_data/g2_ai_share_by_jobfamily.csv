@@ -1,0 +1,22 @@
+country,job_family_num,job_family,ai_share,n
+DE,Data & AI,Data & AI,78.238342,386
+DE,DevOps & Cloud,DevOps & Cloud,12.791991,899
+DE,Management,Management,23.57513,772
+DE,Other,Other,8.2810535,1594
+DE,Software Developer,Software Developer,12.144344,1441
+DE,Software Engineer,Software Engineer,14.060031,633
+DE,Sr+ Software Engineer,Sr+ Software Engineer,25.849337,677
+IN,Data & AI,Data & AI,45.954693,618
+IN,DevOps & Cloud,DevOps & Cloud,3.2064128,1497
+IN,Management,Management,10.643016,902
+IN,Other,Other,2.5850341,4410
+IN,Software Developer,Software Developer,3.1188118,4040
+IN,Software Engineer,Software Engineer,8.5485849,1626
+IN,Sr+ Software Engineer,Sr+ Software Engineer,7.7767611,1093
+US,Data & AI,Data & AI,55.720341,944
+US,DevOps & Cloud,DevOps & Cloud,17.83567,1497
+US,Management,Management,31.806616,786
+US,Other,Other,14.248577,8078
+US,Software Developer,Software Developer,15.864799,3284
+US,Software Engineer,Software Engineer,26.777834,2039
+US,Sr+ Software Engineer,Sr+ Software Engineer,33.27869,1220
