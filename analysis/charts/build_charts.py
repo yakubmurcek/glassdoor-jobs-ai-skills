@@ -25,7 +25,14 @@ STATA_OUT = ROOT / "analysis" / "stata" / "output"
 CHARTS_OUT = ROOT / "analysis" / "charts" / "output"
 CHARTS_OUT.mkdir(parents=True, exist_ok=True)
 
-plt.rcParams.update({"figure.dpi": 140, "font.size": 9, "font.family": "sans-serif"})
+plt.rcParams.update({
+    "figure.dpi": 140,
+    "font.size": 9,
+    "font.family": "sans-serif",
+    # Jemnější šrafování pro ns — tenčí linie, šedivá místo černé
+    "hatch.linewidth": 0.6,
+    "hatch.color": "#6a6a6a",
+})
 
 COLOR_POS = "#3c6ea8"
 COLOR_NEG = "#b84a4a"
@@ -129,21 +136,24 @@ def graph_1(run_dir: Path) -> None:
            edgecolor=EDGE_COLOR, linewidth=EDGE_WIDTH)
 
     for i in range(len(countries)):
-        if integ[i] > 1.5:
-            ax.text(i, none[i] + integ[i] / 2, f"{integ[i]:.1f}%",
-                    ha="center", va="center", color="white", fontsize=8)
-        if appl[i] > 1.5:
-            ax.text(i, none[i] + integ[i] + appl[i] / 2, f"{appl[i]:.1f}%",
-                    ha="center", va="center", color="white", fontsize=8)
+        # "None" popisek uprostřed svého segmentu
         ax.text(i, none[i] / 2, f"{none[i]:.1f}%",
                 ha="center", va="center", color="#555", fontsize=8)
+        # Segmenty AI vždy dovnitř (i pro malé segmenty u Indie) — konzistence
+        if integ[i] > 0.3:
+            ax.text(i, none[i] + integ[i] / 2, f"{integ[i]:.1f}%",
+                    ha="center", va="center", color="white", fontsize=7.5)
+        if appl[i] > 0.3:
+            ax.text(i, none[i] + integ[i] + appl[i] / 2, f"{appl[i]:.1f}%",
+                    ha="center", va="center", color="white", fontsize=7.5)
 
     ax.set_ylabel("Podíl inzerátů (%)")
     ax.set_ylim(0, 101)
     ax.set_title("Složení AI požadavků podle země")
-    ax.legend(loc="upper right", fontsize=8, framealpha=0.95)
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.08),
+              ncol=3, fontsize=8, frameon=False)
     plt.tight_layout()
-    plt.savefig(CHARTS_OUT / "01_ai_tier_by_country.png")
+    plt.savefig(CHARTS_OUT / "01_ai_tier_by_country.png", bbox_inches="tight")
     plt.close()
 
 
@@ -164,7 +174,10 @@ def graph_2(run_dir: Path) -> None:
     ax.set_yticklabels(us["job_family"])
     ax.invert_yaxis()
     ax.axvline(overall, color="gray", linestyle="--", linewidth=1)
-    ax.text(overall, -0.6, f"průměr {overall:.1f}%", color="gray", fontsize=8)
+    # rozšířit plot area nahoru, ať se popisek "průměr" vejde mimo sloupce
+    ax.set_ylim(len(us) - 0.5, -1.2)  # po invert_yaxis je to "nahoru o 1.2"
+    ax.text(overall + 0.8, -0.85, f"průměr {overall:.1f}%",
+            color="gray", fontsize=8, va="center", ha="left")
     for i, (share, n) in enumerate(zip(us["ai_share"], us["n"])):
         ax.text(share + 0.5, i, f"{share:.1f}%  (N={int(n):,})".replace(",", " "),
                 va="center", fontsize=8)
@@ -300,13 +313,13 @@ def graph_5(run_dir: Path) -> None:
     fig, ax = plt.subplots(figsize=(5.4, 7.4))
     im = ax.imshow(data, cmap="RdBu", vmin=-vmax, vmax=vmax, aspect="auto")
 
-    # Hatching for ns cells
+    # Hatching for ns cells — jemná šedá
     for i in range(len(labels)):
         for j in range(len(cols)):
             if not sig[i, j]:
                 ax.add_patch(Rectangle((j - 0.5, i - 0.5), 1, 1,
                                        fill=False, hatch=HATCH_NS_HEATMAP,
-                                       edgecolor="black", linewidth=0, alpha=0.55))
+                                       edgecolor="#6a6a6a", linewidth=0, alpha=0.45))
 
     ax.set_xticks(range(len(cols)))
     ax.set_xticklabels(cols)
@@ -346,7 +359,7 @@ def graph_6(run_dir: Path) -> None:
         return result
 
     models = {"A": load("A"), "B": load("B"), "C": load("C")}
-    labels = ["Model A\n(firemní profil)", "Model B\n(+ lidský kapitál)", "Model C\n(+ dovednosti + JF)"]
+    labels = ["Model A\n(firemní profil)", "Model B\n(+ lidský kapitál)", "Model C\n(+ skill clusters + job family)"]
     integ = [models[m]["integ"][0] for m in "ABC"]
     integ_err = [1.96 * models[m]["integ"][1] for m in "ABC"]
     integ_p = [models[m]["integ"][2] for m in "ABC"]
@@ -378,10 +391,10 @@ def graph_6(run_dir: Path) -> None:
 
     for i, (v, p) in enumerate(zip(integ, integ_p)):
         ax.text(i - w/2, v + integ_err[i] + 0.3,
-                f"{v:.1f}%\n{sig_stars(p)}", ha="center", fontsize=8)
+                f"{v:.1f}% {sig_stars(p)}", ha="center", fontsize=8)
     for i, (v, p) in enumerate(zip(app, app_p)):
         ax.text(i + w/2, v + app_err[i] + 0.3,
-                f"{v:.1f}%\n{sig_stars(p)}", ha="center", fontsize=8)
+                f"{v:.1f}% {sig_stars(p)}", ha="center", fontsize=8)
 
     ax.set_xticks(x)
     ax.set_xticklabels(labels)
@@ -434,10 +447,10 @@ def graph_7(run_dir: Path) -> None:
                edgecolor=EDGE_COLOR, linewidth=EDGE_WIDTH, capsize=4)
     for i, (v, p) in enumerate(zip(integ, integ_p)):
         ax.text(i - w/2, v + integ_err[i] + 0.3,
-                f"{v:.1f}%\n{sig_stars(p)}", ha="center", fontsize=8)
+                f"{v:.1f}% {sig_stars(p)}", ha="center", fontsize=8)
     for i, (v, p) in enumerate(zip(app, app_p)):
         ax.text(i + w/2, v + app_err[i] + 0.3,
-                f"{v:.1f}%\n{sig_stars(p)}", ha="center", fontsize=8)
+                f"{v:.1f}% {sig_stars(p)}", ha="center", fontsize=8)
 
     ax.set_xticks(x)
     ax.set_xticklabels(countries)
@@ -450,9 +463,14 @@ def graph_7(run_dir: Path) -> None:
         Patch(facecolor="white", edgecolor=EDGE_COLOR, hatch=HATCH_NS,
               alpha=ALPHA_NS, label="Nesignifikantní"),
     ]
-    ax.legend(handles=legend, fontsize=8, loc="upper right")
+    # větší prostor nahoře pro popisky nad CI a legendu pod grafem
+    ymax = max([v + e for v, e in zip(integ, integ_err)] + [v + e for v, e in zip(app, app_err)])
+    ax.set_ylim(top=ymax * 1.28)
+    ax.legend(handles=legend, fontsize=8,
+              loc="upper center", bbox_to_anchor=(0.5, -0.12),
+              ncol=3, frameon=False)
     plt.tight_layout()
-    plt.savefig(CHARTS_OUT / "07_premium_crosscountry.png")
+    plt.savefig(CHARTS_OUT / "07_premium_crosscountry.png", bbox_inches="tight")
     plt.close()
 
 
