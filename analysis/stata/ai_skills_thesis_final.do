@@ -1278,6 +1278,29 @@ quietly regress ln_salary ///
 vif
 
 * ------------------------------------------------------------------
+* 13.3c Model C se standardizovanymi (beta) koeficienty
+* ------------------------------------------------------------------
+* POZN: volba `beta` neni kompatibilni s `vce(cluster ...)`, proto tento
+* blok pouziva default OLS SE. Slouzi pouze ke srovnani relativni
+* dulezitosti prediktoru pres posledni sloupec vystupu (Beta). Statisticka
+* inference pro hlavni zavery zustava u klasifikovaneho Model C vyse
+* (s clustrovanymi SE na firemni uroven).
+display _n "--- 13.3c OLS Model C, standardizovane (beta) koeficienty ---"
+display "Cti posledni sloupec 'Beta' pro relativni dulezitost prediktoru."
+regress ln_salary ///
+    cluster_* ///
+    i.ai_level ///
+    ib`nace_base'.sector_nace_num ///
+    ib`region_base'.region_num ///
+    is_remote ///
+    ib1.type_cat ///
+    ib5.size_cat ///
+    ib`sw_base'.job_family_num ///
+    ib3.edu_ols ///
+    ib3.exp_category ///
+    if country == "US" & ln_salary != ., beta
+
+* ------------------------------------------------------------------
 * 13.4 OLS Model C-nojf: Mediace pres job_family
 * ------------------------------------------------------------------
 display _n "--- 13.4 OLS Model C bez job_family (mediace) ---"
