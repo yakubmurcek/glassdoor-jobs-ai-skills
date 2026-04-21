@@ -1,0 +1,44 @@
+{
+  "run_dir": "thesis_final_run_19_Apr_2026_17-53-39",
+  "generated_at": "2026-04-21T15:36:17.833311+00:00",
+  "counts": {
+    "clusters": 24,
+    "job_families": 7,
+    "jobs_sample": 500,
+    "countries": 3,
+    "rows_total": 44832
+  },
+  "cluster_labels": {
+    "cluster_generative_ai": "Generative AI",
+    "cluster_data_science__ml": "Data Science / ML",
+    "cluster_dynamic_web": "Dynamic Web",
+    "cluster_cloud_computing": "Cloud Computing",
+    "cluster_data_engineering": "Data Engineering",
+    "cluster_bi__analytics": "BI & Analytics",
+    "cluster_frontend_development": "Frontend Dev",
+    "cluster_enterprise_platforms": "Enterprise Platforms",
+    "cluster_devops__containers": "DevOps & Containers",
+    "cluster_backend_development": "Backend Dev",
+    "cluster_systems_programming": "Systems Programming",
+    "cluster_architecture__methods": "Architecture & Methods",
+    "cluster_security__identity": "Security & Identity",
+    "cluster_mobile__desktop": "Mobile & Desktop",
+    "cluster_testing__qa__debugging": "Testing / QA",
+    "cluster_databases__storage": "Databases & Storage",
+    "cluster_networking": "Networking",
+    "cluster_os__embedded": "OS & Embedded",
+    "cluster_certifications": "Certifications",
+    "cluster_scripting__shell": "Scripting / Shell",
+    "cluster_enterprise__managed": "Enterprise / Managed"
+  },
+  "country_labels": {
+    "US": "United States",
+    "DE": "Germany",
+    "IN": "India"
+  },
+  "ai_level_order": [
+    "None",
+    "AI Integration",
+    "Applied/Core AI"
+  ]
+}

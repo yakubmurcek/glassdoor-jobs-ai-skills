@@ -1,0 +1,1394 @@
+[
+  {
+    "key": "cluster_architecture___methods",
+    "label": "Architecture & Methods",
+    "frequency": 15049,
+    "pct": 81.5,
+    "top_skills": [
+      {
+        "skill": "software engineering",
+        "count": 7651,
+        "pct": 50.84
+      },
+      {
+        "skill": "python",
+        "count": 5622,
+        "pct": 37.36
+      },
+      {
+        "skill": "agile",
+        "count": 5428,
+        "pct": 36.07
+      },
+      {
+        "skill": "aws",
+        "count": 4856,
+        "pct": 32.27
+      },
+      {
+        "skill": "system design",
+        "count": 4666,
+        "pct": 31.01
+      },
+      {
+        "skill": "ci/cd",
+        "count": 4477,
+        "pct": 29.75
+      },
+      {
+        "skill": "api",
+        "count": 4455,
+        "pct": 29.6
+      },
+      {
+        "skill": "javascript",
+        "count": 4186,
+        "pct": 27.82
+      },
+      {
+        "skill": "sql",
+        "count": 4144,
+        "pct": 27.54
+      },
+      {
+        "skill": "java",
+        "count": 3914,
+        "pct": 26.01
+      }
+    ]
+  },
+  {
+    "key": "cluster_frontend_development",
+    "label": "Frontend Dev",
+    "frequency": 11132,
+    "pct": 60.29,
+    "top_skills": [
+      {
+        "skill": "software engineering",
+        "count": 5051,
+        "pct": 45.37
+      },
+      {
+        "skill": "api",
+        "count": 4914,
+        "pct": 44.14
+      },
+      {
+        "skill": "javascript",
+        "count": 4288,
+        "pct": 38.52
+      },
+      {
+        "skill": "agile",
+        "count": 3916,
+        "pct": 35.18
+      },
+      {
+        "skill": "frontend development",
+        "count": 3836,
+        "pct": 34.46
+      },
+      {
+        "skill": "python",
+        "count": 3777,
+        "pct": 33.93
+      },
+      {
+        "skill": "aws",
+        "count": 3648,
+        "pct": 32.77
+      },
+      {
+        "skill": "rest",
+        "count": 3569,
+        "pct": 32.06
+      },
+      {
+        "skill": "sql",
+        "count": 3389,
+        "pct": 30.44
+      },
+      {
+        "skill": "ci/cd",
+        "count": 3357,
+        "pct": 30.16
+      }
+    ]
+  },
+  {
+    "key": "cluster_dynamic___web",
+    "label": "Dynamic Web",
+    "frequency": 10309,
+    "pct": 55.83,
+    "top_skills": [
+      {
+        "skill": "python",
+        "count": 6472,
+        "pct": 62.78
+      },
+      {
+        "skill": "software engineering",
+        "count": 4740,
+        "pct": 45.98
+      },
+      {
+        "skill": "javascript",
+        "count": 4654,
+        "pct": 45.15
+      },
+      {
+        "skill": "aws",
+        "count": 3953,
+        "pct": 38.35
+      },
+      {
+        "skill": "agile",
+        "count": 3384,
+        "pct": 32.83
+      },
+      {
+        "skill": "api",
+        "count": 3356,
+        "pct": 32.55
+      },
+      {
+        "skill": "ci/cd",
+        "count": 3354,
+        "pct": 32.53
+      },
+      {
+        "skill": "frontend development",
+        "count": 3167,
+        "pct": 30.72
+      },
+      {
+        "skill": "sql",
+        "count": 3149,
+        "pct": 30.55
+      },
+      {
+        "skill": "java",
+        "count": 3026,
+        "pct": 29.35
+      }
+    ]
+  },
+  {
+    "key": "cluster_testing__qa___debugging",
+    "label": "Testing & Qa / Debugging",
+    "frequency": 10154,
+    "pct": 54.99,
+    "top_skills": [
+      {
+        "skill": "software engineering",
+        "count": 4974,
+        "pct": 48.99
+      },
+      {
+        "skill": "agile",
+        "count": 3763,
+        "pct": 37.06
+      },
+      {
+        "skill": "python",
+        "count": 3711,
+        "pct": 36.55
+      },
+      {
+        "skill": "ci/cd",
+        "count": 3322,
+        "pct": 32.72
+      },
+      {
+        "skill": "api",
+        "count": 3302,
+        "pct": 32.52
+      },
+      {
+        "skill": "aws",
+        "count": 3136,
+        "pct": 30.88
+      },
+      {
+        "skill": "sql",
+        "count": 3009,
+        "pct": 29.63
+      },
+      {
+        "skill": "javascript",
+        "count": 2963,
+        "pct": 29.18
+      },
+      {
+        "skill": "debugging",
+        "count": 2908,
+        "pct": 28.64
+      },
+      {
+        "skill": "rest",
+        "count": 2866,
+        "pct": 28.23
+      }
+    ]
+  },
+  {
+    "key": "cluster_backend_development",
+    "label": "Backend Dev",
+    "frequency": 10117,
+    "pct": 54.79,
+    "top_skills": [
+      {
+        "skill": "software engineering",
+        "count": 4737,
+        "pct": 46.82
+      },
+      {
+        "skill": "rest",
+        "count": 4049,
+        "pct": 40.02
+      },
+      {
+        "skill": "api",
+        "count": 3960,
+        "pct": 39.14
+      },
+      {
+        "skill": "aws",
+        "count": 3831,
+        "pct": 37.87
+      },
+      {
+        "skill": "javascript",
+        "count": 3734,
+        "pct": 36.91
+      },
+      {
+        "skill": "agile",
+        "count": 3639,
+        "pct": 35.97
+      },
+      {
+        "skill": "python",
+        "count": 3615,
+        "pct": 35.73
+      },
+      {
+        "skill": "sql",
+        "count": 3406,
+        "pct": 33.67
+      },
+      {
+        "skill": "ci/cd",
+        "count": 3314,
+        "pct": 32.76
+      },
+      {
+        "skill": "java",
+        "count": 3225,
+        "pct": 31.88
+      }
+    ]
+  },
+  {
+    "key": "cluster_devops___containers",
+    "label": "DevOps & Containers",
+    "frequency": 8826,
+    "pct": 47.8,
+    "top_skills": [
+      {
+        "skill": "ci/cd",
+        "count": 4741,
+        "pct": 53.72
+      },
+      {
+        "skill": "software engineering",
+        "count": 4335,
+        "pct": 49.12
+      },
+      {
+        "skill": "aws",
+        "count": 4264,
+        "pct": 48.31
+      },
+      {
+        "skill": "python",
+        "count": 4165,
+        "pct": 47.19
+      },
+      {
+        "skill": "agile",
+        "count": 3553,
+        "pct": 40.26
+      },
+      {
+        "skill": "devops",
+        "count": 3524,
+        "pct": 39.93
+      },
+      {
+        "skill": "kubernetes",
+        "count": 3090,
+        "pct": 35.01
+      },
+      {
+        "skill": "api",
+        "count": 3034,
+        "pct": 34.38
+      },
+      {
+        "skill": "azure",
+        "count": 3023,
+        "pct": 34.25
+      },
+      {
+        "skill": "docker",
+        "count": 2955,
+        "pct": 33.48
+      }
+    ]
+  },
+  {
+    "key": "cluster_databases___storage",
+    "label": "Databases & Storage",
+    "frequency": 8305,
+    "pct": 44.98,
+    "top_skills": [
+      {
+        "skill": "sql",
+        "count": 4777,
+        "pct": 57.52
+      },
+      {
+        "skill": "software engineering",
+        "count": 3700,
+        "pct": 44.55
+      },
+      {
+        "skill": "aws",
+        "count": 3424,
+        "pct": 41.23
+      },
+      {
+        "skill": "python",
+        "count": 3413,
+        "pct": 41.1
+      },
+      {
+        "skill": "agile",
+        "count": 2953,
+        "pct": 35.56
+      },
+      {
+        "skill": "api",
+        "count": 2878,
+        "pct": 34.65
+      },
+      {
+        "skill": "javascript",
+        "count": 2748,
+        "pct": 33.09
+      },
+      {
+        "skill": "ci/cd",
+        "count": 2653,
+        "pct": 31.94
+      },
+      {
+        "skill": "rest",
+        "count": 2640,
+        "pct": 31.79
+      },
+      {
+        "skill": "java",
+        "count": 2596,
+        "pct": 31.26
+      }
+    ]
+  },
+  {
+    "key": "cluster_cloud_computing",
+    "label": "Cloud Computing",
+    "frequency": 7992,
+    "pct": 43.28,
+    "top_skills": [
+      {
+        "skill": "aws",
+        "count": 5510,
+        "pct": 68.94
+      },
+      {
+        "skill": "azure",
+        "count": 4053,
+        "pct": 50.71
+      },
+      {
+        "skill": "python",
+        "count": 3784,
+        "pct": 47.35
+      },
+      {
+        "skill": "software engineering",
+        "count": 3624,
+        "pct": 45.35
+      },
+      {
+        "skill": "ci/cd",
+        "count": 3403,
+        "pct": 42.58
+      },
+      {
+        "skill": "agile",
+        "count": 2833,
+        "pct": 35.45
+      },
+      {
+        "skill": "api",
+        "count": 2729,
+        "pct": 34.15
+      },
+      {
+        "skill": "devops",
+        "count": 2700,
+        "pct": 33.78
+      },
+      {
+        "skill": "kubernetes",
+        "count": 2604,
+        "pct": 32.58
+      },
+      {
+        "skill": "sql",
+        "count": 2547,
+        "pct": 31.87
+      }
+    ]
+  },
+  {
+    "key": "cluster_enterprise___managed",
+    "label": "Enterprise / Managed",
+    "frequency": 6561,
+    "pct": 35.53,
+    "top_skills": [
+      {
+        "skill": "java",
+        "count": 4289,
+        "pct": 65.37
+      },
+      {
+        "skill": "software engineering",
+        "count": 3553,
+        "pct": 54.15
+      },
+      {
+        "skill": "agile",
+        "count": 2712,
+        "pct": 41.34
+      },
+      {
+        "skill": "python",
+        "count": 2673,
+        "pct": 40.74
+      },
+      {
+        "skill": "sql",
+        "count": 2627,
+        "pct": 40.04
+      },
+      {
+        "skill": "c#",
+        "count": 2617,
+        "pct": 39.89
+      },
+      {
+        "skill": "javascript",
+        "count": 2471,
+        "pct": 37.66
+      },
+      {
+        "skill": "aws",
+        "count": 2280,
+        "pct": 34.75
+      },
+      {
+        "skill": "api",
+        "count": 2265,
+        "pct": 34.52
+      },
+      {
+        "skill": "rest",
+        "count": 2259,
+        "pct": 34.43
+      }
+    ]
+  },
+  {
+    "key": "cluster_bi___analytics",
+    "label": "BI & Analytics",
+    "frequency": 6371,
+    "pct": 34.5,
+    "top_skills": [
+      {
+        "skill": "python",
+        "count": 2526,
+        "pct": 39.65
+      },
+      {
+        "skill": "reporting",
+        "count": 2511,
+        "pct": 39.41
+      },
+      {
+        "skill": "software engineering",
+        "count": 2493,
+        "pct": 39.13
+      },
+      {
+        "skill": "sql",
+        "count": 2209,
+        "pct": 34.67
+      },
+      {
+        "skill": "aws",
+        "count": 1933,
+        "pct": 30.34
+      },
+      {
+        "skill": "agile",
+        "count": 1930,
+        "pct": 30.29
+      },
+      {
+        "skill": "api",
+        "count": 1748,
+        "pct": 27.44
+      },
+      {
+        "skill": "ci/cd",
+        "count": 1614,
+        "pct": 25.33
+      },
+      {
+        "skill": "system design",
+        "count": 1611,
+        "pct": 25.29
+      },
+      {
+        "skill": "azure",
+        "count": 1582,
+        "pct": 24.83
+      }
+    ]
+  },
+  {
+    "key": "cluster_security___identity",
+    "label": "Security & Identity",
+    "frequency": 6038,
+    "pct": 32.7,
+    "top_skills": [
+      {
+        "skill": "python",
+        "count": 2425,
+        "pct": 40.16
+      },
+      {
+        "skill": "aws",
+        "count": 2412,
+        "pct": 39.95
+      },
+      {
+        "skill": "cybersecurity",
+        "count": 2284,
+        "pct": 37.83
+      },
+      {
+        "skill": "software engineering",
+        "count": 2249,
+        "pct": 37.25
+      },
+      {
+        "skill": "ci/cd",
+        "count": 1916,
+        "pct": 31.73
+      },
+      {
+        "skill": "azure",
+        "count": 1907,
+        "pct": 31.58
+      },
+      {
+        "skill": "system design",
+        "count": 1704,
+        "pct": 28.22
+      },
+      {
+        "skill": "devops",
+        "count": 1617,
+        "pct": 26.78
+      },
+      {
+        "skill": "agile",
+        "count": 1595,
+        "pct": 26.42
+      },
+      {
+        "skill": "api",
+        "count": 1488,
+        "pct": 24.64
+      }
+    ]
+  },
+  {
+    "key": "cluster_data_engineering",
+    "label": "Data Engineering",
+    "frequency": 5763,
+    "pct": 31.21,
+    "top_skills": [
+      {
+        "skill": "python",
+        "count": 2656,
+        "pct": 46.09
+      },
+      {
+        "skill": "sql",
+        "count": 2532,
+        "pct": 43.94
+      },
+      {
+        "skill": "software engineering",
+        "count": 2496,
+        "pct": 43.31
+      },
+      {
+        "skill": "aws",
+        "count": 2417,
+        "pct": 41.94
+      },
+      {
+        "skill": "api",
+        "count": 2065,
+        "pct": 35.83
+      },
+      {
+        "skill": "agile",
+        "count": 2001,
+        "pct": 34.72
+      },
+      {
+        "skill": "ci/cd",
+        "count": 1996,
+        "pct": 34.63
+      },
+      {
+        "skill": "java",
+        "count": 1882,
+        "pct": 32.66
+      },
+      {
+        "skill": "azure",
+        "count": 1867,
+        "pct": 32.4
+      },
+      {
+        "skill": "rest",
+        "count": 1845,
+        "pct": 32.01
+      }
+    ]
+  },
+  {
+    "key": "cluster_networking",
+    "label": "Networking",
+    "frequency": 5146,
+    "pct": 27.87,
+    "top_skills": [
+      {
+        "skill": "networking",
+        "count": 2461,
+        "pct": 47.82
+      },
+      {
+        "skill": "python",
+        "count": 2221,
+        "pct": 43.16
+      },
+      {
+        "skill": "software engineering",
+        "count": 2097,
+        "pct": 40.75
+      },
+      {
+        "skill": "aws",
+        "count": 1911,
+        "pct": 37.14
+      },
+      {
+        "skill": "https",
+        "count": 1813,
+        "pct": 35.23
+      },
+      {
+        "skill": "system design",
+        "count": 1562,
+        "pct": 30.35
+      },
+      {
+        "skill": "ci/cd",
+        "count": 1520,
+        "pct": 29.54
+      },
+      {
+        "skill": "linux",
+        "count": 1434,
+        "pct": 27.87
+      },
+      {
+        "skill": "azure",
+        "count": 1383,
+        "pct": 26.88
+      },
+      {
+        "skill": "agile",
+        "count": 1366,
+        "pct": 26.54
+      }
+    ]
+  },
+  {
+    "key": "cluster_os___embedded",
+    "label": "OS & Embedded",
+    "frequency": 3910,
+    "pct": 21.18,
+    "top_skills": [
+      {
+        "skill": "linux",
+        "count": 3108,
+        "pct": 79.49
+      },
+      {
+        "skill": "python",
+        "count": 2144,
+        "pct": 54.83
+      },
+      {
+        "skill": "software engineering",
+        "count": 1724,
+        "pct": 44.09
+      },
+      {
+        "skill": "aws",
+        "count": 1342,
+        "pct": 34.32
+      },
+      {
+        "skill": "windows",
+        "count": 1317,
+        "pct": 33.68
+      },
+      {
+        "skill": "networking",
+        "count": 1195,
+        "pct": 30.56
+      },
+      {
+        "skill": "system design",
+        "count": 1140,
+        "pct": 29.16
+      },
+      {
+        "skill": "agile",
+        "count": 1095,
+        "pct": 28.01
+      },
+      {
+        "skill": "java",
+        "count": 1086,
+        "pct": 27.77
+      },
+      {
+        "skill": "ci/cd",
+        "count": 1059,
+        "pct": 27.08
+      }
+    ]
+  },
+  {
+    "key": "cluster_mobile___desktop",
+    "label": "Mobile & Desktop",
+    "frequency": 3056,
+    "pct": 16.55,
+    "top_skills": [
+      {
+        "skill": "windows",
+        "count": 1800,
+        "pct": 58.9
+      },
+      {
+        "skill": "software engineering",
+        "count": 1288,
+        "pct": 42.15
+      },
+      {
+        "skill": "linux",
+        "count": 1171,
+        "pct": 38.32
+      },
+      {
+        "skill": "python",
+        "count": 1025,
+        "pct": 33.54
+      },
+      {
+        "skill": "agile",
+        "count": 884,
+        "pct": 28.93
+      },
+      {
+        "skill": "java",
+        "count": 856,
+        "pct": 28.01
+      },
+      {
+        "skill": "android",
+        "count": 845,
+        "pct": 27.65
+      },
+      {
+        "skill": "aws",
+        "count": 840,
+        "pct": 27.49
+      },
+      {
+        "skill": "api",
+        "count": 822,
+        "pct": 26.9
+      },
+      {
+        "skill": "javascript",
+        "count": 812,
+        "pct": 26.57
+      }
+    ]
+  },
+  {
+    "key": "cluster_systems_programming",
+    "label": "Systems Programming",
+    "frequency": 2986,
+    "pct": 16.17,
+    "top_skills": [
+      {
+        "skill": "c++",
+        "count": 2407,
+        "pct": 80.61
+      },
+      {
+        "skill": "software engineering",
+        "count": 1835,
+        "pct": 61.45
+      },
+      {
+        "skill": "python",
+        "count": 1732,
+        "pct": 58.0
+      },
+      {
+        "skill": "linux",
+        "count": 1099,
+        "pct": 36.81
+      },
+      {
+        "skill": "system design",
+        "count": 1006,
+        "pct": 33.69
+      },
+      {
+        "skill": "java",
+        "count": 991,
+        "pct": 33.19
+      },
+      {
+        "skill": "debugging",
+        "count": 831,
+        "pct": 27.83
+      },
+      {
+        "skill": "agile",
+        "count": 823,
+        "pct": 27.56
+      },
+      {
+        "skill": "c#",
+        "count": 667,
+        "pct": 22.34
+      },
+      {
+        "skill": "git",
+        "count": 657,
+        "pct": 22.0
+      }
+    ]
+  },
+  {
+    "key": "cluster_data_science___ml",
+    "label": "Data Science / ML",
+    "frequency": 2337,
+    "pct": 12.66,
+    "top_skills": [
+      {
+        "skill": "machine learning",
+        "count": 1426,
+        "pct": 61.02
+      },
+      {
+        "skill": "python",
+        "count": 1356,
+        "pct": 58.02
+      },
+      {
+        "skill": "software engineering",
+        "count": 1125,
+        "pct": 48.14
+      },
+      {
+        "skill": "aws",
+        "count": 985,
+        "pct": 42.15
+      },
+      {
+        "skill": "ci/cd",
+        "count": 762,
+        "pct": 32.61
+      },
+      {
+        "skill": "system design",
+        "count": 732,
+        "pct": 31.32
+      },
+      {
+        "skill": "api",
+        "count": 715,
+        "pct": 30.59
+      },
+      {
+        "skill": "sql",
+        "count": 681,
+        "pct": 29.14
+      },
+      {
+        "skill": "azure",
+        "count": 665,
+        "pct": 28.46
+      },
+      {
+        "skill": "agile",
+        "count": 626,
+        "pct": 26.79
+      }
+    ]
+  },
+  {
+    "key": "cluster_scripting___shell",
+    "label": "Scripting / Shell",
+    "frequency": 2036,
+    "pct": 11.03,
+    "top_skills": [
+      {
+        "skill": "python",
+        "count": 1631,
+        "pct": 80.11
+      },
+      {
+        "skill": "bash",
+        "count": 1231,
+        "pct": 60.46
+      },
+      {
+        "skill": "powershell",
+        "count": 1048,
+        "pct": 51.47
+      },
+      {
+        "skill": "aws",
+        "count": 987,
+        "pct": 48.48
+      },
+      {
+        "skill": "linux",
+        "count": 917,
+        "pct": 45.04
+      },
+      {
+        "skill": "devops",
+        "count": 871,
+        "pct": 42.78
+      },
+      {
+        "skill": "azure",
+        "count": 862,
+        "pct": 42.34
+      },
+      {
+        "skill": "ci/cd",
+        "count": 842,
+        "pct": 41.36
+      },
+      {
+        "skill": "kubernetes",
+        "count": 751,
+        "pct": 36.89
+      },
+      {
+        "skill": "software engineering",
+        "count": 722,
+        "pct": 35.46
+      }
+    ]
+  },
+  {
+    "key": "cluster_generative_ai",
+    "label": "Generative AI",
+    "frequency": 1272,
+    "pct": 6.89,
+    "top_skills": [
+      {
+        "skill": "python",
+        "count": 669,
+        "pct": 52.59
+      },
+      {
+        "skill": "aws",
+        "count": 597,
+        "pct": 46.93
+      },
+      {
+        "skill": "software engineering",
+        "count": 593,
+        "pct": 46.62
+      },
+      {
+        "skill": "api",
+        "count": 567,
+        "pct": 44.58
+      },
+      {
+        "skill": "generative ai",
+        "count": 471,
+        "pct": 37.03
+      },
+      {
+        "skill": "ci/cd",
+        "count": 469,
+        "pct": 36.87
+      },
+      {
+        "skill": "llm",
+        "count": 451,
+        "pct": 35.46
+      },
+      {
+        "skill": "system design",
+        "count": 434,
+        "pct": 34.12
+      },
+      {
+        "skill": "azure",
+        "count": 428,
+        "pct": 33.65
+      },
+      {
+        "skill": "react",
+        "count": 392,
+        "pct": 30.82
+      }
+    ]
+  },
+  {
+    "key": "cluster_certifications",
+    "label": "Certifications",
+    "frequency": 1060,
+    "pct": 5.74,
+    "top_skills": [
+      {
+        "skill": "aws",
+        "count": 614,
+        "pct": 57.92
+      },
+      {
+        "skill": "azure",
+        "count": 510,
+        "pct": 48.11
+      },
+      {
+        "skill": "python",
+        "count": 461,
+        "pct": 43.49
+      },
+      {
+        "skill": "devops",
+        "count": 455,
+        "pct": 42.92
+      },
+      {
+        "skill": "ci/cd",
+        "count": 448,
+        "pct": 42.26
+      },
+      {
+        "skill": "terraform",
+        "count": 373,
+        "pct": 35.19
+      },
+      {
+        "skill": "networking",
+        "count": 367,
+        "pct": 34.62
+      },
+      {
+        "skill": "agile",
+        "count": 363,
+        "pct": 34.25
+      },
+      {
+        "skill": "software engineering",
+        "count": 338,
+        "pct": 31.89
+      },
+      {
+        "skill": "kubernetes",
+        "count": 334,
+        "pct": 31.51
+      }
+    ]
+  },
+  {
+    "key": "cluster_tools___editors",
+    "label": "Tools / Editors",
+    "frequency": 933,
+    "pct": 5.05,
+    "top_skills": [
+      {
+        "skill": "visual studio",
+        "count": 554,
+        "pct": 59.38
+      },
+      {
+        "skill": "software engineering",
+        "count": 514,
+        "pct": 55.09
+      },
+      {
+        "skill": "sql",
+        "count": 455,
+        "pct": 48.77
+      },
+      {
+        "skill": "agile",
+        "count": 417,
+        "pct": 44.69
+      },
+      {
+        "skill": "javascript",
+        "count": 409,
+        "pct": 43.84
+      },
+      {
+        "skill": "c#",
+        "count": 405,
+        "pct": 43.41
+      },
+      {
+        "skill": "git",
+        "count": 362,
+        "pct": 38.8
+      },
+      {
+        "skill": "dotnet",
+        "count": 352,
+        "pct": 37.73
+      },
+      {
+        "skill": "java",
+        "count": 346,
+        "pct": 37.08
+      },
+      {
+        "skill": "rest",
+        "count": 321,
+        "pct": 34.41
+      }
+    ]
+  },
+  {
+    "key": "cluster_enterprise_platforms",
+    "label": "Enterprise Platforms",
+    "frequency": 857,
+    "pct": 4.64,
+    "top_skills": [
+      {
+        "skill": "data management",
+        "count": 629,
+        "pct": 73.4
+      },
+      {
+        "skill": "software engineering",
+        "count": 375,
+        "pct": 43.76
+      },
+      {
+        "skill": "python",
+        "count": 357,
+        "pct": 41.66
+      },
+      {
+        "skill": "sql",
+        "count": 336,
+        "pct": 39.21
+      },
+      {
+        "skill": "aws",
+        "count": 318,
+        "pct": 37.11
+      },
+      {
+        "skill": "agile",
+        "count": 301,
+        "pct": 35.12
+      },
+      {
+        "skill": "api",
+        "count": 297,
+        "pct": 34.66
+      },
+      {
+        "skill": "system design",
+        "count": 267,
+        "pct": 31.16
+      },
+      {
+        "skill": "ci/cd",
+        "count": 257,
+        "pct": 29.99
+      },
+      {
+        "skill": "azure",
+        "count": 238,
+        "pct": 27.77
+      }
+    ]
+  },
+  {
+    "key": "cluster_data_analysis___stats",
+    "label": "Data Analysis / Stats",
+    "frequency": 240,
+    "pct": 1.3,
+    "top_skills": [
+      {
+        "skill": "python",
+        "count": 158,
+        "pct": 65.83
+      },
+      {
+        "skill": "matlab",
+        "count": 157,
+        "pct": 65.42
+      },
+      {
+        "skill": "c++",
+        "count": 126,
+        "pct": 52.5
+      },
+      {
+        "skill": "software engineering",
+        "count": 125,
+        "pct": 52.08
+      },
+      {
+        "skill": "system design",
+        "count": 80,
+        "pct": 33.33
+      },
+      {
+        "skill": "linux",
+        "count": 75,
+        "pct": 31.25
+      },
+      {
+        "skill": "sas",
+        "count": 74,
+        "pct": 30.83
+      },
+      {
+        "skill": "debugging",
+        "count": 67,
+        "pct": 27.92
+      },
+      {
+        "skill": "agile",
+        "count": 63,
+        "pct": 26.25
+      },
+      {
+        "skill": "sql",
+        "count": 60,
+        "pct": 25.0
+      }
+    ]
+  },
+  {
+    "key": "cluster_legacy___mainframe",
+    "label": "Legacy / Mainframe",
+    "frequency": 49,
+    "pct": 0.27,
+    "top_skills": [
+      {
+        "skill": "cobol",
+        "count": 49,
+        "pct": 100.0
+      },
+      {
+        "skill": "sql",
+        "count": 32,
+        "pct": 65.31
+      },
+      {
+        "skill": "software engineering",
+        "count": 19,
+        "pct": 38.78
+      },
+      {
+        "skill": "debugging",
+        "count": 16,
+        "pct": 32.65
+      },
+      {
+        "skill": "agile",
+        "count": 14,
+        "pct": 28.57
+      },
+      {
+        "skill": "system design",
+        "count": 10,
+        "pct": 20.41
+      },
+      {
+        "skill": "javascript",
+        "count": 9,
+        "pct": 18.37
+      },
+      {
+        "skill": "reporting",
+        "count": 9,
+        "pct": 18.37
+      },
+      {
+        "skill": "azure",
+        "count": 8,
+        "pct": 16.33
+      },
+      {
+        "skill": "information security",
+        "count": 8,
+        "pct": 16.33
+      }
+    ]
+  }
+]

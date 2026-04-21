@@ -1,0 +1,128 @@
+[
+  {
+    "country": "DE",
+    "job_family": "Data & AI",
+    "ai_share": 78.24,
+    "n": 386
+  },
+  {
+    "country": "DE",
+    "job_family": "DevOps & Cloud",
+    "ai_share": 12.79,
+    "n": 899
+  },
+  {
+    "country": "DE",
+    "job_family": "Management",
+    "ai_share": 23.58,
+    "n": 772
+  },
+  {
+    "country": "DE",
+    "job_family": "Other",
+    "ai_share": 8.28,
+    "n": 1594
+  },
+  {
+    "country": "DE",
+    "job_family": "Software Developer",
+    "ai_share": 12.14,
+    "n": 1441
+  },
+  {
+    "country": "DE",
+    "job_family": "Software Engineer",
+    "ai_share": 14.06,
+    "n": 633
+  },
+  {
+    "country": "DE",
+    "job_family": "Sr+ Software Engineer",
+    "ai_share": 25.85,
+    "n": 677
+  },
+  {
+    "country": "IN",
+    "job_family": "Data & AI",
+    "ai_share": 45.95,
+    "n": 618
+  },
+  {
+    "country": "IN",
+    "job_family": "DevOps & Cloud",
+    "ai_share": 3.21,
+    "n": 1497
+  },
+  {
+    "country": "IN",
+    "job_family": "Management",
+    "ai_share": 10.64,
+    "n": 902
+  },
+  {
+    "country": "IN",
+    "job_family": "Other",
+    "ai_share": 2.59,
+    "n": 4410
+  },
+  {
+    "country": "IN",
+    "job_family": "Software Developer",
+    "ai_share": 3.12,
+    "n": 4040
+  },
+  {
+    "country": "IN",
+    "job_family": "Software Engineer",
+    "ai_share": 8.55,
+    "n": 1626
+  },
+  {
+    "country": "IN",
+    "job_family": "Sr+ Software Engineer",
+    "ai_share": 7.78,
+    "n": 1093
+  },
+  {
+    "country": "US",
+    "job_family": "Data & AI",
+    "ai_share": 55.72,
+    "n": 944
+  },
+  {
+    "country": "US",
+    "job_family": "DevOps & Cloud",
+    "ai_share": 17.84,
+    "n": 1497
+  },
+  {
+    "country": "US",
+    "job_family": "Management",
+    "ai_share": 31.81,
+    "n": 786
+  },
+  {
+    "country": "US",
+    "job_family": "Other",
+    "ai_share": 14.25,
+    "n": 8078
+  },
+  {
+    "country": "US",
+    "job_family": "Software Developer",
+    "ai_share": 15.86,
+    "n": 3284
+  },
+  {
+    "country": "US",
+    "job_family": "Software Engineer",
+    "ai_share": 26.78,
+    "n": 2039
+  },
+  {
+    "country": "US",
+    "job_family": "Sr+ Software Engineer",
+    "ai_share": 33.28,
+    "n": 1220
+  }
+]

@@ -1,0 +1,56 @@
+[
+  {
+    "country": "US",
+    "country_label": "United States",
+    "total": 17848,
+    "None": {
+      "pct": 79.45,
+      "count": 14181
+    },
+    "AI Integration": {
+      "pct": 13.19,
+      "count": 2354
+    },
+    "Applied/Core AI": {
+      "pct": 7.36,
+      "count": 1313
+    },
+    "ai_share": 20.55
+  },
+  {
+    "country": "DE",
+    "country_label": "Germany",
+    "total": 6402,
+    "None": {
+      "pct": 81.72,
+      "count": 5232
+    },
+    "AI Integration": {
+      "pct": 9.72,
+      "count": 622
+    },
+    "Applied/Core AI": {
+      "pct": 8.56,
+      "count": 548
+    },
+    "ai_share": 18.28
+  },
+  {
+    "country": "IN",
+    "country_label": "India",
+    "total": 14186,
+    "None": {
+      "pct": 93.71,
+      "count": 13294
+    },
+    "AI Integration": {
+      "pct": 2.78,
+      "count": 394
+    },
+    "Applied/Core AI": {
+      "pct": 3.51,
+      "count": 498
+    },
+    "ai_share": 6.29
+  }
+]
