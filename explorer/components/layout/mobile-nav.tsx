@@ -3,30 +3,39 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  BookOpen,
-  DollarSign,
-  GitCompareArrows,
+  Globe2,
+  Hash,
   Home,
   Layers,
+  Network,
   SlidersHorizontal,
+  Sparkles,
   Table2,
+  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
   { href: "/", label: "Home", icon: Home },
+  { href: "/insights", label: "Insights", icon: Sparkles },
   { href: "/analyze", label: "Analyze", icon: SlidersHorizontal },
-  { href: "/compare", label: "Compare", icon: GitCompareArrows },
-  { href: "/clusters", label: "Skills", icon: Layers },
-  { href: "/premium", label: "Wages", icon: DollarSign },
+  { href: "/skills", label: "Skills", icon: Hash },
+  { href: "/network", label: "Network", icon: Network },
+  { href: "/distributions", label: "Dist.", icon: TrendingUp },
+  { href: "/geography", label: "Geo", icon: Globe2 },
+  { href: "/clusters", label: "Clust.", icon: Layers },
   { href: "/explorer", label: "Data", icon: Table2 },
-  { href: "/about", label: "Info", icon: BookOpen },
 ];
+
+// Routes that should render full-bleed without the bottom navigation
+// (defense mode is the only one for now).
+const HIDDEN_ON: ReadonlyArray<string> = ["/present"];
 
 export function MobileNav() {
   const pathname = usePathname();
+  if (HIDDEN_ON.includes(pathname)) return null;
   return (
-    <nav className="sticky bottom-0 z-40 flex items-stretch border-t bg-background/95 backdrop-blur md:hidden">
+    <nav className="sticky bottom-0 z-40 flex items-stretch overflow-x-auto border-t bg-background/95 backdrop-blur md:hidden">
       {ITEMS.map((item) => {
         const active = pathname === item.href;
         const Icon = item.icon;
@@ -35,7 +44,7 @@ export function MobileNav() {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium",
+              "flex min-w-[60px] flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[10px] font-medium",
               active ? "text-primary" : "text-muted-foreground",
             )}
           >
