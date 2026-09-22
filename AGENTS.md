@@ -28,6 +28,7 @@ AI skills extraction from Glassdoor job postings for master's thesis (US vs EU).
 
 1. **Formatting/Paths:** CSV must use `;` separator and `utf-8-sig` encoding. Always use `pathlib.Path`, never raw strings.
 2. **Coding Style:** Extensive type hints (`from __future__ import annotations`), descriptive names, lazy initialization where possible, logging everywhere, graceful error handling.
+3. **Zaokrouhlování čísel v thesis výstupech:** Všechny číselné hodnoty (procenta, procentní body, koeficienty, AME, poměry) v textech, tabulkách a interpretacích pro diplomovou práci (`docs/`, `analysis/`) vždy zaokrouhlovat na **jedno desetinné místo** (např. 13,2 %, nikoli 13,19 %). Pokud by zaokrouhlení ztratilo smysl (např. rozdíl 0,04 pp by se stal 0,0 pp), upozornit.
 
 ## Config Precedence
 
