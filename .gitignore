@@ -230,3 +230,6 @@ data/vectordb/
 
 # Temporary Office files
 ~$*.docx
+
+# Local uv install (47 MB of binaries), never versioned
+.bin/
